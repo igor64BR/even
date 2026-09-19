@@ -1,3 +1,4 @@
+using Rateio.Application.Despesas;
 using Rateio.Domain;
 
 namespace Rateio.Application.Grupos;
@@ -37,46 +38,13 @@ internal static class ConstrutorDeGrupoSincronizado
             : Participante.Autenticado(id, nome);
     }
 
-    private static List<DespesaParaSincronizar> ConstruirDespesas(
+    private static List<DespesaParaPersistir> ConstruirDespesas(
         IReadOnlyList<DespesaSincronizadaRequest> despesas) =>
         despesas.Select(ConstruirDespesa).ToList();
 
-    private static DespesaParaSincronizar ConstruirDespesa(DespesaSincronizadaRequest requisicao)
-    {
-        var despesa = new Despesa(
-            requisicao.Id,
-            Dinheiro.EmCentavos(requisicao.ValorTotalCentavos),
-            new ParticipanteId(requisicao.PagadorId),
-            ConstruirParticipacoes(requisicao.TipoDivisao, requisicao.Participacoes));
-
-        return new DespesaParaSincronizar(despesa, requisicao.Descricao, requisicao.Data);
-    }
-
-    private static List<ParticipacaoDespesa> ConstruirParticipacoes(
-        TipoDivisaoRequest tipo, IReadOnlyList<ParticipacaoSincronizadaRequest> participacoes) =>
-        participacoes.Select(participacao => ConstruirParticipacao(tipo, participacao)).ToList();
-
-    private static ParticipacaoDespesa ConstruirParticipacao(
-        TipoDivisaoRequest tipo, ParticipacaoSincronizadaRequest requisicao)
-    {
-        var participanteId = new ParticipanteId(requisicao.ParticipanteId);
-
-        return tipo switch
-        {
-            TipoDivisaoRequest.PorIgual => new ParticipacaoDespesa.PorIgual(participanteId),
-            TipoDivisaoRequest.PorPeso => new ParticipacaoDespesa.PorPeso(participanteId, ExigirPeso(requisicao)),
-            TipoDivisaoRequest.PorValorFixo => new ParticipacaoDespesa.PorValorFixo(participanteId, ExigirValor(requisicao)),
-            _ => throw new ArgumentOutOfRangeException(nameof(tipo), tipo, "Tipo de divisão não suportado."),
-        };
-    }
-
-    private static long ExigirPeso(ParticipacaoSincronizadaRequest requisicao) =>
-        requisicao.Peso ?? throw new ArgumentException(
-            "Peso é obrigatório numa participação de despesa dividida por peso.", nameof(requisicao));
-
-    private static Dinheiro ExigirValor(ParticipacaoSincronizadaRequest requisicao) =>
-        requisicao.ValorCentavos is { } valorCentavos
-            ? Dinheiro.EmCentavos(valorCentavos)
-            : throw new ArgumentException(
-                "Valor é obrigatório numa participação de despesa dividida por valor fixo.", nameof(requisicao));
+    // T23 extraiu a construção de Despesa/ParticipacaoDespesa em si pra
+    // Rateio.Application.Despesas.MapeadorDeDespesa — reaproveitada aqui e pelo novo caso de uso de
+    // despesa avulsa, em vez de duplicada.
+    private static DespesaParaPersistir ConstruirDespesa(DespesaSincronizadaRequest requisicao) =>
+        new(MapeadorDeDespesa.Construir(requisicao), requisicao.Descricao, requisicao.Data);
 }

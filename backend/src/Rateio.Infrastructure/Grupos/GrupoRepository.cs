@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
 using Rateio.Domain;
+using Rateio.Infrastructure.Despesas;
 using Rateio.Infrastructure.Persistence;
 using Rateio.Infrastructure.Persistence.Entities;
 
@@ -7,7 +10,7 @@ namespace Rateio.Infrastructure.Grupos;
 
 /// <summary>
 /// Implementação de <see cref="IGrupoRepository"/> via EF Core / <see cref="AppDbContext"/>
-/// (T18.1). Mapeamento Domínio→EF em métodos pequenos e nomeados, espelhando
+/// (T18.1, T23.2). Mapeamento Domínio→EF em métodos pequenos e nomeados, espelhando
 /// <c>ConstrutorDeGrupoSincronizado</c> (Application) do lado oposto da tradução. Não seta
 /// manualmente <c>GrupoId</c>/<c>DespesaId</c> nas entidades filhas — isso é resolvido pelo EF via
 /// fixup de relacionamento a partir das coleções de navegação, do mesmo jeito que as
@@ -24,6 +27,17 @@ public sealed class GrupoRepository(AppDbContext dbContext) : IGrupoRepository
 
         return entidade.Id;
     }
+
+    /// <summary>
+    /// T23.2: leitura mínima (sem participantes/despesas) só pra validar existência + RNF07 antes
+    /// de adicionar uma despesa avulsa — <c>AsNoTracking</c> porque é somente leitura.
+    /// </summary>
+    public Task<AcessoAoGrupo?> ObterAcessoAsync(Guid grupoId, CancellationToken cancellationToken = default) =>
+        dbContext.Grupos
+            .AsNoTracking()
+            .Where(grupo => grupo.Id == grupoId)
+            .Select(grupo => new AcessoAoGrupo(grupo.Id, grupo.DonoUsuarioId))
+            .FirstOrDefaultAsync(cancellationToken);
 
     private static GrupoEntity ConstruirEntidadeGrupo(GrupoParaSincronizar grupoParaSincronizar) => new()
     {
@@ -48,48 +62,9 @@ public sealed class GrupoRepository(AppDbContext dbContext) : IGrupoRepository
         EhConvidado = participante.EhConvidado,
     };
 
-    private static List<DespesaEntity> ConstruirEntidadesDespesas(IReadOnlyList<DespesaParaSincronizar> despesas) =>
-        despesas.Select(ConstruirEntidadeDespesa).ToList();
-
-    private static DespesaEntity ConstruirEntidadeDespesa(DespesaParaSincronizar despesaParaSincronizar) => new()
-    {
-        Id = despesaParaSincronizar.Despesa.Id,
-        PagadorId = despesaParaSincronizar.Despesa.PagadorId.Valor,
-        ValorTotalCentavos = despesaParaSincronizar.Despesa.ValorTotal.Centavos,
-        Descricao = despesaParaSincronizar.Descricao,
-        Data = despesaParaSincronizar.Data,
-        CriadoEm = DateTimeOffset.UtcNow,
-        Participacoes = ConstruirEntidadesParticipacoes(despesaParaSincronizar.Despesa.Participacoes),
-    };
-
-    private static List<ParticipacaoDespesaEntity> ConstruirEntidadesParticipacoes(
-        IReadOnlyList<ParticipacaoDespesa> participacoes) =>
-        participacoes.Select(ConstruirEntidadeParticipacao).ToList();
-
-    private static ParticipacaoDespesaEntity ConstruirEntidadeParticipacao(ParticipacaoDespesa participacao) =>
-        participacao switch
-        {
-            ParticipacaoDespesa.PorIgual porIgual => new ParticipacaoDespesaEntity
-            {
-                Id = Guid.NewGuid(),
-                ParticipanteId = porIgual.ParticipanteId.Valor,
-                Tipo = TipoDivisaoEntity.PorIgual,
-            },
-            ParticipacaoDespesa.PorPeso porPeso => new ParticipacaoDespesaEntity
-            {
-                Id = Guid.NewGuid(),
-                ParticipanteId = porPeso.ParticipanteId.Valor,
-                Tipo = TipoDivisaoEntity.PorPeso,
-                Peso = porPeso.Peso,
-            },
-            ParticipacaoDespesa.PorValorFixo porValorFixo => new ParticipacaoDespesaEntity
-            {
-                Id = Guid.NewGuid(),
-                ParticipanteId = porValorFixo.ParticipanteId.Valor,
-                Tipo = TipoDivisaoEntity.PorValorFixo,
-                ValorCentavos = porValorFixo.Valor.Centavos,
-            },
-            var naoSuportada => throw new NotSupportedException(
-                $"Tipo de participação não suportado: {naoSuportada.GetType().Name}"),
-        };
+    // T23 extraiu a construção da DespesaEntity em si (incluindo participações) pra
+    // Rateio.Infrastructure.Despesas.MapeadorDeDespesaEntity — reaproveitada aqui e pelo novo
+    // DespesaRepository, em vez de duplicada.
+    private static List<DespesaEntity> ConstruirEntidadesDespesas(IReadOnlyList<DespesaParaPersistir> despesas) =>
+        despesas.Select(MapeadorDeDespesaEntity.Construir).ToList();
 }

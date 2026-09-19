@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Rateio.Application.Auth;
+using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
 
 namespace Rateio.Application;
@@ -15,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<AutenticarComGoogleUseCase>();
         services.AddScoped<RevogarSessaoUseCase>();
         services.AddScoped<SincronizarGrupoUseCase>();
+        services.AddScoped<CriarDespesaUseCase>();
 
         return services;
     }
