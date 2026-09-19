@@ -5,7 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.rateio.app.di.AppContainer
+import com.rateio.app.ui.creategroup.CreateGroupRoute
+import com.rateio.app.ui.creategroup.CreateGroupViewModelFactory
 import com.rateio.app.ui.groups.GroupListRoute
 import com.rateio.app.ui.groups.GroupListViewModelFactory
 import com.rateio.app.ui.theme.RateioTheme
@@ -26,18 +32,38 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** Destinos navegáveis a partir da raiz. Sem NavHost ainda — só duas telas, estado local basta. */
+private sealed interface RateioDestination {
+    data object GroupList : RateioDestination
+    data object CreateGroup : RateioDestination
+}
+
 @Composable
 private fun RateioApp(container: AppContainer) {
+    var destination by remember { mutableStateOf<RateioDestination>(RateioDestination.GroupList) }
+
     val groupListViewModelFactory = GroupListViewModelFactory(
+        groupRepository = container.groupRepository,
+        participantRepository = container.participantRepository,
+    )
+    val createGroupViewModelFactory = CreateGroupViewModelFactory(
         groupRepository = container.groupRepository,
         participantRepository = container.participantRepository,
     )
 
     RateioTheme {
-        GroupListRoute(
-            factory = groupListViewModelFactory,
-            onCreateGroupClick = { /* T16 — tela "Novo grupo" ainda não existe. */ },
-            onGroupClick = { /* T-detalhe de grupo (RF42) ainda não existe. */ },
-        )
+        when (destination) {
+            RateioDestination.GroupList -> GroupListRoute(
+                factory = groupListViewModelFactory,
+                onCreateGroupClick = { destination = RateioDestination.CreateGroup },
+                onGroupClick = { /* T-detalhe de grupo (RF42) ainda não existe. */ },
+            )
+
+            RateioDestination.CreateGroup -> CreateGroupRoute(
+                factory = createGroupViewModelFactory,
+                onGroupCreated = { destination = RateioDestination.GroupList },
+                onBackClick = { destination = RateioDestination.GroupList },
+            )
+        }
     }
 }
