@@ -5,22 +5,26 @@ using Microsoft.AspNetCore.Mvc;
 using Rateio.Api.Contracts;
 using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
+using Rateio.Application.Simplificacao;
 
 namespace Rateio.Api.Controllers;
 
 /// <summary>
 /// T18.1/T18.2: sincronização de um grupo local (Room, app) pro backend (RF09). T23.1 acrescentou
 /// <c>POST /groups/{id}/expenses</c>: adicionar uma despesa avulsa a um grupo que já está
-/// sincronizado (dia a dia, diferente do bulk de sincronização). O controller só traduz
-/// HTTP↔caso de uso — toda orquestração vive nos casos de uso (<see cref="SincronizarGrupoUseCase"/>,
-/// <see cref="CriarDespesaUseCase"/>).
+/// sincronizado (dia a dia, diferente do bulk de sincronização). T32.1 acrescentou
+/// <c>GET /groups/{id}/settlement</c>: a simplificação de dívidas do grupo, recomputada sob
+/// demanda (nunca armazenada). O controller só traduz HTTP↔caso de uso — toda orquestração vive
+/// nos casos de uso (<see cref="SincronizarGrupoUseCase"/>, <see cref="CriarDespesaUseCase"/>,
+/// <see cref="ObterSimplificacaoDeDividasUseCase"/>).
 /// </summary>
 [ApiController]
 [Authorize]
 [Route("groups")]
 public class GruposController(
     SincronizarGrupoUseCase sincronizarGrupo,
-    CriarDespesaUseCase criarDespesa) : ControllerBase
+    CriarDespesaUseCase criarDespesa,
+    ObterSimplificacaoDeDividasUseCase obterSimplificacaoDeDividas) : ControllerBase
 {
     /// <summary>
     /// RNF07: o dono do grupo sincronizado é sempre o usuário do JWT validado
@@ -93,6 +97,45 @@ public class GruposController(
                 title: "Payload de despesa inválido.",
                 detail: erro.Message,
                 statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    /// <summary>
+    /// T32.1: simplificação de dívidas do grupo, sempre recomputada a partir do histórico vigente
+    /// de despesas e quitações (motor de T31 — este endpoint não guarda saldo nenhum). Mesmo
+    /// padrão de acesso/erro de <see cref="CriarDespesa"/>: 404 se o grupo não existe, 403 se o
+    /// usuário autenticado não é dono dele (RNF07).
+    /// </summary>
+    [HttpGet("{id:guid}/settlement")]
+    public async Task<ActionResult<IReadOnlyList<TransacaoResponse>>> ObterSettlement(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var usuarioAutenticadoId = ObterUsuarioAutenticadoId();
+
+            var transacoes = await obterSimplificacaoDeDividas.ExecutarAsync(usuarioAutenticadoId, id, cancellationToken);
+
+            var resposta = transacoes
+                .Select(transacao => new TransacaoResponse(transacao.De.Valor, transacao.Para.Valor, transacao.Valor.Centavos))
+                .ToList();
+
+            return Ok(resposta);
+        }
+        catch (GrupoNaoEncontradoException erro)
+        {
+            return Problem(
+                title: "Grupo não encontrado.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        catch (AcessoNegadoException erro)
+        {
+            return Problem(
+                title: "Usuário sem acesso ao grupo.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status403Forbidden);
         }
     }
 

@@ -26,8 +26,7 @@ public sealed class CriarDespesaUseCase(IGrupoRepository grupoRepository, IDespe
         DespesaSincronizadaRequest requisicao,
         CancellationToken cancellationToken = default)
     {
-        var acesso = await ObterAcessoOuFalhar(grupoId, cancellationToken);
-        ExigirAcesso(acesso, usuarioAutenticadoId);
+        await VerificacaoDeAcessoAoGrupo.ExigirAsync(grupoRepository, grupoId, usuarioAutenticadoId, cancellationToken);
 
         var despesa = MapeadorDeDespesa.Construir(requisicao);
         var despesaParaPersistir = new DespesaParaPersistir(despesa, requisicao.Descricao, requisicao.Data);
@@ -35,17 +34,5 @@ public sealed class CriarDespesaUseCase(IGrupoRepository grupoRepository, IDespe
         await despesaRepository.AdicionarAsync(grupoId, despesaParaPersistir, cancellationToken);
 
         return despesa.Id;
-    }
-
-    private async Task<AcessoAoGrupo> ObterAcessoOuFalhar(Guid grupoId, CancellationToken cancellationToken) =>
-        await grupoRepository.ObterAcessoAsync(grupoId, cancellationToken)
-            ?? throw new GrupoNaoEncontradoException(grupoId);
-
-    private static void ExigirAcesso(AcessoAoGrupo acesso, Guid usuarioAutenticadoId)
-    {
-        if (!acesso.PertenceA(usuarioAutenticadoId))
-        {
-            throw new AcessoNegadoException(usuarioAutenticadoId, acesso.GrupoId);
-        }
     }
 }
