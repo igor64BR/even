@@ -42,6 +42,10 @@ app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
+// T18: primeiro endpoint protegido do projeto (`POST /groups/sync`) — UseAuthentication precisa
+// rodar antes de UseAuthorization pra popular HttpContext.User a partir do JWT antes do
+// [Authorize] decidir se deixa passar.
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

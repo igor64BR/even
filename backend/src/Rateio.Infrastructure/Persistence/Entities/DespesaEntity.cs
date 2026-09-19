@@ -1,9 +1,11 @@
 namespace Rateio.Infrastructure.Persistence.Entities;
 
 /// <summary>
-/// Mapeamento de persistência de uma despesa. Esqueleto mínimo (T2.2) — propriedades apenas o
-/// suficiente para existir a tabela; o modelo completo (participações por igual/peso/valor fixo,
-/// quitações) é escopo de T15/T23.
+/// Mapeamento de persistência de uma despesa. Esqueleto mínimo (T2.2); T18 acrescentou
+/// <see cref="Data"/> (a data de lançamento informada pelo app — distinta de
+/// <see cref="CriadoEm"/>, que é o timestamp de quando a linha chegou no servidor) e
+/// <see cref="Participacoes"/> (a divisão por participante, RF17/18/19), porque T18 é a primeira
+/// vez que o projeto persiste uma <see cref="Rateio.Domain.Despesa"/> completa.
 ///
 /// <see cref="ValorTotalCentavos"/> guarda o mesmo valor bruto que
 /// <see cref="Rateio.Domain.Dinheiro.Centavos"/> expõe — a coluna nunca vira <c>decimal</c> cru;
@@ -23,7 +25,11 @@ public class DespesaEntity
 
     public string Descricao { get; set; } = string.Empty;
 
+    public DateOnly Data { get; set; }
+
     public DateTimeOffset CriadoEm { get; set; }
 
     public GrupoEntity? Grupo { get; set; }
+
+    public List<ParticipacaoDespesaEntity> Participacoes { get; set; } = [];
 }

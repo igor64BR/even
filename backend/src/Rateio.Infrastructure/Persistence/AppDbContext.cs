@@ -15,6 +15,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<DespesaEntity> Despesas => Set<DespesaEntity>();
 
+    public DbSet<ParticipacaoDespesaEntity> ParticipacoesDeDespesa => Set<ParticipacaoDespesaEntity>();
+
     public DbSet<UsuarioEntity> Usuarios => Set<UsuarioEntity>();
 
     public DbSet<RefreshTokenEntity> RefreshTokens => Set<RefreshTokenEntity>();
