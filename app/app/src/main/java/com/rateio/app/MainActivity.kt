@@ -51,6 +51,9 @@ private fun RateioApp(container: AppContainer) {
     val groupListViewModelFactory = GroupListViewModelFactory(
         groupRepository = container.groupRepository,
         participantRepository = container.participantRepository,
+        expenseRepository = container.expenseRepository,
+        authRepository = container.authRepository,
+        remoteGroupRepository = container.remoteGroupRepository,
     )
     val createGroupViewModelFactory = CreateGroupViewModelFactory(
         groupRepository = container.groupRepository,

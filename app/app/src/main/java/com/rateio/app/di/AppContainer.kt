@@ -9,12 +9,17 @@ import com.rateio.data.local.auth.TokenStorage
 import com.rateio.data.persistence.RateioDatabase
 import com.rateio.data.remote.RateioHttpClientFactory
 import com.rateio.data.remote.auth.AuthApi
+import com.rateio.data.remote.groups.GroupsApi
 import com.rateio.data.repository.RemoteAuthRepository
+import com.rateio.data.repository.RemoteGroupSyncRepository
+import com.rateio.data.repository.RoomExpenseRepository
 import com.rateio.data.repository.RoomGroupRepository
 import com.rateio.data.repository.RoomParticipantRepository
 import com.rateio.domain.repository.AuthRepository
+import com.rateio.domain.repository.ExpenseRepository
 import com.rateio.domain.repository.GroupRepository
 import com.rateio.domain.repository.ParticipantRepository
+import com.rateio.domain.repository.RemoteGroupRepository
 
 /**
  * Raiz de composição manual do módulo `:app` — não há framework de DI no projeto ainda. Monta o
@@ -31,6 +36,7 @@ class AppContainer(context: Context) {
 
     val groupRepository: GroupRepository by lazy { RoomGroupRepository(database.groupDao()) }
     val participantRepository: ParticipantRepository by lazy { RoomParticipantRepository(database.participantDao()) }
+    val expenseRepository: ExpenseRepository by lazy { RoomExpenseRepository(database.expenseDao()) }
 
     // T12 — autenticação opcional via Google (constitution.md, princípios 1 e 2). `authApi`
     // usa BuildConfig.API_BASE_URL (placeholder documentado em `app/app/build.gradle.kts`);
@@ -39,6 +45,11 @@ class AppContainer(context: Context) {
     private val authApi: AuthApi by lazy { RateioHttpClientFactory.createAuthApi(BuildConfig.API_BASE_URL) }
     val authRepository: AuthRepository by lazy { RemoteAuthRepository(authApi, tokenStorage) }
     val googleIdentityClient: GoogleIdentityClient by lazy { GoogleIdentityClient(context.applicationContext) }
+
+    // T19 — ação "Sincronizar este grupo" (POST /groups/sync, T18). Reaproveita o mesmo
+    // `tokenStorage` de T12 pra ler o access token na hora de montar o header Authorization.
+    private val groupsApi: GroupsApi by lazy { RateioHttpClientFactory.createGroupsApi(BuildConfig.API_BASE_URL) }
+    val remoteGroupRepository: RemoteGroupRepository by lazy { RemoteGroupSyncRepository(groupsApi, tokenStorage) }
 
     private companion object {
         const val DATABASE_NAME = "rateio.db"

@@ -23,11 +23,16 @@ import com.rateio.app.ui.theme.LocalRateioColors
  * `.group-card` do protótipo: sigla do grupo, nome + contagem de participantes + ícone de sync,
  * saldo colorido à direita. Uma responsabilidade — apresentar um [GroupListItemUiModel]; nenhuma
  * lógica de saldo/sync mora aqui (isso é do ViewModel).
+ *
+ * [onSyncClick] (T19) é a ação "Sincronizar este grupo" embutida no próprio card — não existe
+ * tela de detalhe de grupo ainda (RF42), então este é o lugar mais próximo de "onde o usuário já
+ * está olhando pro grupo" que existe hoje; ver [SyncAction].
  */
 @Composable
 fun GroupCard(
     group: GroupListItemUiModel,
     onClick: (String) -> Unit,
+    onSyncClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -45,7 +50,48 @@ fun GroupCard(
             isSynced = group.isSynced,
             modifier = Modifier.weight(1f),
         )
-        GroupBalanceLabel(balance = group.balance)
+        Column(horizontalAlignment = Alignment.End) {
+            GroupBalanceLabel(balance = group.balance)
+            SyncAction(state = group.syncAction, onClick = { onSyncClick(group.id) })
+        }
+    }
+}
+
+/**
+ * Botão temporário simples (T19, registrado na task: "pode ser um botão temporário simples se
+ * ainda não houver tela de detalhe de grupo" — RF42 não existe). [GroupSyncActionUiState.Hidden]
+ * não desenha nada, então grupos já sincronizados ou usuário deslogado não ganham espaço extra no
+ * card. Em [GroupSyncActionUiState.Failed] o próprio texto de erro é o convite pra tentar de novo
+ * (tocável) — o grupo continua local (`isSynced=false`), nenhum estado fica inconsistente.
+ */
+@Composable
+private fun SyncAction(state: GroupSyncActionUiState, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalRateioColors.current
+    when (state) {
+        GroupSyncActionUiState.Hidden -> Unit
+
+        GroupSyncActionUiState.Available -> Text(
+            text = "Sincronizar",
+            color = colors.brand,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 11.5.sp,
+            modifier = modifier.clickable(onClick = onClick),
+        )
+
+        GroupSyncActionUiState.InProgress -> Text(
+            text = "Sincronizando…",
+            color = colors.inkSoft,
+            fontSize = 11.5.sp,
+            modifier = modifier,
+        )
+
+        is GroupSyncActionUiState.Failed -> Text(
+            text = "Falhou — tentar de novo",
+            color = colors.danger,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 11.5.sp,
+            modifier = modifier.clickable(onClick = onClick),
+        )
     }
 }
 

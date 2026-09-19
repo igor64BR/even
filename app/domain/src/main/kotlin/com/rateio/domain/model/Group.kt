@@ -15,10 +15,18 @@ import java.time.Instant
  * isso vive em `Grupo.cs`/futura task de agregado rico no Android, fora do escopo de T7B), então
  * a mesma transição de estado aqui é `group.copy(isSynced = true)`: idiomático em Kotlin e sem
  * abrir nenhum caminho novo pra mutar o campo por fora (o `data class` já é imutável).
+ *
+ * [remoteId] (T19.2) é o id atribuído pelo backend na primeira sincronização
+ * (`SincronizarGrupoResponse.GrupoId`) — `null` enquanto o grupo só existe neste aparelho. Anda
+ * sempre junto de [isSynced]: os dois viram verdadeiros/preenchidos na mesma transição
+ * (`group.copy(isSynced = true, remoteId = idDoServidor)`), nunca um sem o outro, pra não deixar o
+ * grupo num estado inconsistente (marcado como sincronizado sem saber qual grupo remoto
+ * corresponde a ele, ou vice-versa).
  */
 data class Group(
     val id: String,
     val name: String,
     val createdAt: Instant,
     val isSynced: Boolean = false,
+    val remoteId: String? = null,
 )

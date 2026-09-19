@@ -15,10 +15,11 @@ import com.rateio.data.persistence.entity.ParticipantEntity
  * princípio 1), funciona 100% sem rede.
  *
  * Versão 2 (T7B): adiciona `GroupEntity.isSynced` e a tabela `expense_splits`
- * (`ExpenseSplitEntity`). Sem migration explícita e sem `fallbackToDestructiveMigration` — ainda
- * não existe build distribuído com a v1 (nenhum usuário real a preservar), então recriar o schema
- * do zero é seguro; uma migration real entra assim que houver uma versão publicada para migrar a
- * partir dela.
+ * (`ExpenseSplitEntity`). Versão 3 (T19.2): adiciona `GroupEntity.remoteId`, pra guardar o id do
+ * grupo no servidor depois de sincronizado. Sem migration explícita e sem
+ * `fallbackToDestructiveMigration` em nenhuma das duas — ainda não existe build distribuído
+ * (nenhum usuário real a preservar), então recriar o schema do zero é seguro; uma migration real
+ * entra assim que houver uma versão publicada para migrar a partir dela.
  *
  * `exportSchema = false`: histórico de schema para teste de migration é escopo de quando a
  * primeira migration real existir, não deste esqueleto inicial.
@@ -30,7 +31,7 @@ import com.rateio.data.persistence.entity.ParticipantEntity
         ExpenseEntity::class,
         ExpenseSplitEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class RateioDatabase : RoomDatabase() {
