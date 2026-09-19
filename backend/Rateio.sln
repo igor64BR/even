@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Domain.Tests", "test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Application.Tests", "tests\Rateio.Application.Tests\Rateio.Application.Tests.csproj", "{C291506C-7885-49C2-8457-DBDC01B51949}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Infrastructure.Tests", "tests\Rateio.Infrastructure.Tests\Rateio.Infrastructure.Tests.csproj", "{A59003F0-EC53-48BC-ADDF-C317AC126751}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,10 @@ Global
 		{C291506C-7885-49C2-8457-DBDC01B51949}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C291506C-7885-49C2-8457-DBDC01B51949}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C291506C-7885-49C2-8457-DBDC01B51949}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A59003F0-EC53-48BC-ADDF-C317AC126751}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A59003F0-EC53-48BC-ADDF-C317AC126751}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A59003F0-EC53-48BC-ADDF-C317AC126751}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A59003F0-EC53-48BC-ADDF-C317AC126751}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C71C5D6C-DE51-4712-877D-82505111D918} = {81C67277-7998-4D37-AAD6-46EF07B19038}
@@ -60,5 +66,6 @@ Global
 		{0325DFD1-91BD-431D-BC31-35C42EFE4C24} = {81C67277-7998-4D37-AAD6-46EF07B19038}
 		{47CC686B-EB3A-40D9-9B7A-3A8E150740D2} = {ACC987B5-E462-4D48-A810-D8BDB338CF82}
 		{C291506C-7885-49C2-8457-DBDC01B51949} = {ACC987B5-E462-4D48-A810-D8BDB338CF82}
+		{A59003F0-EC53-48BC-ADDF-C317AC126751} = {ACC987B5-E462-4D48-A810-D8BDB338CF82}
 	EndGlobalSection
 EndGlobal

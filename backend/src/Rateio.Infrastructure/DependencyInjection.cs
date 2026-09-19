@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Rateio.Application.Auth;
+using Rateio.Infrastructure.Auth;
 using Rateio.Infrastructure.Persistence;
 
 namespace Rateio.Infrastructure;
@@ -34,6 +36,38 @@ public static class DependencyInjection
         // `.AddCheck(...)`/`.AddSignalRHub(...)` na mesma chain, tornando o endpoint agregado.
         services.AddHealthChecks()
             .AddNpgSql(connectionString, name: "postgres");
+
+        services.AddAuthGoogle(configuration);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registro de DI de T11: validação do ID token do Google, emissão de JWT próprio e
+    /// persistência de usuário/refresh token. Extraído do corpo de <see cref="AddInfrastructure"/>
+    /// só por legibilidade — continua fazendo parte do mesmo composition root.
+    /// </summary>
+    private static IServiceCollection AddAuthGoogle(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Bind + ValidateOnStart: se faltar GoogleAuth:ClientId ou algum campo de Jwt em
+        // appsettings, a aplicação falha ao subir em vez de falhar silenciosamente no primeiro
+        // login (as propriedades `required` dos records de options garantem isso em tempo de bind).
+        services
+            .AddOptions<GoogleAuthOptions>()
+            .Bind(configuration.GetSection(GoogleAuthOptions.SecaoConfiguracao))
+            .ValidateOnStart();
+
+        services
+            .AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SecaoConfiguracao))
+            .ValidateOnStart();
+
+        services.AddSingleton(TimeProvider.System);
+
+        services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
+        services.AddScoped<IJwtIssuer, JwtIssuer>();
+        services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         return services;
     }
