@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>document.documentElement.dataset.theme = localStorage.getItem('rateio:theme') || 'light';</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rateio — Novo grupo</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="proto-bar">
+  <strong>Rateio</strong> — protótipo estático
+  <span class="sep">·</span>
+  <a href="index.html">grupos</a>
+  <span class="sep">·</span>
+  <a href="criar-grupo.html">criar grupo</a>
+  <span class="sep">·</span>
+  <a href="grupo.html?id=churras">grupo (local)</a>
+  <span class="sep">·</span>
+  <a href="grupo.html?id=praia">grupo (sincronizado)</a>
+  <span class="sep">·</span>
+  <a href="login.html">login</a>
+  <span class="sep">·</span>
+  <a href="notificacoes.html">notificações</a>
+  <button class="reset" id="theme-toggle"></button>
+</div>
+
+<div class="stage">
+  <div class="device">
+    <div class="statusbar"><span class="time">9:41</span><span>●●●</span></div>
+
+    <div class="topbar">
+      <a class="back" href="index.html">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+      <h1>Novo grupo</h1>
+    </div>
+
+    <div class="screen with-bottombar">
+      <div class="field" id="field-nome">
+        <label for="nome">Nome do grupo</label>
+        <input type="text" id="nome" placeholder="Ex.: Churras de sábado" maxlength="40">
+        <div class="error">Dá um nome pro grupo.</div>
+      </div>
+
+      <div class="field">
+        <label>Categoria</label>
+        <div class="chip-row" id="categorias">
+          <div class="chip selected" data-cat="Viagem">Viagem</div>
+          <div class="chip" data-cat="República">República</div>
+          <div class="chip" data-cat="Churrasco">Churrasco</div>
+          <div class="chip" data-cat="Outro">Outro</div>
+        </div>
+      </div>
+
+      <div class="field" id="field-part">
+        <label>Participantes</label>
+        <div class="chip-row" id="participantes" style="margin-bottom:10px"></div>
+        <input type="text" id="novo-participante" placeholder="Nome e Enter">
+        <div class="error">Precisa de pelo menos 2 participantes.</div>
+        <div class="help">Só o nome. Ninguém aqui precisa instalar o app nem ter conta.</div>
+      </div>
+
+      <button class="btn btn-primary" id="criar-btn">Criar grupo</button>
+    </div>
+
+    <div class="bottombar">
+      <span id="bell-slot"></span>
+      <a class="tab active" href="index.html">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
+        Grupos
+      </a>
+      <span id="auth-slot"></span>
+    </div>
+
+    <div class="overlay" id="overlay"><div class="spinner"></div><span>Carregando…</span></div>
+    <div class="toast" id="toast"><span class="ok-dot"></span><span class="msg"></span></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+renderNotifBell(getState(), false);
+renderHeaderAuth(getState(), false);
+
+let categoria = 'Viagem';
+let participantes = [{ id: 'voce', nome: 'Você', isYou: true }];
+
+document.querySelectorAll('#categorias .chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#categorias .chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    categoria = chip.dataset.cat;
+  });
+});
+
+function renderParticipantes() {
+  const box = document.getElementById('participantes');
+  box.innerHTML = participantes.map(p => `
+    <div class="chip removable">${p.nome}${p.isYou ? '' : `<button data-id="${p.id}">&times;</button>`}</div>
+  `).join('');
+  box.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      participantes = participantes.filter(p => p.id !== btn.dataset.id);
+      renderParticipantes();
+    });
+  });
+}
+renderParticipantes();
+
+document.getElementById('novo-participante').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const val = e.target.value.trim();
+  if (!val) return;
+  participantes.push({ id: 'p' + Date.now(), nome: val });
+  e.target.value = '';
+  document.getElementById('field-part').classList.remove('has-error');
+  renderParticipantes();
+});
+
+document.getElementById('criar-btn').addEventListener('click', () => {
+  const nomeEl = document.getElementById('nome');
+  const nome = nomeEl.value.trim();
+  let ok = true;
+
+  if (!nome) { document.getElementById('field-nome').classList.add('has-error'); ok = false; }
+  else document.getElementById('field-nome').classList.remove('has-error');
+
+  if (participantes.length < 2) { document.getElementById('field-part').classList.add('has-error'); ok = false; }
+  else document.getElementById('field-part').classList.remove('has-error');
+
+  if (!ok) return;
+
+  showOverlay('Criando grupo…');
+  setTimeout(() => {
+    const state = getState();
+    const id = 'g' + Date.now();
+    state.groups.unshift({
+      id, nome, categoria, synced: false,
+      participantes,
+      despesas: [], quitacoes: [],
+    });
+    saveState(state);
+    hideOverlay();
+    window.location.href = `grupo.html?id=${id}&novo=1`;
+  }, 650);
+});
+</script>
+</body>
+</html>

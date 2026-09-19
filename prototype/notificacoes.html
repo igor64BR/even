@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>document.documentElement.dataset.theme = localStorage.getItem('rateio:theme') || 'light';</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rateio — Notificações</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="proto-bar">
+  <strong>Rateio</strong> — protótipo estático
+  <span class="sep">·</span>
+  <a href="index.html">grupos</a>
+  <span class="sep">·</span>
+  <a href="notificacoes.html">notificações</a>
+  <button class="reset" id="theme-toggle"></button>
+</div>
+
+<div class="stage">
+  <div class="device">
+    <div class="statusbar"><span class="time">9:41</span><span>●●●</span></div>
+
+    <div class="topbar">
+      <a class="back" href="index.html">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+      <h1>Notificações</h1>
+    </div>
+
+    <div class="screen with-bottombar" id="screen"></div>
+
+    <div class="bottombar">
+      <span id="bell-slot"></span>
+      <a class="tab" href="index.html">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
+        Grupos
+      </a>
+      <span id="auth-slot"></span>
+    </div>
+
+    <div class="toast" id="toast"><span class="ok-dot"></span><span class="msg"></span></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+function render() {
+  const state = getState();
+  renderNotifBell(state, true);
+  renderHeaderAuth(state, false);
+  const screen = document.getElementById('screen');
+
+  if (!state.user) {
+    screen.innerHTML = `
+      <div class="empty-state">
+        <div class="mark">
+          <svg class="icon" style="width:40px;height:40px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9Z"/><path d="M9.5 17a2.5 2.5 0 0 0 5 0"/></svg>
+        </div>
+        <h2>Notificação exige conta</h2>
+        <p>Grupos locais não têm pra quem avisar. Entre com Google e sincronize um grupo pra começar a receber avisos em tempo real.</p>
+        <a class="btn btn-primary" href="login.html" style="width:auto;padding:11px 22px">Entrar com Google</a>
+      </div>`;
+    return;
+  }
+
+  if (state.notificacoes.length === 0) {
+    screen.innerHTML = `
+      <div class="empty-state">
+        <h2>Tudo quieto por aqui</h2>
+        <p>Quando alguém lançar uma despesa ou quitar uma dívida num grupo sincronizado, aparece nessa lista na hora.</p>
+      </div>`;
+    return;
+  }
+
+  screen.innerHTML = state.notificacoes.map(n => `
+    <div class="notif-row ${!n.lida ? 'unread' : ''}">
+      <div class="notif-dot ${n.lida ? 'read' : ''}"></div>
+      <div>
+        <div class="notif-text">${n.texto}</div>
+        <div class="notif-time">${fmtRelative(n.data)}</div>
+      </div>
+    </div>`).join('');
+
+  const s = getState();
+  s.notificacoes.forEach(n => n.lida = true);
+  saveState(s);
+  renderNotifBellSoon();
+}
+
+function renderNotifBellSoon() {} // contador já foi zerado ao salvar; próxima tela recalcula sozinha
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>document.documentElement.dataset.theme = localStorage.getItem('rateio:theme') || 'light';</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rateio — Nova despesa</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="proto-bar">
+  <strong>Rateio</strong> — protótipo estático
+  <span class="sep">·</span>
+  <a href="index.html">grupos</a>
+  <span class="sep">·</span>
+  <a href="grupo.html?id=churras">grupo (local)</a>
+  <span class="sep">·</span>
+  <a href="nova-despesa.html?id=churras">nova despesa</a>
+  <span class="sep">·</span>
+  <a href="quitar.html?id=praia">quitar dívidas</a>
+  <button class="reset" id="theme-toggle"></button>
+</div>
+
+<div class="stage">
+  <div class="device">
+    <div class="statusbar"><span class="time">9:41</span><span>●●●</span></div>
+
+    <div class="topbar">
+      <a class="back" id="back-link" href="grupo.html">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+      <h1>Nova despesa</h1>
+    </div>
+
+    <div class="screen with-bottombar">
+      <div class="field" id="field-desc">
+        <label for="descricao">Descrição</label>
+        <input type="text" id="descricao" placeholder="Ex.: Jantar de sexta" maxlength="40">
+        <div class="error">Descreve a despesa.</div>
+      </div>
+
+      <div class="field" id="field-valor">
+        <label for="valor">Valor total</label>
+        <input type="number" id="valor" placeholder="0,00" step="0.01" min="0">
+        <div class="error">O valor precisa ser maior que zero.</div>
+      </div>
+
+      <div class="field">
+        <label for="pagador">Quem pagou</label>
+        <select id="pagador"></select>
+      </div>
+
+      <div class="field">
+        <label for="data">Data</label>
+        <input type="date" id="data">
+      </div>
+
+      <div class="field">
+        <label>Como dividir</label>
+        <div class="tabs" id="tabs">
+          <button class="active" data-tipo="igual">Igual</button>
+          <button data-tipo="percentual">Percentual</button>
+          <button data-tipo="fixo">Valor fixo</button>
+        </div>
+        <div id="split-area"></div>
+        <div class="split-sum" id="split-sum"></div>
+      </div>
+
+      <button class="btn btn-primary" id="salvar-btn">Salvar despesa</button>
+    </div>
+
+    <div class="bottombar">
+      <span id="bell-slot"></span>
+      <a class="tab active" href="index.html">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
+        Grupos
+      </a>
+      <span id="auth-slot"></span>
+    </div>
+
+    <div class="overlay" id="overlay"><div class="spinner"></div><span>Salvando…</span></div>
+    <div class="toast" id="toast"><span class="ok-dot"></span><span class="msg"></span></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const groupId = params.get('id') || 'churras';
+const state = getState();
+const group = state.groups.find(g => g.id === groupId);
+renderNotifBell(state, false);
+renderHeaderAuth(state, false);
+document.getElementById('back-link').href = `grupo.html?id=${groupId}`;
+document.getElementById('data').value = new Date().toISOString().slice(0, 10);
+
+const pagadorSel = document.getElementById('pagador');
+pagadorSel.innerHTML = group.participantes.map(p => `<option value="${p.id}">${p.nome}${p.isYou ? ' (você)' : ''}</option>`).join('');
+
+let tipo = 'igual';
+let incluidos = new Set(group.participantes.map(p => p.id));
+let percentuais = {};
+let fixos = {};
+group.participantes.forEach(p => { percentuais[p.id] = Math.round(100 / group.participantes.length); fixos[p.id] = 0; });
+
+function totalValor() { return parseFloat(document.getElementById('valor').value) || 0; }
+
+function renderSplit() {
+  const area = document.getElementById('split-area');
+  const total = totalValor();
+
+  if (tipo === 'igual') {
+    area.innerHTML = group.participantes.map(p => `
+      <div class="split-row">
+        <div class="who"><input type="checkbox" data-id="${p.id}" ${incluidos.has(p.id) ? 'checked' : ''}> ${p.nome}${p.isYou ? ' (você)' : ''}</div>
+        <div class="computed" id="eq-${p.id}"></div>
+      </div>`).join('');
+    area.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => {
+      if (cb.checked) incluidos.add(cb.dataset.id); else incluidos.delete(cb.dataset.id);
+      renderSplit();
+    }));
+    const n = incluidos.size || 1;
+    const cada = total / n;
+    group.participantes.forEach(p => {
+      const el = document.getElementById('eq-' + p.id);
+      if (el) el.textContent = incluidos.has(p.id) ? fmtMoney(cada) : '—';
+    });
+    document.getElementById('split-sum').textContent = '';
+    return;
+  }
+
+  if (tipo === 'percentual') {
+    area.innerHTML = group.participantes.map(p => `
+      <div class="split-row">
+        <div class="who">${p.nome}${p.isYou ? ' (você)' : ''}</div>
+        <div class="amount-input"><input type="number" min="0" max="100" data-id="${p.id}" value="${percentuais[p.id]}">%</div>
+      </div>`).join('');
+    area.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+      percentuais[inp.dataset.id] = parseFloat(inp.value) || 0;
+      updateSplitSum();
+    }));
+    updateSplitSum();
+    return;
+  }
+
+  if (tipo === 'fixo') {
+    area.innerHTML = group.participantes.map(p => `
+      <div class="split-row">
+        <div class="who">${p.nome}${p.isYou ? ' (você)' : ''}</div>
+        <div class="amount-input"><input type="number" min="0" step="0.01" data-id="${p.id}" value="${fixos[p.id] || ''}" placeholder="0,00"></div>
+      </div>`).join('');
+    area.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+      fixos[inp.dataset.id] = parseFloat(inp.value) || 0;
+      updateSplitSum();
+    }));
+    updateSplitSum();
+    return;
+  }
+}
+
+function updateSplitSum() {
+  const total = totalValor();
+  const sumEl = document.getElementById('split-sum');
+  if (tipo === 'percentual') {
+    const soma = Object.values(percentuais).reduce((a, b) => a + b, 0);
+    sumEl.textContent = `soma: ${soma}%`;
+    sumEl.className = 'split-sum ' + (Math.abs(soma - 100) < 0.5 ? 'ok' : 'bad');
+  } else if (tipo === 'fixo') {
+    const soma = Object.values(fixos).reduce((a, b) => a + b, 0);
+    sumEl.textContent = `soma: ${fmtMoney(soma)} de ${fmtMoney(total)}`;
+    sumEl.className = 'split-sum ' + (Math.abs(soma - total) < 0.01 ? 'ok' : 'bad');
+  }
+}
+
+document.querySelectorAll('#tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    tipo = btn.dataset.tipo;
+    renderSplit();
+  });
+});
+document.getElementById('valor').addEventListener('input', renderSplit);
+renderSplit();
+
+document.getElementById('salvar-btn').addEventListener('click', () => {
+  let ok = true;
+  const descEl = document.getElementById('descricao');
+  const valorEl = document.getElementById('valor');
+  const total = parseFloat(valorEl.value) || 0;
+
+  if (!descEl.value.trim()) { document.getElementById('field-desc').classList.add('has-error'); ok = false; }
+  else document.getElementById('field-desc').classList.remove('has-error');
+
+  if (total <= 0) { document.getElementById('field-valor').classList.add('has-error'); ok = false; }
+  else document.getElementById('field-valor').classList.remove('has-error');
+
+  if (tipo === 'percentual') {
+    const soma = Object.values(percentuais).reduce((a, b) => a + b, 0);
+    if (Math.abs(soma - 100) > 0.5) ok = false;
+  }
+  if (tipo === 'fixo') {
+    const soma = Object.values(fixos).reduce((a, b) => a + b, 0);
+    if (Math.abs(soma - total) > 0.01) ok = false;
+  }
+  if (tipo === 'igual' && incluidos.size === 0) ok = false;
+
+  if (!ok) return;
+
+  let divisao;
+  if (tipo === 'igual') {
+    const cada = total / incluidos.size;
+    divisao = [...incluidos].map(id => ({ p: id, v: cada }));
+  } else if (tipo === 'percentual') {
+    divisao = group.participantes.map(p => ({ p: p.id, v: total * (percentuais[p.id] / 100) }));
+  } else {
+    divisao = group.participantes.filter(p => fixos[p.id] > 0).map(p => ({ p: p.id, v: fixos[p.id] }));
+  }
+
+  showOverlay('Salvando despesa…');
+  setTimeout(() => {
+    const s = getState();
+    const g = s.groups.find(g => g.id === groupId);
+    g.despesas.push({
+      id: 'e' + Date.now(),
+      descricao: descEl.value.trim(),
+      valor: total,
+      pagadorId: pagadorSel.value,
+      data: document.getElementById('data').value,
+      tipo,
+      divisao,
+    });
+    if (g.synced) {
+      notify(s, `${participantName(g, pagadorSel.value)} lançou "${descEl.value.trim()}" — ${fmtMoney(total)} — em "${g.nome}".`);
+    }
+    saveState(s);
+    hideOverlay();
+    window.location.href = `grupo.html?id=${groupId}&despesa=1`;
+  }, 700);
+});
+</script>
+</body>
+</html>

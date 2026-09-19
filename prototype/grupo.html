@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>document.documentElement.dataset.theme = localStorage.getItem('rateio:theme') || 'light';</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rateio — Grupo</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="proto-bar">
+  <strong>Rateio</strong> — protótipo estático
+  <span class="sep">·</span>
+  <a href="index.html">grupos</a>
+  <span class="sep">·</span>
+  <a href="criar-grupo.html">criar grupo</a>
+  <span class="sep">·</span>
+  <a href="grupo.html?id=churras">grupo (local)</a>
+  <span class="sep">·</span>
+  <a href="grupo.html?id=praia">grupo (sincronizado)</a>
+  <span class="sep">·</span>
+  <a href="grupo.html?id=republica">grupo (vazio)</a>
+  <span class="sep">·</span>
+  <a href="login.html">login</a>
+  <button class="reset" id="theme-toggle"></button>
+</div>
+
+<div class="stage">
+  <div class="device">
+    <div class="statusbar"><span class="time">9:41</span><span>●●●</span></div>
+
+    <div class="topbar">
+      <a class="back" href="index.html">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+      <h1 id="titulo">Grupo</h1>
+    </div>
+
+    <div class="screen with-bottombar" id="screen"></div>
+
+    <a class="fab above-bar" id="fab" href="#" title="Nova despesa">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 3v18M16.5 7.5H10a2.8 2.8 0 0 0 0 5.6h4a2.8 2.8 0 0 1 0 5.6H7"/></svg>
+    </a>
+
+    <div class="bottombar">
+      <span id="bell-slot"></span>
+      <a class="tab active" href="index.html">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
+        Grupos
+      </a>
+      <span id="auth-slot"></span>
+    </div>
+
+    <div class="overlay" id="overlay"><div class="spinner"></div><span>Carregando…</span></div>
+    <div class="toast" id="toast"><span class="ok-dot"></span><span class="msg"></span></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const groupId = params.get('id') || 'churras';
+
+function tipoLabel(tipo) {
+  return { igual: 'dividido igual', percentual: 'dividido por %', fixo: 'valor fixo por pessoa' }[tipo] || tipo;
+}
+
+function render() {
+  const state = getState();
+  renderNotifBell(state, false);
+  renderHeaderAuth(state, false);
+  const group = state.groups.find(g => g.id === groupId);
+  if (!group) { document.getElementById('screen').innerHTML = '<div class="empty-state"><h2>Grupo não encontrado</h2></div>'; return; }
+
+  document.getElementById('titulo').textContent = group.nome;
+  document.getElementById('fab').href = `nova-despesa.html?id=${group.id}`;
+
+  const saldos = computeBalances(group);
+  const screen = document.getElementById('screen');
+
+  const saldosHtml = group.participantes.map(p => {
+    const v = saldos[p.id] || 0;
+    let cls = 'neutral', label = '', value = 'quitado';
+    if (v > 0.01) { cls = 'credit'; label = 'recebe'; value = fmtMoney(v); }
+    else if (v < -0.01) { cls = 'owed'; label = 'deve'; value = fmtMoney(-v); }
+    return `
+      <div class="split-row">
+        <div class="who">${p.nome}${p.isYou ? ' <span class="pill">você</span>' : ''}</div>
+        <div class="balance ${cls}">${label ? `<span class="label">${label}</span>` : ''}${value}</div>
+      </div>`;
+  }).join('');
+
+  const despesasHtml = group.despesas.length === 0 ? `
+    <div class="empty-state" style="padding:34px 10px">
+      <h2>Nenhuma despesa lançada ainda</h2>
+      <p>Lance a primeira despesa e o saldo de cada participante aparece aqui.</p>
+    </div>` : [...group.despesas].reverse().map(d => `
+      <div class="expense-row">
+        <div class="expense-mark">
+          <svg class="icon" style="width:17px;height:17px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2v20M17 6H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H7"/></svg>
+        </div>
+        <div class="expense-info">
+          <div class="desc">${d.descricao}</div>
+          <div class="meta">${participantName(group, d.pagadorId)} pagou · ${fmtDate(d.data)} · ${tipoLabel(d.tipo)}</div>
+        </div>
+        <div class="expense-amount">${fmtMoney(d.valor)}</div>
+      </div>`).join('');
+
+  screen.innerHTML = `
+    <div class="eyebrow">${group.categoria} · ${group.participantes.length} pessoas · ${syncIcon(group.synced)}</div>
+
+    <div class="eyebrow" style="margin-top:20px">Saldos</div>
+    ${saldosHtml}
+
+    <a class="btn btn-primary" style="margin-top:16px" href="quitar.html?id=${group.id}">Quitar dívidas</a>
+    ${!group.synced ? `<a class="btn btn-secondary" style="margin-top:10px" href="login.html?sync=${group.id}">Sincronizar este grupo</a>` : ''}
+
+    <div class="eyebrow" style="margin-top:22px">Despesas</div>
+    <div>${despesasHtml}</div>
+  `;
+}
+
+render();
+
+if (params.get('novo') === '1') {
+  setTimeout(() => showToast('Grupo criado. Já dá pra lançar despesas.'), 200);
+} else if (params.get('despesa') === '1') {
+  setTimeout(() => showToast('Despesa salva. Saldos atualizados.'), 200);
+} else if (params.get('sync') === '1') {
+  setTimeout(() => showToast('Grupo sincronizado. Notificações ativadas.'), 200);
+}
+</script>
+</body>
+</html>
