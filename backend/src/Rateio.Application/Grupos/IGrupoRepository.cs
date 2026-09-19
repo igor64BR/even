@@ -1,3 +1,5 @@
+using Rateio.Domain;
+
 namespace Rateio.Application.Grupos;
 
 /// <summary>
@@ -21,4 +23,21 @@ public interface IGrupoRepository
     /// precisa. <c>null</c> quando o grupo não existe; quem chama decide se isso vira 404.
     /// </summary>
     Task<AcessoAoGrupo?> ObterAcessoAsync(Guid grupoId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Leitura mínima pra T21.2 (entrar via convite): nome/categoria/participantes atuais,
+    /// suficiente pra <see cref="EntrarNoGrupoViaConviteUseCase"/> reconstruir um
+    /// <see cref="Grupo"/> e chamar <see cref="Grupo.AdicionarParticipante"/> antes de persistir.
+    /// <c>null</c> quando o grupo não existe.
+    /// </summary>
+    Task<GrupoParaEntrada?> ObterParaEntradaAsync(Guid grupoId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Persiste um único <see cref="Participante"/> novo num grupo que já existe (T21.2) — insere
+    /// direto pela FK (<c>GrupoId</c>), sem recarregar o agregado inteiro, mesmo padrão de
+    /// <c>Rateio.Infrastructure.Despesas.DespesaRepository.AdicionarAsync</c> (T23). Quem chama já
+    /// validou a invariante de domínio via <see cref="Grupo.AdicionarParticipante"/> antes desta
+    /// chamada.
+    /// </summary>
+    Task AdicionarParticipanteAsync(Guid grupoId, Participante participante, CancellationToken cancellationToken = default);
 }

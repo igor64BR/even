@@ -122,13 +122,15 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// Registro de DI de T18/T23: sincronização de grupo local pra nuvem (RF09) e, a partir de
-    /// T23, adicionar despesa avulsa a um grupo já sincronizado.
+    /// Registro de DI de T18/T23/T21: sincronização de grupo local pra nuvem (RF09), adicionar
+    /// despesa avulsa a um grupo já sincronizado (T23) e, a partir de T21, convite/entrada por
+    /// código.
     /// </summary>
     private static IServiceCollection AddGrupos(this IServiceCollection services)
     {
         services.AddScoped<IGrupoRepository, GrupoRepository>();
         services.AddScoped<IDespesaRepository, DespesaRepository>();
+        services.AddScoped<ICodigoConviteRepository, CodigoConviteRepository>();
 
         return services;
     }

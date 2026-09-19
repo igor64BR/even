@@ -39,6 +39,55 @@ public sealed class GrupoRepository(AppDbContext dbContext) : IGrupoRepository
             .Select(grupo => new AcessoAoGrupo(grupo.Id, grupo.DonoUsuarioId))
             .FirstOrDefaultAsync(cancellationToken);
 
+    /// <summary>
+    /// T21.2: leitura mínima (nome/categoria/participantes, sem despesas) pra
+    /// <c>EntrarNoGrupoViaConviteUseCase</c> reconstruir o agregado de domínio antes de chamar
+    /// <c>Grupo.AdicionarParticipante</c> — <c>AsNoTracking</c> porque é somente leitura, o insert
+    /// de fato acontece em <see cref="AdicionarParticipanteAsync"/>.
+    /// </summary>
+    public async Task<GrupoParaEntrada?> ObterParaEntradaAsync(Guid grupoId, CancellationToken cancellationToken = default)
+    {
+        var entidade = await dbContext.Grupos
+            .AsNoTracking()
+            .Include(grupo => grupo.Participantes)
+            .SingleOrDefaultAsync(grupo => grupo.Id == grupoId, cancellationToken);
+
+        return entidade is null ? null : ParaGrupoParaEntrada(entidade);
+    }
+
+    /// <summary>
+    /// T21.2: insere o participante direto pela FK (<c>GrupoId</c>), sem recarregar o
+    /// <see cref="GrupoEntity"/> inteiro — mesmo padrão de
+    /// <c>Rateio.Infrastructure.Despesas.DespesaRepository.AdicionarAsync</c> (T23.2).
+    /// </summary>
+    public Task AdicionarParticipanteAsync(Guid grupoId, Participante participante, CancellationToken cancellationToken = default)
+    {
+        dbContext.Participantes.Add(new ParticipanteEntity
+        {
+            Id = participante.Id.Valor,
+            GrupoId = grupoId,
+            Nome = participante.Nome.Valor,
+            EhConvidado = participante.EhConvidado,
+        });
+
+        return dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static GrupoParaEntrada ParaGrupoParaEntrada(GrupoEntity entidade) => new(
+        NomeGrupo.Criar(entidade.Nome),
+        entidade.Categoria,
+        entidade.Participantes.Select(ParaParticipanteDeDominio).ToList());
+
+    private static Participante ParaParticipanteDeDominio(ParticipanteEntity entidade)
+    {
+        var id = new ParticipanteId(entidade.Id);
+        var nome = NomeParticipante.Criar(entidade.Nome);
+
+        return entidade.EhConvidado
+            ? Participante.Convidado(id, nome)
+            : Participante.Autenticado(id, nome);
+    }
+
     private static GrupoEntity ConstruirEntidadeGrupo(GrupoParaSincronizar grupoParaSincronizar) => new()
     {
         Id = grupoParaSincronizar.Grupo.Id,
