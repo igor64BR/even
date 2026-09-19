@@ -294,9 +294,9 @@ private fun AccountCard(user: AuthenticatedUser, modifier: Modifier = Modifier) 
 }
 
 /**
- * `.btn-secondary` do protótipo. Desconecta só localmente (limpa a sessão guardada no aparelho) —
- * revogar o refresh token no backend é do escopo de T14, que esta task desbloqueia mas não
- * implementa.
+ * `.btn-secondary` do protótipo. Revoga a sessão no backend e limpa a sessão guardada no
+ * aparelho (T14.2, via `AuthViewModel.signOut` → `RemoteAuthRepository.signOut`) — a limpeza
+ * local acontece sempre, mesmo se a revogação no backend falhar por falta de rede.
  */
 @Composable
 private fun SignOutButton(onClick: () -> Unit, modifier: Modifier = Modifier) {

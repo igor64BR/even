@@ -11,7 +11,9 @@ namespace Rateio.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("auth")]
-public class AuthController(AutenticarComGoogleUseCase autenticarComGoogle) : ControllerBase
+public class AuthController(
+    AutenticarComGoogleUseCase autenticarComGoogle,
+    RevogarSessaoUseCase revogarSessao) : ControllerBase
 {
     [HttpPost("google")]
     public async Task<ActionResult<GoogleLoginResponse>> Google(
@@ -40,5 +42,28 @@ public class AuthController(AutenticarComGoogleUseCase autenticarComGoogle) : Co
                 detail: erro.Message,
                 statusCode: StatusCodes.Status401Unauthorized);
         }
+    }
+
+    /// <summary>
+    /// T14.1: revoga a sessão do refresh token informado (ver <see cref="LogoutRequest"/> pra
+    /// justificativa de por que ele vem no corpo, não no header Authorization). Sempre 204,
+    /// mesmo se o token já estava revogado ou não existia — <see cref="RevogarSessaoUseCase"/> é
+    /// idempotente de propósito, pra não expor ao cliente se um dado token chegou a existir.
+    /// </summary>
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(
+        [FromBody] LogoutRequest requisicao,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(requisicao.RefreshToken))
+        {
+            return Problem(
+                title: "refreshToken é obrigatório.",
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        await revogarSessao.ExecutarAsync(requisicao.RefreshToken, cancellationToken);
+
+        return NoContent();
     }
 }

@@ -11,4 +11,13 @@ public interface IRefreshTokenRepository
         string refreshToken,
         DateTimeOffset expiraEm,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Marca <c>RevogadoEm</c> na sessão correspondente a <paramref name="refreshToken"/> (T14).
+    /// Idempotente: token já revogado ou desconhecido não é erro, só não faz nada — evita expor ao
+    /// chamador se um dado token chegou a existir.
+    /// </summary>
+    Task RevogarAsync(
+        string refreshToken,
+        CancellationToken cancellationToken = default);
 }

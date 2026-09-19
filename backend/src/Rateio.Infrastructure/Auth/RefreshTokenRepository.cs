@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Rateio.Application.Auth;
 using Rateio.Infrastructure.Persistence;
 using Rateio.Infrastructure.Persistence.Entities;
@@ -26,6 +27,28 @@ public sealed class RefreshTokenRepository(AppDbContext dbContext) : IRefreshTok
         };
 
         dbContext.RefreshTokens.Add(entidade);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RevogarAsync(
+        string refreshToken,
+        CancellationToken cancellationToken = default)
+    {
+        var tokenHash = RefreshTokenHasher.Hash(refreshToken);
+
+        // Busca pelo hash (índice único, ver RefreshTokenEntityConfiguration) — o valor em texto
+        // puro do refresh token nunca é usado em where/log, só pra derivar o hash acima.
+        var entidade = await dbContext.RefreshTokens
+            .SingleOrDefaultAsync(refreshTokenEntity => refreshTokenEntity.TokenHash == tokenHash, cancellationToken);
+
+        if (entidade is null || entidade.RevogadoEm is not null)
+        {
+            // Token desconhecido ou já revogado: idempotente, não é erro (ver doc de
+            // IRefreshTokenRepository.RevogarAsync).
+            return;
+        }
+
+        entidade.RevogadoEm = DateTimeOffset.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
