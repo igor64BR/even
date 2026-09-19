@@ -4,13 +4,18 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Mapeamento de persistência de um grupo. Esqueleto mínimo (T7) — objeto de mapeamento puro,
- * sem lógica de negócio; conversão para/de `com.rateio.domain.model.Group` mora nos mappers de
- * `:data`, não aqui (ver `com.rateio.data.repository.RoomGroupRepository`).
+ * Mapeamento de persistência de um grupo. Objeto de mapeamento puro, sem lógica de negócio;
+ * conversão para/de `com.rateio.domain.model.Group` mora nos mappers de `:data`, não aqui (ver
+ * `com.rateio.data.repository.RoomGroupRepository`).
+ *
+ * [isSynced] espelha `Group.isSynced` (`:domain`, T7B.1) / `Sincronizado` de `Grupo.cs`.
+ * `false` por padrão: todo grupo persistido localmente antes de existir sincronização nasce não
+ * sincronizado.
  */
 @Entity(tableName = "groups")
 data class GroupEntity(
     @PrimaryKey val id: String,
     val name: String,
     val createdAtEpochMillis: Long,
+    val isSynced: Boolean = false,
 )

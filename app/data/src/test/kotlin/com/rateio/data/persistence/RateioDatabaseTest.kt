@@ -2,12 +2,16 @@ package com.rateio.data.persistence
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.rateio.data.persistence.entity.ExpenseEntity
+import com.rateio.data.persistence.entity.ExpenseSplitEntity
 import com.rateio.data.persistence.entity.GroupEntity
 import com.rateio.data.persistence.entity.ParticipantEntity
+import com.rateio.data.persistence.entity.SplitTypeEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -67,5 +71,101 @@ class RateioDatabaseTest {
         database.groupDao().deleteById("g1")
 
         assertEquals(emptyList<ParticipantEntity>(), database.participantDao().getParticipantsFlow("g1").first())
+    }
+
+    @Test
+    fun `GroupEntity guarda isSynced (T7B) e le de volta pelo GroupDao`() = runTest {
+        val synced = GroupEntity(id = "g2", name = "Viagem", createdAtEpochMillis = 2_000L, isSynced = true)
+
+        database.groupDao().insert(synced)
+
+        assertTrue(database.groupDao().getGroupById("g2")!!.isSynced)
+    }
+
+    @Test
+    fun `insertWithSplits grava despesa e partes, getExpensesWithSplitsFlow le as duas juntas`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+        val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
+        val other = ParticipantEntity(id = "p2", groupId = "g1", name = "P2")
+        database.groupDao().insert(group)
+        database.participantDao().insert(payer)
+        database.participantDao().insert(other)
+
+        val expense = ExpenseEntity(
+            id = "e1",
+            groupId = "g1",
+            description = "Churrasco",
+            amountCents = 1000,
+            paidByParticipantId = "p1",
+            createdAtEpochMillis = 3_000L,
+        )
+        val splits = listOf(
+            ExpenseSplitEntity(expenseId = "e1", participantId = "p1", type = SplitTypeEntity.EQUAL),
+            ExpenseSplitEntity(expenseId = "e1", participantId = "p2", type = SplitTypeEntity.EQUAL),
+        )
+
+        database.expenseDao().insertWithSplits(expense, splits)
+
+        val rows = database.expenseDao().getExpensesWithSplitsFlow("g1").first()
+        val row = rows.single()
+        assertEquals(expense, row.expense)
+        assertEquals(splits.toSet(), row.splits.toSet())
+    }
+
+    @Test
+    fun `insertWithSplits substitui as partes antigas em vez de acumular`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+        val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
+        database.groupDao().insert(group)
+        database.participantDao().insert(payer)
+
+        val expense = ExpenseEntity(
+            id = "e1",
+            groupId = "g1",
+            description = "Churrasco",
+            amountCents = 1000,
+            paidByParticipantId = "p1",
+            createdAtEpochMillis = 3_000L,
+        )
+        database.expenseDao().insertWithSplits(
+            expense,
+            listOf(ExpenseSplitEntity(expenseId = "e1", participantId = "p1", type = SplitTypeEntity.WEIGHT, weight = 1)),
+        )
+
+        // Edição da mesma despesa (mesmo id) com uma divisão diferente — as partes antigas não
+        // podem sobrar como lixo órfão (ver comentário em ExpenseDao.insertWithSplits).
+        database.expenseDao().insertWithSplits(
+            expense,
+            listOf(ExpenseSplitEntity(expenseId = "e1", participantId = "p1", type = SplitTypeEntity.EQUAL)),
+        )
+
+        val row = database.expenseDao().getExpensesWithSplitsFlow("g1").first().single()
+        assertEquals(1, row.splits.size)
+        assertEquals(SplitTypeEntity.EQUAL, row.splits.single().type)
+    }
+
+    @Test
+    fun `remove despesa em cascata remove suas partes`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+        val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
+        database.groupDao().insert(group)
+        database.participantDao().insert(payer)
+
+        val expense = ExpenseEntity(
+            id = "e1",
+            groupId = "g1",
+            description = "Churrasco",
+            amountCents = 1000,
+            paidByParticipantId = "p1",
+            createdAtEpochMillis = 3_000L,
+        )
+        database.expenseDao().insertWithSplits(
+            expense,
+            listOf(ExpenseSplitEntity(expenseId = "e1", participantId = "p1", type = SplitTypeEntity.EQUAL)),
+        )
+
+        database.expenseDao().deleteById("e1")
+
+        assertEquals(emptyList<Any>(), database.expenseDao().getExpensesWithSplitsFlow("g1").first())
     }
 }

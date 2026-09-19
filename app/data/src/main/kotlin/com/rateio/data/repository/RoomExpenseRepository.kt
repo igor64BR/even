@@ -2,7 +2,12 @@ package com.rateio.data.repository
 
 import com.rateio.data.persistence.dao.ExpenseDao
 import com.rateio.data.persistence.entity.ExpenseEntity
+import com.rateio.data.persistence.entity.ExpenseSplitEntity
+import com.rateio.data.persistence.entity.ExpenseWithSplitsEntity
+import com.rateio.data.persistence.entity.SplitTypeEntity
 import com.rateio.domain.model.Expense
+import com.rateio.domain.model.ExpenseSplit
+import com.rateio.domain.model.Money
 import com.rateio.domain.repository.ExpenseRepository
 import java.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -12,22 +17,27 @@ import kotlinx.coroutines.flow.map
 class RoomExpenseRepository(private val expenseDao: ExpenseDao) : ExpenseRepository {
 
     override fun getExpensesFlow(groupId: String): Flow<List<Expense>> =
-        expenseDao.getExpensesFlow(groupId).map { entities -> entities.map(ExpenseEntity::toDomain) }
+        expenseDao.getExpensesWithSplitsFlow(groupId)
+            .map { rows -> rows.map(ExpenseWithSplitsEntity::toDomain) }
 
     override suspend fun insertExpense(expense: Expense) =
-        expenseDao.insert(expense.toEntity())
+        expenseDao.insertWithSplits(
+            expense = expense.toEntity(),
+            splits = expense.splits.map { split -> split.toEntity(expenseId = expense.id) },
+        )
 
     override suspend fun deleteExpense(expenseId: String) =
         expenseDao.deleteById(expenseId)
 }
 
-private fun ExpenseEntity.toDomain() = Expense(
-    id = id,
-    groupId = groupId,
-    description = description,
-    amountCents = amountCents,
-    paidByParticipantId = paidByParticipantId,
-    createdAt = Instant.ofEpochMilli(createdAtEpochMillis),
+private fun ExpenseWithSplitsEntity.toDomain() = Expense(
+    id = expense.id,
+    groupId = expense.groupId,
+    description = expense.description,
+    amountCents = expense.amountCents,
+    paidByParticipantId = expense.paidByParticipantId,
+    createdAt = Instant.ofEpochMilli(expense.createdAtEpochMillis),
+    splits = splits.map(ExpenseSplitEntity::toDomain),
 )
 
 private fun Expense.toEntity() = ExpenseEntity(
@@ -38,3 +48,45 @@ private fun Expense.toEntity() = ExpenseEntity(
     paidByParticipantId = paidByParticipantId,
     createdAtEpochMillis = createdAt.toEpochMilli(),
 )
+
+private fun ExpenseSplit.toEntity(expenseId: String): ExpenseSplitEntity = when (this) {
+    is ExpenseSplit.Equal -> ExpenseSplitEntity(
+        expenseId = expenseId,
+        participantId = participantId,
+        type = SplitTypeEntity.EQUAL,
+    )
+
+    is ExpenseSplit.Weight -> ExpenseSplitEntity(
+        expenseId = expenseId,
+        participantId = participantId,
+        type = SplitTypeEntity.WEIGHT,
+        weight = weight,
+    )
+
+    is ExpenseSplit.FixedAmount -> ExpenseSplitEntity(
+        expenseId = expenseId,
+        participantId = participantId,
+        type = SplitTypeEntity.FIXED_AMOUNT,
+        fixedAmountCents = amount.cents,
+    )
+}
+
+private fun ExpenseSplitEntity.toDomain(): ExpenseSplit = when (type) {
+    SplitTypeEntity.EQUAL -> ExpenseSplit.Equal(participantId = participantId)
+
+    SplitTypeEntity.WEIGHT -> ExpenseSplit.Weight(
+        participantId = participantId,
+        weight = requireNotNull(weight) {
+            "ExpenseSplitEntity do tipo WEIGHT sem weight (participantId=$participantId)"
+        },
+    )
+
+    SplitTypeEntity.FIXED_AMOUNT -> ExpenseSplit.FixedAmount(
+        participantId = participantId,
+        amount = Money.ofCents(
+            requireNotNull(fixedAmountCents) {
+                "ExpenseSplitEntity do tipo FIXED_AMOUNT sem fixedAmountCents (participantId=$participantId)"
+            },
+        ),
+    )
+}

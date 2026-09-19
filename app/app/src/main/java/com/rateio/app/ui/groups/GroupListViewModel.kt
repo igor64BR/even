@@ -20,15 +20,14 @@ import kotlinx.coroutines.flow.stateIn
  * [ParticipantRepository] — as duas portas de `:domain` que `:data` já implementa sobre Room
  * (T7); zero chamada de rede, como pede T8.
  *
- * Lacuna conhecida, reportada em vez de inventada (T8 pede exatamente isso quando falta algo em
- * `:domain`/`:data`): nem [Group] nem `Expense` carregam hoje o que o card completo do protótipo
- * precisa — falta um sinalizador de sincronização em `Group` e a divisão por participante
- * (`divisao`) em `Expense`, sem a qual não dá para calcular saldo real (o motor de
- * simplificação, RF25-RF28, ainda não tem porta Kotlin — ver plan.md). Como T8 restringe o
- * escopo a `app/app/` (não pode alterar `:domain`/`:data`), [GroupListItemUiModel.isSynced] e
- * [GroupListItemUiModel.balance] usam o valor neutro mais honesto disponível — local/quitado —
- * em vez de um cálculo inventado. Uma task futura de modelagem (sinalizador de sync + divisão de
- * despesa + motor Kotlin) deve substituir [toUiModel] por dados reais.
+ * Lacuna conhecida por T8 (que reportou em vez de inventar dado, já que estava restrita a
+ * `app/app/`): faltava sinalizador de sincronização em `Group` e divisão por participante em
+ * `Expense`. T7B (`:domain`/`:data`) resolveu a primeira metade — [Group.isSynced] agora é campo
+ * real, e [toUiModel] usa o valor de verdade em vez do `false` fixo que T8 tinha colocado como
+ * placeholder. [GroupListItemUiModel.balance] continua [GroupBalance.Settled] fixo: calcular saldo
+ * de verdade depende do motor de simplificação em Kotlin (RF25-RF28, T33), que ainda não existe —
+ * `Expense.splits` (T7B.3) já modela os dados que T33 vai consumir, mas rodar o algoritmo é escopo
+ * daquela task, não desta.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupListViewModel(
@@ -64,7 +63,7 @@ private fun Group.toUiModel(participantCount: Int) = GroupListItemUiModel(
     name = name,
     tag = tagFor(name),
     participantCount = participantCount,
-    isSynced = false,
+    isSynced = isSynced,
     balance = GroupBalance.Settled,
 )
 
