@@ -1,10 +1,25 @@
 // Módulo :app — UI (Compose), navegação e DI wiring. Depende de :domain e :data; nunca o
 // contrário (Dependency Rule).
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
+
+// T12 — client id OAuth real ainda não existe (T11 documentou o mesmo problema do lado do
+// backend, ver `backend/src/Rateio.Api/appsettings.Development.json`). Lido de
+// `local.properties` (arquivo por-desenvolvedor, já no .gitignore) com fallback pra um
+// placeholder óbvio — nunca hardcoded como valor "real" no código-fonte. Trocar
+// `RATEIO_GOOGLE_WEB_CLIENT_ID` em `local.properties` assim que houver um projeto Google Cloud.
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun localOrDefault(key: String, default: String): String =
+    (localProperties.getProperty(key) ?: System.getenv(key))?.takeIf { it.isNotBlank() } ?: default
 
 android {
     namespace = "com.rateio.app"
@@ -18,6 +33,21 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "GOOGLE_WEB_CLIENT_ID",
+            "\"${localOrDefault("RATEIO_GOOGLE_WEB_CLIENT_ID", "PLACEHOLDER-CLIENT-ID.apps.googleusercontent.com")}\"",
+        )
+        // 10.0.2.2 é o alias do host a partir do emulador Android (loopback da máquina que roda
+        // o backend, perfil "http" de `backend/src/Rateio.Api/Properties/launchSettings.json`,
+        // porta 5134) — não funciona em dispositivo físico na mesma rede, que precisaria do IP
+        // real da máquina.
+        buildConfigField(
+            "String",
+            "API_BASE_URL",
+            "\"${localOrDefault("RATEIO_API_BASE_URL", "http://10.0.2.2:5134/")}\"",
+        )
     }
 
     buildTypes {
@@ -41,6 +71,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     // Robolectric (T8 smoke test do GroupListViewModel contra Room de verdade, mesmo padrão do
@@ -72,6 +103,13 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
+
+    // T12 — login opcional via Google. Credential Manager é a API atual (substitui o
+    // GoogleSignIn deprecated); credentials-play-services-auth + googleid são o motor concreto
+    // que sabe conversar com a conta Google instalada no aparelho.
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     testImplementation(libs.junit4)
     // Mesmo racional do :data (ver RateioDatabaseTest): Room em memória precisa de um Context

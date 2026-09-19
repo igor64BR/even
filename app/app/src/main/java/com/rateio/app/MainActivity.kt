@@ -10,6 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.rateio.app.di.AppContainer
+import com.rateio.app.ui.auth.AuthViewModelFactory
+import com.rateio.app.ui.auth.LoginRoute
 import com.rateio.app.ui.creategroup.CreateGroupRoute
 import com.rateio.app.ui.creategroup.CreateGroupViewModelFactory
 import com.rateio.app.ui.groups.GroupListRoute
@@ -32,10 +34,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/** Destinos navegáveis a partir da raiz. Sem NavHost ainda — só duas telas, estado local basta. */
+/**
+ * Destinos navegáveis a partir da raiz. Sem NavHost ainda (T9, bottom nav de verdade, não existe)
+ * — essa é uma máquina de estados mínima entre as três telas que já existem.
+ */
 private sealed interface RateioDestination {
     data object GroupList : RateioDestination
     data object CreateGroup : RateioDestination
+    data object Login : RateioDestination
 }
 
 @Composable
@@ -50,6 +56,10 @@ private fun RateioApp(container: AppContainer) {
         groupRepository = container.groupRepository,
         participantRepository = container.participantRepository,
     )
+    val authViewModelFactory = AuthViewModelFactory(
+        authRepository = container.authRepository,
+        googleIdentityClient = container.googleIdentityClient,
+    )
 
     RateioTheme {
         when (destination) {
@@ -57,12 +67,19 @@ private fun RateioApp(container: AppContainer) {
                 factory = groupListViewModelFactory,
                 onCreateGroupClick = { destination = RateioDestination.CreateGroup },
                 onGroupClick = { /* T-detalhe de grupo (RF42) ainda não existe. */ },
+                onProfileClick = { destination = RateioDestination.Login },
             )
 
             RateioDestination.CreateGroup -> CreateGroupRoute(
                 factory = createGroupViewModelFactory,
                 onGroupCreated = { destination = RateioDestination.GroupList },
                 onBackClick = { destination = RateioDestination.GroupList },
+            )
+
+            RateioDestination.Login -> LoginRoute(
+                factory = authViewModelFactory,
+                onBackClick = { destination = RateioDestination.GroupList },
+                onContinueWithoutAccount = { destination = RateioDestination.GroupList },
             )
         }
     }

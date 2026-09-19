@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- T12 — POST /auth/google (T11) e Credential Manager precisam de rede. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".RateioApplication"
         android:allowBackup="true"

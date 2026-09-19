@@ -4,6 +4,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
 
@@ -45,6 +46,15 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // T12 — client HTTP mínimo pra POST /auth/google (T11) e armazenamento seguro da sessão.
+    // Só o necessário pro endpoint de auth; outros endpoints (grupos sincronizados, SignalR)
+    // ficam para as tasks que os introduzem (T19+).
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.security.crypto)
 
     testImplementation(libs.junit4)
     // Room em memória não roda em teste unitário puro (precisa de um Context Android) — Robolectric
