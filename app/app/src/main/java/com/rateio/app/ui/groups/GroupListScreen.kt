@@ -29,6 +29,7 @@ fun GroupListRoute(
     factory: GroupListViewModelFactory,
     onCreateGroupClick: () -> Unit,
     onGroupClick: (String) -> Unit,
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: GroupListViewModel = viewModel(factory = factory)
@@ -38,6 +39,7 @@ fun GroupListRoute(
         uiState = uiState,
         onCreateGroupClick = onCreateGroupClick,
         onGroupClick = onGroupClick,
+        onProfileClick = onProfileClick,
         modifier = modifier,
     )
 }
@@ -53,6 +55,7 @@ fun GroupListScreen(
     uiState: GroupListUiState,
     onCreateGroupClick: () -> Unit,
     onGroupClick: (String) -> Unit,
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -64,7 +67,17 @@ fun GroupListScreen(
         topBar = { GroupListTopBar() },
         floatingActionButton = { CreateGroupFab(onClick = onCreateGroupClick) },
         floatingActionButtonPosition = FabPosition.End,
-        bottomBar = { RateioBottomBar(selectedTab = selectedTab, onTabSelected = { selectedTab = it }) },
+        bottomBar = {
+            RateioBottomBar(
+                selectedTab = selectedTab,
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                    // T12 — aba "Perfil" é o equivalente ao auth-slot do protótipo
+                    // (ver prototype/app.js, renderHeaderAuth): entrada pra tela de login/conta.
+                    if (tab == RateioBottomTab.PERFIL) onProfileClick()
+                },
+            )
+        },
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             GroupListBody(
