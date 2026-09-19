@@ -21,6 +21,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 dependencies {
+    // Flow é o único tipo do coroutines que os contratos de repositório expõem — kotlinx-coroutines-core
+    // é uma lib Kotlin pura (sem Android), então não quebra a regra de :domain não depender do Android SDK.
+    implementation(libs.kotlinx.coroutines.core)
+
     testImplementation(libs.junit.jupiter)
 }
 

@@ -4,6 +4,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -39,8 +40,20 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.coroutines.core)
+
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit4)
+    // Room em memória não roda em teste unitário puro (precisa de um Context Android) — Robolectric
+    // fornece isso na JVM, sem exigir emulador/dispositivo conectado (nenhum estava disponível neste
+    // ambiente). Cobre o entregável de T7.2 ("teste instrumentado ou unitário simples").
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.kotlinx.coroutines.test)
+
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
