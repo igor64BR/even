@@ -24,12 +24,11 @@ import com.rateio.app.ui.theme.LocalRateioColors
 import java.time.LocalDate
 
 /**
- * Tela "Nova despesa" (T24), aberta a partir do [com.rateio.app.ui.groups.GroupCard] na lista de
- * grupos — não existe tela de detalhe de grupo ainda (RF42), mesmo precedente documentado que T19
- * usou pra "Sincronizar este grupo" (ação embutida no próprio card em vez de uma tela dedicada que
- * ainda não existe). `factory` injeta o [CreateExpenseViewModel] pela composição manual de
- * [com.rateio.app.di.AppContainer], mesmo padrão de
- * [com.rateio.app.ui.creategroup.CreateGroupRoute].
+ * Tela "Nova despesa" (T24), aberta a partir do botão "+" em "Detalhes do grupo" (T42.2/RF42) —
+ * até T42.4 era aberta direto do [com.rateio.app.ui.groups.GroupCard] na lista de grupos, atalho
+ * temporário porque a tela de detalhe ainda não existia. `factory` injeta o
+ * [CreateExpenseViewModel] pela composição manual de [com.rateio.app.di.AppContainer], mesmo
+ * padrão de [com.rateio.app.ui.creategroup.CreateGroupRoute].
  */
 @Composable
 fun CreateExpenseRoute(

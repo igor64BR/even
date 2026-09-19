@@ -10,6 +10,7 @@ class SettlementTest {
     fun `Settlement guarda pagador, recebedor e valor`() {
         val settlement = Settlement(
             id = "s1",
+            groupId = "g1",
             payerId = "A",
             receiverId = "B",
             amount = Money.ofCents(1000),

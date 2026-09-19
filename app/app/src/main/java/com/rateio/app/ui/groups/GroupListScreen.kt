@@ -39,7 +39,6 @@ fun GroupListRoute(
         uiState = uiState,
         onCreateGroupClick = onCreateGroupClick,
         onGroupClick = onGroupClick,
-        onSyncGroupClick = viewModel::onSyncGroupClick,
         onProfileClick = onProfileClick,
         modifier = modifier,
     )
@@ -56,7 +55,6 @@ fun GroupListScreen(
     uiState: GroupListUiState,
     onCreateGroupClick: () -> Unit,
     onGroupClick: (String) -> Unit,
-    onSyncGroupClick: (String) -> Unit = {},
     onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -86,7 +84,6 @@ fun GroupListScreen(
                 uiState = uiState,
                 onCreateGroupClick = onCreateGroupClick,
                 onGroupClick = onGroupClick,
-                onSyncGroupClick = onSyncGroupClick,
             )
         }
     }
@@ -103,28 +100,19 @@ private fun GroupListBody(
     uiState: GroupListUiState,
     onCreateGroupClick: () -> Unit,
     onGroupClick: (String) -> Unit,
-    onSyncGroupClick: (String) -> Unit,
 ) {
     when (uiState) {
         is GroupListUiState.Loading -> Unit
         is GroupListUiState.Empty -> EmptyGroupsState(onCreateGroupClick = onCreateGroupClick)
-        is GroupListUiState.Content -> GroupList(
-            groups = uiState.groups,
-            onGroupClick = onGroupClick,
-            onSyncGroupClick = onSyncGroupClick,
-        )
+        is GroupListUiState.Content -> GroupList(groups = uiState.groups, onGroupClick = onGroupClick)
     }
 }
 
 @Composable
-private fun GroupList(
-    groups: List<GroupListItemUiModel>,
-    onGroupClick: (String) -> Unit,
-    onSyncGroupClick: (String) -> Unit,
-) {
+private fun GroupList(groups: List<GroupListItemUiModel>, onGroupClick: (String) -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         items(items = groups, key = { it.id }) { group ->
-            GroupCard(group = group, onClick = onGroupClick, onSyncClick = onSyncGroupClick)
+            GroupCard(group = group, onClick = onGroupClick)
         }
     }
 }

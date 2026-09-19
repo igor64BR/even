@@ -15,11 +15,15 @@ import com.rateio.data.repository.RemoteGroupSyncRepository
 import com.rateio.data.repository.RoomExpenseRepository
 import com.rateio.data.repository.RoomGroupRepository
 import com.rateio.data.repository.RoomParticipantRepository
+import com.rateio.data.repository.RoomSettlementRepository
+import com.rateio.domain.engine.DebtSimplificationEngine
+import com.rateio.domain.engine.GreedyDebtSimplificationEngine
 import com.rateio.domain.repository.AuthRepository
 import com.rateio.domain.repository.ExpenseRepository
 import com.rateio.domain.repository.GroupRepository
 import com.rateio.domain.repository.ParticipantRepository
 import com.rateio.domain.repository.RemoteGroupRepository
+import com.rateio.domain.repository.SettlementRepository
 
 /**
  * Raiz de composição manual do módulo `:app` — não há framework de DI no projeto ainda. Monta o
@@ -37,6 +41,15 @@ class AppContainer(context: Context) {
     val groupRepository: GroupRepository by lazy { RoomGroupRepository(database.groupDao()) }
     val participantRepository: ParticipantRepository by lazy { RoomParticipantRepository(database.participantDao()) }
     val expenseRepository: ExpenseRepository by lazy { RoomExpenseRepository(database.expenseDao()) }
+
+    // T42.1 — persistência de quitações (RF31/RF33), consumida pela tela "Quitar dívidas" (T42.3).
+    val settlementRepository: SettlementRepository by lazy { RoomSettlementRepository(database.settlementDao()) }
+
+    // T33 — motor de simplificação de dívidas (algorithm-spec.md). Interface de :domain, única
+    // implementação também vive em :domain (GreedyDebtSimplificationEngine) — não é um contrato de
+    // persistência como os `Room*Repository` acima, mas segue a mesma composição manual: quem
+    // consome (T42.2/T42.3) depende da interface, não da classe concreta.
+    val debtSimplificationEngine: DebtSimplificationEngine by lazy { GreedyDebtSimplificationEngine() }
 
     // T12 — autenticação opcional via Google (constitution.md, princípios 1 e 2). `authApi`
     // usa BuildConfig.API_BASE_URL (placeholder documentado em `app/app/build.gradle.kts`);

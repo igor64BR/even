@@ -4,14 +4,15 @@ package com.rateio.domain.model
  * Registro de que [payerId] pagou [amount] a [receiverId] para quitar (parte de) uma dívida
  * existente (RF31/RF33). Espelha `Quitacao` (`backend/src/Rateio.Domain/Quitacao.cs`).
  *
- * Sem persistência própria ainda — não há `SettlementRepository`/DAO/entidade Room em `:data`
- * nesta task (T7B pede só o tipo de domínio; a tela/fluxo que registra quitações é escopo futuro,
- * fora de T7B.1-T7B.5). O tipo existe aqui porque `computeBalances` (`algorithm-spec.md`, T33)
- * recebe uma lista de `Quitacao`/`Settlement` além das despesas — sem o tipo, T33 não teria o que
- * consumir.
+ * [groupId] existe desde T42.1 — persistência real via `SettlementRepository`
+ * (`:domain`)/`RoomSettlementRepository` (`:data`), mesmo padrão de [Expense.groupId]: toda
+ * leitura é sempre escopada a um grupo (a tela "Quitar dívidas" só se importa com as quitações do
+ * grupo que está olhando). Antes de T42.1 este tipo só existia para `computeBalances`
+ * (`algorithm-spec.md`, T33) ter o que consumir — não tinha DAO/entidade Room própria.
  */
 data class Settlement(
     val id: String,
+    val groupId: String,
     val payerId: String,
     val receiverId: String,
     val amount: Money,

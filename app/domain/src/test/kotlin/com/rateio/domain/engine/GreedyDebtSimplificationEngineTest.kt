@@ -130,7 +130,7 @@ class GreedyDebtSimplificationEngineTest {
                 ExpenseSplit.Equal(participantId = "P3"),
             ),
         )
-        val settlement = Settlement(id = "s1", payerId = "P2", receiverId = "P1", amount = Money.ofCents(100))
+        val settlement = Settlement(id = "s1", groupId = "g1", payerId = "P2", receiverId = "P1", amount = Money.ofCents(100))
 
         val balances = engine.computeBalances(listOf(expense), listOf(settlement))
 

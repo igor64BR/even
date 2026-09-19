@@ -6,6 +6,7 @@ import com.rateio.data.persistence.entity.ExpenseEntity
 import com.rateio.data.persistence.entity.ExpenseSplitEntity
 import com.rateio.data.persistence.entity.GroupEntity
 import com.rateio.data.persistence.entity.ParticipantEntity
+import com.rateio.data.persistence.entity.SettlementEntity
 import com.rateio.data.persistence.entity.SplitTypeEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -167,5 +168,37 @@ class RateioDatabaseTest {
         database.expenseDao().deleteById("e1")
 
         assertEquals(emptyList<Any>(), database.expenseDao().getExpensesWithSplitsFlow("g1").first())
+    }
+
+    @Test
+    fun `insere quitacao vinculada ao grupo e le de volta pelo SettlementDao (T42-1)`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+        val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
+        val receiver = ParticipantEntity(id = "p2", groupId = "g1", name = "P2")
+        database.groupDao().insert(group)
+        database.participantDao().insert(payer)
+        database.participantDao().insert(receiver)
+
+        val settlement = SettlementEntity(id = "s1", groupId = "g1", payerId = "p1", receiverId = "p2", amountCents = 500)
+        database.settlementDao().insert(settlement)
+
+        assertEquals(listOf(settlement), database.settlementDao().getSettlementsFlow("g1").first())
+    }
+
+    @Test
+    fun `remove grupo em cascata remove quitacoes do grupo`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+        val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
+        val receiver = ParticipantEntity(id = "p2", groupId = "g1", name = "P2")
+        database.groupDao().insert(group)
+        database.participantDao().insert(payer)
+        database.participantDao().insert(receiver)
+        database.settlementDao().insert(
+            SettlementEntity(id = "s1", groupId = "g1", payerId = "p1", receiverId = "p2", amountCents = 500),
+        )
+
+        database.groupDao().deleteById("g1")
+
+        assertEquals(emptyList<SettlementEntity>(), database.settlementDao().getSettlementsFlow("g1").first())
     }
 }
