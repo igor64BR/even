@@ -4,45 +4,40 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import com.rateio.app.di.AppContainer
+import com.rateio.app.ui.groups.GroupListRoute
+import com.rateio.app.ui.groups.GroupListViewModelFactory
+import com.rateio.app.ui.theme.RateioTheme
 
-// Placeholder de bootstrap do módulo :app — só confirma que Compose/navegação/DI wiring
-// compilam sobre :domain e :data. A tela "Seus grupos" de verdade (RF41) é escopo da T8.
+/**
+ * Ponto de entrada do app (RF40 — abre direto em "Seus grupos", sem login). Só monta o tema e
+ * delega pra [GroupListRoute]; nenhuma lógica de UI mora aqui.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val container = (application as RateioApplication).container
         setContent {
-            RateioApp()
+            RateioApp(container = container)
         }
     }
 }
 
 @Composable
-private fun RateioApp() {
-    MaterialTheme {
-        Scaffold { innerPadding ->
-            Surface(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                Text(text = "Rateio")
-            }
-        }
-    }
-}
+private fun RateioApp(container: AppContainer) {
+    val groupListViewModelFactory = GroupListViewModelFactory(
+        groupRepository = container.groupRepository,
+        participantRepository = container.participantRepository,
+    )
 
-@Preview(showBackground = true)
-@Composable
-private fun RateioAppPreview() {
-    RateioApp()
+    RateioTheme {
+        GroupListRoute(
+            factory = groupListViewModelFactory,
+            onCreateGroupClick = { /* T16 — tela "Novo grupo" ainda não existe. */ },
+            onGroupClick = { /* T-detalhe de grupo (RF42) ainda não existe. */ },
+        )
+    }
 }
