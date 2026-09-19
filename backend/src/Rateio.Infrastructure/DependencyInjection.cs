@@ -29,6 +29,12 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
+        // T4.1: health check de infraestrutura para RNF08 (`/health` reflete a saúde do DB).
+        // Quando o Hub SignalR (E8) existir, seu health check entra aqui como um segundo
+        // `.AddCheck(...)`/`.AddSignalRHub(...)` na mesma chain, tornando o endpoint agregado.
+        services.AddHealthChecks()
+            .AddNpgSql(connectionString, name: "postgres");
+
         return services;
     }
 }

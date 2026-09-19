@@ -25,4 +25,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// RNF08: 200 quando as dependências (hoje: DB) estão saudáveis, 503 caso contrário.
+// Checks registrados em Rateio.Infrastructure.DependencyInjection.AddInfrastructure.
+app.MapHealthChecks("/health");
+
 app.Run();
