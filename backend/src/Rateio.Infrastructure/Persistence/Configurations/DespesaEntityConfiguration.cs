@@ -22,7 +22,15 @@ public class DespesaEntityConfiguration : IEntityTypeConfiguration<DespesaEntity
         builder.Property(despesa => despesa.PagadorId)
             .IsRequired();
 
+        builder.Property(despesa => despesa.Data)
+            .IsRequired();
+
         builder.Property(despesa => despesa.CriadoEm)
             .IsRequired();
+
+        builder.HasMany(despesa => despesa.Participacoes)
+            .WithOne(participacao => participacao.Despesa)
+            .HasForeignKey(participacao => participacao.DespesaId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

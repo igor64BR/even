@@ -16,6 +16,15 @@ public class GrupoEntityConfiguration : IEntityTypeConfiguration<GrupoEntity>
             .HasMaxLength(120)
             .IsRequired();
 
+        builder.Property(grupo => grupo.Categoria)
+            .IsRequired();
+
+        builder.Property(grupo => grupo.Sincronizado)
+            .IsRequired();
+
+        builder.Property(grupo => grupo.DonoUsuarioId)
+            .IsRequired();
+
         builder.Property(grupo => grupo.CriadoEm)
             .IsRequired();
 
@@ -28,5 +37,12 @@ public class GrupoEntityConfiguration : IEntityTypeConfiguration<GrupoEntity>
             .WithOne(despesa => despesa.Grupo)
             .HasForeignKey(despesa => despesa.GrupoId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Restrict (não Cascade): apagar um usuário não deve apagar silenciosamente os grupos que
+        // ele sincronizou — isso é decisão explícita de outra operação, fora do escopo de T18.
+        builder.HasOne(grupo => grupo.Dono)
+            .WithMany()
+            .HasForeignKey(grupo => grupo.DonoUsuarioId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

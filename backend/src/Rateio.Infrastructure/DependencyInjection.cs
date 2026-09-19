@@ -1,8 +1,13 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Rateio.Application.Auth;
+using Rateio.Application.Grupos;
 using Rateio.Infrastructure.Auth;
+using Rateio.Infrastructure.Grupos;
 using Rateio.Infrastructure.Persistence;
 
 namespace Rateio.Infrastructure;
@@ -38,6 +43,8 @@ public static class DependencyInjection
             .AddNpgSql(connectionString, name: "postgres");
 
         services.AddAuthGoogle(configuration);
+        services.AddAutenticacaoJwt();
+        services.AddGrupos();
 
         return services;
     }
@@ -68,6 +75,54 @@ public static class DependencyInjection
         services.AddScoped<IJwtIssuer, JwtIssuer>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// T18.1: <c>POST /groups/sync</c> exige JWT válido (<c>[Authorize]</c>) — até esta task
+    /// ninguém validava o token que <see cref="JwtIssuer"/> emite, só o emitia (T11 nunca chegou a
+    /// ter um endpoint protegido). Reaproveita <see cref="JwtOptions"/> (a mesma config de
+    /// emissão) pra validar assinatura/issuer/audience, em vez de duplicar esses valores.
+    /// <c>MapInboundClaims = false</c> é necessário pra ler o claim <c>sub</c> exatamente como
+    /// <see cref="JwtIssuer"/> o emitiu — sem isso o handler padrão remapeia "sub" pro URI legado
+    /// de <see cref="System.Security.Claims.ClaimTypes.NameIdentifier"/>.
+    /// </summary>
+    private static IServiceCollection AddAutenticacaoJwt(this IServiceCollection services)
+    {
+        services
+            .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<JwtOptions>>((bearerOptions, jwtOptionsAccessor) =>
+            {
+                var jwtOptions = jwtOptionsAccessor.Value;
+
+                bearerOptions.MapInboundClaims = false;
+                bearerOptions.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtOptions.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtOptions.Audience,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
+                    ClockSkew = TimeSpan.FromSeconds(30),
+                };
+            });
+
+        services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer();
+
+        services.AddAuthorization();
+
+        return services;
+    }
+
+    /// <summary>Registro de DI de T18: sincronização de grupo local para a nuvem (RF09).</summary>
+    private static IServiceCollection AddGrupos(this IServiceCollection services)
+    {
+        services.AddScoped<IGrupoRepository, GrupoRepository>();
 
         return services;
     }

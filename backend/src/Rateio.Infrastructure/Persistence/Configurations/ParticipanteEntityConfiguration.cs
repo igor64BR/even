@@ -15,5 +15,8 @@ public class ParticipanteEntityConfiguration : IEntityTypeConfiguration<Particip
         builder.Property(participante => participante.Nome)
             .HasMaxLength(120)
             .IsRequired();
+
+        builder.Property(participante => participante.EhConvidado)
+            .IsRequired();
     }
 }
