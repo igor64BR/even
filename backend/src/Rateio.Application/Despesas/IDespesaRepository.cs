@@ -1,3 +1,5 @@
+using Rateio.Domain;
+
 namespace Rateio.Application.Despesas;
 
 /// <summary>
@@ -15,4 +17,12 @@ public interface IDespesaRepository
     /// Não recalcula nem guarda saldo: isso é sob demanda, via T32.
     /// </summary>
     Task AdicionarAsync(Guid grupoId, DespesaParaPersistir despesa, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// T32: todas as despesas vigentes de um grupo, já como tipo de domínio (não
+    /// <see cref="DespesaParaPersistir"/> — quem lê de volta pro motor de simplificação não precisa
+    /// de descrição/data de lançamento, só do que <c>ComputeBalances</c> consome). <paramref name="grupoId"/>
+    /// já foi validado por quem chama (RNF07), igual a <see cref="AdicionarAsync"/>.
+    /// </summary>
+    Task<IReadOnlyList<Despesa>> ObterPorGrupoAsync(Guid grupoId, CancellationToken cancellationToken = default);
 }

@@ -2,6 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Rateio.Application.Auth;
 using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
+using Rateio.Application.Simplificacao;
+using Rateio.Domain;
 
 namespace Rateio.Application;
 
@@ -19,6 +21,14 @@ public static class DependencyInjection
         services.AddScoped<CriarDespesaUseCase>();
         services.AddScoped<GerarCodigoConviteUseCase>();
         services.AddScoped<EntrarNoGrupoViaConviteUseCase>();
+        services.AddScoped<ObterSimplificacaoDeDividasUseCase>();
+
+        // T32: o motor de simplificação (Rateio.Domain, T31) não tem estado — Singleton evita uma
+        // instância nova por requisição sem ganhar nada em troca. Registrado aqui (Application,
+        // não Infrastructure) porque é o motor do domínio, não um detalhe de infraestrutura; e não
+        // em Rateio.Domain porque esse projeto não depende de Microsoft.Extensions.DependencyInjection
+        // (Domain sem dependências externas é decisão estrutural do projeto).
+        services.AddSingleton<IMotorDeSimplificacaoDeDividas, MotorDeSimplificacaoDeDividas>();
 
         return services;
     }

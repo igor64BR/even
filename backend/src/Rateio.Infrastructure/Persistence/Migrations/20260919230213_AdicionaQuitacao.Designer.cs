@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rateio.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Rateio.Infrastructure.Persistence;
 namespace Rateio.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260919230213_AdicionaQuitacao")]
+    partial class AdicionaQuitacao
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,28 +24,6 @@ namespace Rateio.Infrastructure.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.CodigoConviteEntity", b =>
-                {
-                    b.Property<string>("Codigo")
-                        .HasMaxLength(12)
-                        .HasColumnType("character varying(12)");
-
-                    b.Property<DateTimeOffset>("CriadoEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("ExpiraEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GrupoId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Codigo");
-
-                    b.HasIndex("GrupoId");
-
-                    b.ToTable("codigos_convite", (string)null);
-                });
 
             modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.DespesaEntity", b =>
                 {
@@ -253,17 +234,6 @@ namespace Rateio.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("usuarios", (string)null);
-                });
-
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.CodigoConviteEntity", b =>
-                {
-                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.GrupoEntity", "Grupo")
-                        .WithMany()
-                        .HasForeignKey("GrupoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Grupo");
                 });
 
             modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.DespesaEntity", b =>

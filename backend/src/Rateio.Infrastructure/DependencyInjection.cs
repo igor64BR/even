@@ -7,10 +7,12 @@ using Microsoft.IdentityModel.Tokens;
 using Rateio.Application.Auth;
 using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
+using Rateio.Application.Quitacoes;
 using Rateio.Infrastructure.Auth;
 using Rateio.Infrastructure.Despesas;
 using Rateio.Infrastructure.Grupos;
 using Rateio.Infrastructure.Persistence;
+using Rateio.Infrastructure.Quitacoes;
 
 namespace Rateio.Infrastructure;
 
@@ -122,15 +124,17 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// Registro de DI de T18/T23/T21: sincronização de grupo local pra nuvem (RF09), adicionar
-    /// despesa avulsa a um grupo já sincronizado (T23) e, a partir de T21, convite/entrada por
-    /// código.
+    /// Registro de DI de T18/T23/T21/T32: sincronização de grupo local pra nuvem (RF09), adicionar
+    /// despesa avulsa a um grupo já sincronizado (T23), convite/entrada por código (T21) e ler
+    /// despesas/quitações vigentes de um grupo pra alimentar o motor de simplificação sob demanda
+    /// (T32).
     /// </summary>
     private static IServiceCollection AddGrupos(this IServiceCollection services)
     {
         services.AddScoped<IGrupoRepository, GrupoRepository>();
         services.AddScoped<IDespesaRepository, DespesaRepository>();
         services.AddScoped<ICodigoConviteRepository, CodigoConviteRepository>();
+        services.AddScoped<IQuitacaoRepository, QuitacaoRepository>();
 
         return services;
     }
