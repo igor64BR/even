@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rateio.Domain\Rateio.Domain.csproj" />
+    <ProjectReference Include="..\Rateio.Application\Rateio.Application.csproj" />
+    <ProjectReference Include="..\Rateio.Infrastructure\Rateio.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

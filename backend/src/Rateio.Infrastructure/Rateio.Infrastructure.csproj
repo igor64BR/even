@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rateio.Domain\Rateio.Domain.csproj" />
+    <ProjectReference Include="..\Rateio.Application\Rateio.Application.csproj" />
+  </ItemGroup>
+
+</Project>
