@@ -26,4 +26,16 @@ class GroupTest {
         assertFalse(local.isSynced)
         assertTrue(synced.isSynced)
     }
+
+    @Test
+    fun `grupo novo nasce sem remoteId, sincronizar preenche os dois campos juntos`() {
+        // T19.2: isSynced e remoteId andam sempre juntos -- nunca um preenchido sem o outro.
+        val local = Group(id = "g1", name = "Churras", createdAt = Instant.EPOCH)
+
+        assertTrue(local.remoteId == null)
+
+        val synced = local.copy(isSynced = true, remoteId = "id-do-servidor")
+
+        assertTrue(synced.isSynced && synced.remoteId == "id-do-servidor")
+    }
 }

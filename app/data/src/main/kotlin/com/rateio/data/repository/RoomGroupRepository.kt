@@ -29,6 +29,7 @@ private fun GroupEntity.toDomain() = Group(
     name = name,
     createdAt = Instant.ofEpochMilli(createdAtEpochMillis),
     isSynced = isSynced,
+    remoteId = remoteId,
 )
 
 private fun Group.toEntity() = GroupEntity(
@@ -36,4 +37,5 @@ private fun Group.toEntity() = GroupEntity(
     name = name,
     createdAtEpochMillis = createdAt.toEpochMilli(),
     isSynced = isSynced,
+    remoteId = remoteId,
 )

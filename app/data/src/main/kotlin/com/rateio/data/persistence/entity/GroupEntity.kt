@@ -11,6 +11,9 @@ import androidx.room.PrimaryKey
  * [isSynced] espelha `Group.isSynced` (`:domain`, T7B.1) / `Sincronizado` de `Grupo.cs`.
  * `false` por padrão: todo grupo persistido localmente antes de existir sincronização nasce não
  * sincronizado.
+ *
+ * [remoteId] espelha `Group.remoteId` (`:domain`, T19.2) — `null` até a primeira sincronização
+ * bem-sucedida, coluna nova na v3 do schema (ver `RateioDatabase`).
  */
 @Entity(tableName = "groups")
 data class GroupEntity(
@@ -18,4 +21,5 @@ data class GroupEntity(
     val name: String,
     val createdAtEpochMillis: Long,
     val isSynced: Boolean = false,
+    val remoteId: String? = null,
 )
