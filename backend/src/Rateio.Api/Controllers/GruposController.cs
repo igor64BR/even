@@ -26,7 +26,11 @@ namespace Rateio.Api.Controllers;
 /// <see cref="RegistrarQuitacaoUseCase"/>). T39.1 acrescentou
 /// <c>GET /groups/{id}/events?desde={timestampIso8601}</c>: fallback de pull dos eventos de
 /// despesa/quitação perdidos enquanto o app estava desconectado do Hub SignalR (T38,
-/// constitution.md princípio 3) — ver <see cref="ObterEventosDeGrupoUseCase"/>.
+/// constitution.md princípio 3) — ver <see cref="ObterEventosDeGrupoUseCase"/>. T28 acrescentou
+/// <c>PUT</c>/<c>DELETE /groups/{id}/expenses/{expenseId}</c> (editar/excluir despesa, RF20/RF21 —
+/// ver <see cref="EditarDespesaUseCase"/>/<see cref="ExcluirDespesaUseCase"/>) e
+/// <c>GET /groups/{id}</c> (grupo completo — ver <see cref="ObterGrupoUseCase"/>, fecha a lacuna
+/// reportada por T22).
 /// </summary>
 [ApiController]
 [Authorize]
@@ -34,8 +38,11 @@ namespace Rateio.Api.Controllers;
 public class GruposController(
     SincronizarGrupoUseCase sincronizarGrupo,
     CriarDespesaUseCase criarDespesa,
+    EditarDespesaUseCase editarDespesa,
+    ExcluirDespesaUseCase excluirDespesa,
     GerarCodigoConviteUseCase gerarCodigoConvite,
     EntrarNoGrupoViaConviteUseCase entrarNoGrupoViaConvite,
+    ObterGrupoUseCase obterGrupo,
     ObterSimplificacaoDeDividasUseCase obterSimplificacaoDeDividas,
     RegistrarQuitacaoUseCase registrarQuitacao,
     ObterEventosDeGrupoUseCase obterEventosDeGrupo) : ControllerBase
@@ -111,6 +118,133 @@ public class GruposController(
                 title: "Payload de despesa inválido.",
                 detail: erro.Message,
                 statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    /// <summary>
+    /// T28.1: edita uma despesa já persistida (RF20). Mesmo padrão de acesso/erro de
+    /// <see cref="CriarDespesa"/>: 404 se o grupo não existe, 403 sem acesso (RNF07); acrescenta
+    /// 404 quando o grupo existe mas <paramref name="expenseId"/> não corresponde a uma despesa
+    /// dele (<see cref="DespesaNaoEncontradaException"/>). Reconstrói a despesa inteira a partir do
+    /// payload (<see cref="EditarDespesaUseCase"/>) — nunca um update parcial de campo solto.
+    /// </summary>
+    [HttpPut("{id:guid}/expenses/{expenseId:guid}")]
+    public async Task<IActionResult> EditarDespesa(
+        Guid id,
+        Guid expenseId,
+        [FromBody] DespesaSincronizadaRequest requisicao,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var usuarioAutenticadoId = ObterUsuarioAutenticadoId();
+
+            await editarDespesa.ExecutarAsync(usuarioAutenticadoId, id, expenseId, requisicao, cancellationToken);
+
+            return NoContent();
+        }
+        catch (GrupoNaoEncontradoException erro)
+        {
+            return Problem(
+                title: "Grupo não encontrado.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        catch (DespesaNaoEncontradaException erro)
+        {
+            return Problem(
+                title: "Despesa não encontrada.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        catch (AcessoNegadoException erro)
+        {
+            return Problem(
+                title: "Usuário sem acesso ao grupo.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status403Forbidden);
+        }
+        catch (Exception erro) when (erro is ArgumentException or InvalidOperationException)
+        {
+            // Mesmo padrão de CriarDespesa: payload malformado ou violando invariante de domínio
+            // nunca é erro de servidor.
+            return Problem(
+                title: "Payload de despesa inválido.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    /// <summary>
+    /// T28.2: exclui uma despesa já persistida (RF21). Mesmo padrão de acesso/erro de
+    /// <see cref="EditarDespesa"/>: 404 se o grupo não existe, 404 se <paramref name="expenseId"/>
+    /// não corresponde a uma despesa desse grupo, 403 sem acesso (RNF07).
+    /// </summary>
+    [HttpDelete("{id:guid}/expenses/{expenseId:guid}")]
+    public async Task<IActionResult> ExcluirDespesa(Guid id, Guid expenseId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var usuarioAutenticadoId = ObterUsuarioAutenticadoId();
+
+            await excluirDespesa.ExecutarAsync(usuarioAutenticadoId, id, expenseId, cancellationToken);
+
+            return NoContent();
+        }
+        catch (GrupoNaoEncontradoException erro)
+        {
+            return Problem(
+                title: "Grupo não encontrado.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        catch (DespesaNaoEncontradaException erro)
+        {
+            return Problem(
+                title: "Despesa não encontrada.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        catch (AcessoNegadoException erro)
+        {
+            return Problem(
+                title: "Usuário sem acesso ao grupo.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status403Forbidden);
+        }
+    }
+
+    /// <summary>
+    /// T28.3: grupo completo — nome, categoria, participantes e despesas (com descrição/valor/
+    /// pagador/data/divisão) — fecha a lacuna reportada por T22: <c>POST /groups/join/{codigo}</c>
+    /// (T21) só devolve <c>{grupoId}</c>, sem jeito de o app buscar o resto depois de entrar via
+    /// link. Mesmo padrão de acesso/erro de <see cref="CriarDespesa"/>: 404 se o grupo não existe,
+    /// 403 sem acesso (RNF07).
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ObterGrupoResponse>> ObterGrupo(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var usuarioAutenticadoId = ObterUsuarioAutenticadoId();
+
+            var grupoCompleto = await obterGrupo.ExecutarAsync(usuarioAutenticadoId, id, cancellationToken);
+
+            return Ok(MapeadorDeGrupoResponse.Construir(grupoCompleto));
+        }
+        catch (GrupoNaoEncontradoException erro)
+        {
+            return Problem(
+                title: "Grupo não encontrado.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        catch (AcessoNegadoException erro)
+        {
+            return Problem(
+                title: "Usuário sem acesso ao grupo.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status403Forbidden);
         }
     }
 

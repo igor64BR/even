@@ -21,8 +21,11 @@ public static class DependencyInjection
         services.AddScoped<RevogarSessaoUseCase>();
         services.AddScoped<SincronizarGrupoUseCase>();
         services.AddScoped<CriarDespesaUseCase>();
+        services.AddScoped<EditarDespesaUseCase>();
+        services.AddScoped<ExcluirDespesaUseCase>();
         services.AddScoped<GerarCodigoConviteUseCase>();
         services.AddScoped<EntrarNoGrupoViaConviteUseCase>();
+        services.AddScoped<ObterGrupoUseCase>();
         services.AddScoped<ObterSimplificacaoDeDividasUseCase>();
         services.AddScoped<RegistrarQuitacaoUseCase>();
         services.AddScoped<ObterEventosDeGrupoUseCase>();
