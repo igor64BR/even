@@ -53,6 +53,36 @@ class RateioDatabaseTest {
     }
 
     @Test
+    fun `reinserir grupo existente (ex- marcar isSynced) nao apaga participantes e despesas`() = runTest {
+        // Regressão: GroupDao.insert usava @Insert(REPLACE), que no SQLite é DELETE+INSERT e
+        // disparava ON DELETE CASCADE das FKs de participante/despesa/quitação/notificação toda
+        // vez que o grupo já existente era re-inserido (ex.: GroupDetailViewModel.syncGroup()
+        // gravando isSynced=true) — achado durante T29. @Upsert faz UPDATE de verdade.
+        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+        val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
+        database.groupDao().insert(group)
+        database.participantDao().insert(payer)
+        val expense = ExpenseEntity(
+            id = "e1",
+            groupId = "g1",
+            description = "Churrasco",
+            amountCents = 1000,
+            paidByParticipantId = "p1",
+            createdAtEpochMillis = 3_000L,
+        )
+        database.expenseDao().insertWithSplits(
+            expense,
+            listOf(ExpenseSplitEntity(expenseId = "e1", participantId = "p1", type = SplitTypeEntity.EQUAL)),
+        )
+
+        database.groupDao().insert(group.copy(isSynced = true, remoteId = "remote-1"))
+
+        assertTrue(database.groupDao().getGroupById("g1")!!.isSynced)
+        assertEquals(listOf(payer), database.participantDao().getParticipantsFlow("g1").first())
+        assertEquals(1, database.expenseDao().getExpensesWithSplitsFlow("g1").first().size)
+    }
+
+    @Test
     fun `insere participante vinculado ao grupo e le de volta pelo ParticipantDao`() = runTest {
         val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
         val participant = ParticipantEntity(id = "p1", groupId = "g1", name = "Você", isYou = true)
