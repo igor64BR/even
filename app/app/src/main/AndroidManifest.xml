@@ -11,10 +11,22 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- T22.1 — "entrar no grupo por link": rateio://join/{codigo}, compartilhável por
+                 qualquer canal (WhatsApp, SMS etc.), não é integração com nada específico. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="rateio"
+                    android:host="join" />
             </intent-filter>
         </activity>
 

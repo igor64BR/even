@@ -30,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,16 +50,26 @@ import com.rateio.domain.model.AuthenticatedUser
  * [AuthViewModel] pela composição manual de [com.rateio.app.di.AppContainer] — mesma convenção de
  * [com.rateio.app.ui.groups.GroupListRoute] (T8): a Composable em si não sabe de onde vem o
  * estado nem como o ID token do Google é obtido.
+ *
+ * [onSignedIn] (T22.1) é opcional: quando não nulo, dispara uma única vez assim que [uiState] vira
+ * [AuthUiState.SignedIn], via [LaunchedEffect]. Usado pelo fluxo "entrar no grupo por link" pra
+ * retomar automaticamente depois do login — o acesso normal à tela (ícone de perfil) não passa
+ * esse parâmetro e continua sem navegação automática após logar.
  */
 @Composable
 fun LoginRoute(
     factory: AuthViewModelFactory,
     onBackClick: () -> Unit,
     onContinueWithoutAccount: () -> Unit,
+    onSignedIn: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: AuthViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState) {
+        if (onSignedIn != null && uiState is AuthUiState.SignedIn) onSignedIn()
+    }
 
     LoginScreen(
         uiState = uiState,

@@ -27,6 +27,27 @@ interface RemoteGroupRepository {
      * falhar — nunca deixa uma exceção de Retrofit/OkHttp vazar pra quem chama.
      */
     suspend fun syncGroup(group: Group, participants: List<Participant>, expenses: List<Expense>): String
+
+    /**
+     * Entra num grupo existente via código de convite (T21, RF07: `POST /groups/join/{codigo}`,
+     * qualquer usuário autenticado pode entrar — o código válido É a autorização, não há checagem
+     * de dono). Retorna o id remoto do grupo (`grupoId`), no mesmo formato de resposta de
+     * [syncGroup].
+     *
+     * LACUNA conhecida (documentada em `specs/001-mvp-expense-splitting/tasks/T22-app-entrar-via-link.md`,
+     * não inventada aqui): T21 não devolve nome, participantes nem despesas do grupo, e não existe
+     * hoje um endpoint de "obter grupo por id" completo pra baixar esses dados depois de entrar.
+     * Quem chama recebe só o [String] do id remoto e não tem como montar um
+     * [com.rateio.domain.model.Group] local fiel (nome de verdade, participantes, despesas) sem
+     * inventar dados — por isso a tela de confirmação (T22.2) mostra sucesso genérico e não insere
+     * um grupo "fake" na lista local. Isso fica pra quando o backend ganhar esse endpoint.
+     *
+     * @throws GroupSyncException se não houver sessão autenticada, ou se a chamada de rede/HTTP
+     * falhar — inclui código de convite inválido/expirado (`CodigoConviteInvalidoException` no
+     * backend vira um erro HTTP genérico, T21 não distingue isso de outra falha num corpo
+     * estruturado, então a mensagem aqui também fica genérica, mesma convenção de [syncGroup]).
+     */
+    suspend fun joinByCode(inviteCode: String): String
 }
 
 /**

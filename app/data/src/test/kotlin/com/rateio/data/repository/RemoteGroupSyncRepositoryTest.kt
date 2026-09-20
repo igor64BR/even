@@ -130,10 +130,64 @@ class RemoteGroupSyncRepositoryTest {
         }
     }
 
+    @Test
+    fun `joinByCode envia Authorization Bearer e o codigo do convite`() = runTest {
+        val groupsApi = FakeGroupsApi()
+        val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
+
+        val remoteId = repository.joinByCode("ABC123")
+
+        assertEquals("Bearer access-token-valido", groupsApi.lastBearerToken)
+        assertEquals("ABC123", groupsApi.lastCodigo)
+        assertEquals("remote-grupo-id", remoteId)
+    }
+
+    @Test
+    fun `joinByCode sem sessao lanca GroupSyncException sem chamar o backend`() = runTest {
+        val groupsApi = FakeGroupsApi()
+        val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(initialSession = null))
+
+        try {
+            repository.joinByCode("ABC123")
+            fail("esperava GroupSyncException")
+        } catch (error: GroupSyncException) {
+            assertNull("nao deve nem tentar chamar o backend sem sessao", groupsApi.lastCodigo)
+        }
+    }
+
+    @Test
+    fun `joinByCode traduz falha de rede para GroupSyncException`() = runTest {
+        val groupsApi = FakeGroupsApi(failure = { IOException("sem conexão com o servidor do Rateio") })
+        val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
+
+        try {
+            repository.joinByCode("ABC123")
+            fail("esperava GroupSyncException")
+        } catch (error: GroupSyncException) {
+            assertTrue(error.cause is IOException)
+        }
+    }
+
+    @Test
+    fun `joinByCode traduz codigo invalido (erro HTTP) para GroupSyncException`() = runTest {
+        val corpoDeErro = "".toResponseBody("application/json".toMediaType())
+        val groupsApi = FakeGroupsApi(failure = { HttpException(Response.error<Unit>(400, corpoDeErro)) })
+        val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
+
+        try {
+            repository.joinByCode("CODIGO-INVALIDO")
+            fail("esperava GroupSyncException")
+        } catch (error: GroupSyncException) {
+            assertTrue(error.cause is HttpException)
+        }
+    }
+
     private class FakeGroupsApi(private val failure: (() -> Throwable)? = null) : GroupsApi {
         var lastBearerToken: String? = null
             private set
         var lastRequest: SincronizarGrupoRequestDto? = null
+            private set
+        var lastCodigo: String? = null
             private set
 
         override suspend fun sync(
@@ -142,6 +196,13 @@ class RemoteGroupSyncRepositoryTest {
         ): SincronizarGrupoResponseDto {
             lastBearerToken = bearerToken
             lastRequest = request
+            failure?.invoke()?.let { throw it }
+            return SincronizarGrupoResponseDto(grupoId = "remote-grupo-id")
+        }
+
+        override suspend fun join(bearerToken: String, codigo: String): SincronizarGrupoResponseDto {
+            lastBearerToken = bearerToken
+            lastCodigo = codigo
             failure?.invoke()?.let { throw it }
             return SincronizarGrupoResponseDto(grupoId = "remote-grupo-id")
         }

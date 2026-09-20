@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 /**
  * Espelha `POST /groups/sync` (backend: `GruposController.Sync`,
@@ -23,6 +24,18 @@ interface GroupsApi {
     suspend fun sync(
         @Header("Authorization") bearerToken: String,
         @Body request: SincronizarGrupoRequestDto,
+    ): SincronizarGrupoResponseDto
+
+    /**
+     * Espelha `POST /groups/join/{codigo}` (backend: `GruposController.EntrarComCodigo`, T21.2) —
+     * entra num grupo existente via código de convite (RF07). Resposta no mesmo formato de [sync]
+     * (`SincronizarGrupoResponse(GrupoId)`), reaproveitado aqui em vez de um DTO próprio porque o
+     * corpo é idêntico.
+     */
+    @POST("groups/join/{codigo}")
+    suspend fun join(
+        @Header("Authorization") bearerToken: String,
+        @Path("codigo") codigo: String,
     ): SincronizarGrupoResponseDto
 }
 

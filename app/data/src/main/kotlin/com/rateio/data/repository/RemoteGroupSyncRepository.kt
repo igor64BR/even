@@ -52,6 +52,20 @@ class RemoteGroupSyncRepository(
             throw GroupSyncException("Sem conexão com o servidor do Rateio.", error)
         }
     }
+
+    override suspend fun joinByCode(inviteCode: String): String {
+        val accessToken = tokenStorage.read()?.accessToken
+            ?: throw GroupSyncException("É preciso estar autenticado para entrar num grupo.")
+
+        try {
+            val response = groupsApi.join(bearerToken = "Bearer $accessToken", codigo = inviteCode)
+            return response.grupoId
+        } catch (error: HttpException) {
+            throw GroupSyncException("Não foi possível entrar nesse grupo — verifique o código.", error)
+        } catch (error: IOException) {
+            throw GroupSyncException("Sem conexão com o servidor do Rateio.", error)
+        }
+    }
 }
 
 private fun Group.toSyncRequest(participants: List<Participant>, expenses: List<Expense>) =

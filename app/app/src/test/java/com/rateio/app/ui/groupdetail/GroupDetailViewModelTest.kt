@@ -226,5 +226,9 @@ class GroupDetailViewModelTest {
             failure?.invoke()?.let { throw it }
             return remoteIdFor(group)
         }
+
+        override suspend fun joinByCode(inviteCode: String): String {
+            throw UnsupportedOperationException("não usado neste teste — ver JoinGroupViewModelTest (T22)")
+        }
     }
 }
