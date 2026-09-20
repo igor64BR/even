@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Rateio.Application.Auth;
 using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
+using Rateio.Application.Quitacoes;
 using Rateio.Application.Simplificacao;
 using Rateio.Domain;
 
@@ -22,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<GerarCodigoConviteUseCase>();
         services.AddScoped<EntrarNoGrupoViaConviteUseCase>();
         services.AddScoped<ObterSimplificacaoDeDividasUseCase>();
+        services.AddScoped<RegistrarQuitacaoUseCase>();
 
         // T32: o motor de simplificação (Rateio.Domain, T31) não tem estado — Singleton evita uma
         // instância nova por requisição sem ganhar nada em troca. Registrado aqui (Application,

@@ -7,9 +7,10 @@ namespace Rateio.Infrastructure.Quitacoes;
 
 /// <summary>
 /// Implementação de <see cref="IQuitacaoRepository"/> via EF Core / <see cref="AppDbContext"/>
-/// (T32) — mesmo padrão de <c>Rateio.Infrastructure.Despesas.DespesaRepository</c>: leitura
+/// (T32/T35) — mesmo padrão de <c>Rateio.Infrastructure.Despesas.DespesaRepository</c>: leitura
 /// <c>AsNoTracking</c> (somente leitura), filtrada por <c>GrupoId</c>, cujo acesso já foi validado
-/// por quem chama (<c>ObterSimplificacaoDeDividasUseCase</c>) antes deste método ser invocado.
+/// por quem chama (<c>ObterSimplificacaoDeDividasUseCase</c>/<c>RegistrarQuitacaoUseCase</c>) antes
+/// de qualquer um destes métodos ser invocado.
 /// </summary>
 public sealed class QuitacaoRepository(AppDbContext dbContext) : IQuitacaoRepository
 {
@@ -22,5 +23,20 @@ public sealed class QuitacaoRepository(AppDbContext dbContext) : IQuitacaoReposi
             .ToListAsync(cancellationToken);
 
         return entidades.Select(MapeadorDeQuitacaoParaDominio.Construir).ToList();
+    }
+
+    /// <summary>
+    /// T35: insere a quitação direto pela FK (<c>QuitacaoEntity.GrupoId</c>), sem carregar o
+    /// <c>GrupoEntity</c> inteiro só pra anexar mais uma linha — mesma decisão de
+    /// <c>DespesaRepository.AdicionarAsync</c> (T23), pelo mesmo motivo: o grupo já foi confirmado
+    /// como existente por <c>IGrupoRepository.ObterAcessoAsync</c> antes deste método ser chamado.
+    /// </summary>
+    public async Task AdicionarAsync(Guid grupoId, Quitacao quitacao, CancellationToken cancellationToken = default)
+    {
+        var entidade = MapeadorDeQuitacaoEntity.Construir(quitacao);
+        entidade.GrupoId = grupoId;
+
+        dbContext.Quitacoes.Add(entidade);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
