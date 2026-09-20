@@ -2,8 +2,10 @@ package com.rateio.data.remote.groups
 
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 /**
@@ -37,6 +39,32 @@ interface GroupsApi {
         @Header("Authorization") bearerToken: String,
         @Path("codigo") codigo: String,
     ): SincronizarGrupoResponseDto
+
+    /**
+     * T29 (app: editar despesa) contra T28 (backend, `PUT /groups/{id}/expenses/{expenseId}`,
+     * rodando em paralelo — ver KDoc de [com.rateio.domain.repository.RemoteExpenseRepository]
+     * pra a pendência documentada). Corpo idêntico ao de `POST /groups/{id}/expenses`
+     * (`CriarDespesa`, T23.1, mesmo [DespesaSincronizadaDto]) — só troca o verbo HTTP, já que é
+     * sempre a despesa inteira substituindo a anterior, nunca um patch parcial.
+     */
+    @PUT("groups/{id}/expenses/{expenseId}")
+    suspend fun updateExpense(
+        @Header("Authorization") bearerToken: String,
+        @Path("id") id: String,
+        @Path("expenseId") expenseId: String,
+        @Body request: DespesaSincronizadaDto,
+    )
+
+    /**
+     * T29 (app: excluir despesa) contra T28 (backend, `DELETE /groups/{id}/expenses/{expenseId}`)
+     * — mesma pendência documentada em [updateExpense].
+     */
+    @DELETE("groups/{id}/expenses/{expenseId}")
+    suspend fun deleteExpense(
+        @Header("Authorization") bearerToken: String,
+        @Path("id") id: String,
+        @Path("expenseId") expenseId: String,
+    )
 }
 
 /** Corpo de `POST /groups/sync` — espelha `SincronizarGrupoRequest` do backend. */

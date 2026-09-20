@@ -37,3 +37,13 @@ fun parseAmountInputToCents(input: String): Long? {
 
     return amount.movePointRight(2).setScale(0, RoundingMode.HALF_UP).toLong()
 }
+
+/**
+ * Inverso de [parseAmountInputToCents]: centavos -> texto editável ("1000" -> "10,00"), sem
+ * prefixo de moeda (diferente de [formatCentsAsBrl], que é só apresentação — os campos de valor
+ * já têm o próprio prefixo "R$", ver [com.rateio.app.ui.createexpense.AmountField]). Usado só pra
+ * pré-preencher campos de valor em modo de edição (T29): nasce simétrico ao parse de propósito,
+ * pra um round-trip exato (carregar -> editar sem tocar -> salvar preserva os mesmos centavos).
+ */
+fun formatCentsAsAmountInput(amountCents: Long): String =
+    BigDecimal(amountCents).movePointLeft(2).setScale(2, RoundingMode.HALF_UP).toPlainString().replace('.', ',')

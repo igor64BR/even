@@ -16,6 +16,7 @@ import com.rateio.domain.repository.ExpenseRepository
 import com.rateio.domain.repository.GroupRepository
 import com.rateio.domain.repository.GroupSyncException
 import com.rateio.domain.repository.ParticipantRepository
+import com.rateio.domain.repository.RemoteExpenseRepository
 import com.rateio.domain.repository.RemoteGroupRepository
 import com.rateio.domain.repository.SettlementRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,6 +59,7 @@ class GroupDetailViewModel(
     private val settlementRepository: SettlementRepository,
     private val authRepository: AuthRepository,
     private val remoteGroupRepository: RemoteGroupRepository,
+    private val remoteExpenseRepository: RemoteExpenseRepository,
     private val debtSimplificationEngine: DebtSimplificationEngine,
     private val groupRealtimeGateway: GroupRealtimeGateway,
 ) : ViewModel() {
@@ -110,6 +112,35 @@ class GroupDetailViewModel(
         val remoteId = remoteGroupRepository.syncGroup(group, participants, expenses)
 
         groupRepository.insertGroup(group.copy(isSynced = true, remoteId = remoteId))
+    }
+
+    /**
+     * T29.2: exclui a despesa localmente (Room) — chamado só depois que a confirmação do diálogo
+     * ([GroupDetailScreen]) já aconteceu, esta função nunca é o gatilho de "tocar pra excluir" em
+     * si. `uiState` reflete a exclusão sozinho, via o mesmo `Flow` combinado que já recalcula saldo
+     * a cada mudança em [expenseRepository] (T33/T42.2) — não precisa de estado extra aqui.
+     */
+    fun onDeleteExpenseClick(expenseId: String) {
+        viewModelScope.launch {
+            expenseRepository.deleteExpense(expenseId)
+            propagateDeleteIfSynced(expenseId)
+        }
+    }
+
+    /**
+     * T29: propaga a exclusão pro backend quando o grupo já está sincronizado — mesmo racional de
+     * [com.rateio.app.ui.createexpense.CreateExpenseViewModel.propagateUpdateIfSynced]: a exclusão
+     * local já aconteceu na linha acima, best-effort e silenciosa, nunca desfaz a exclusão local
+     * nem bloqueia a UI esperando confirmação de servidor (constitution.md, princípio 1).
+     */
+    private suspend fun propagateDeleteIfSynced(expenseId: String) {
+        val group = groupRepository.getGroupById(groupId) ?: return
+        val remoteId = group.remoteId?.takeIf { group.isSynced } ?: return
+        try {
+            remoteExpenseRepository.deleteExpense(remoteId, expenseId)
+        } catch (error: GroupSyncException) {
+            // Ver KDoc da função: falha de rede/HTTP não desfaz a exclusão local.
+        }
     }
 
     /**

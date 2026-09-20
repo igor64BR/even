@@ -1,6 +1,7 @@
 package com.rateio.data.repository
 
 import com.rateio.data.local.auth.TokenStorage
+import com.rateio.data.remote.groups.DespesaSincronizadaDto
 import com.rateio.data.remote.groups.GroupsApi
 import com.rateio.data.remote.groups.SincronizarGrupoRequestDto
 import com.rateio.data.remote.groups.SincronizarGrupoResponseDto
@@ -206,6 +207,18 @@ class RemoteGroupSyncRepositoryTest {
             failure?.invoke()?.let { throw it }
             return SincronizarGrupoResponseDto(grupoId = "remote-grupo-id")
         }
+
+        // Não usados por RemoteGroupSyncRepositoryTest (T29 os cobre em
+        // RemoteExpenseSyncRepositoryTest) — só aqui pra satisfazer a interface GroupsApi.
+        override suspend fun updateExpense(
+            bearerToken: String,
+            id: String,
+            expenseId: String,
+            request: DespesaSincronizadaDto,
+        ): Unit = throw UnsupportedOperationException("não usado neste teste")
+
+        override suspend fun deleteExpense(bearerToken: String, id: String, expenseId: String): Unit =
+            throw UnsupportedOperationException("não usado neste teste")
     }
 
     private class FakeTokenStorage(initialSession: AuthSession?) : TokenStorage {

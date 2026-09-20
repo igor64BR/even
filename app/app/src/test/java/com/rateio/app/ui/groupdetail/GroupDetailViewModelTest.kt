@@ -17,6 +17,7 @@ import com.rateio.domain.model.Participant
 import com.rateio.domain.realtime.GroupRealtimeGateway
 import com.rateio.domain.repository.AuthRepository
 import com.rateio.domain.repository.GroupSyncException
+import com.rateio.domain.repository.RemoteExpenseRepository
 import com.rateio.domain.repository.RemoteGroupRepository
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
@@ -84,6 +85,7 @@ class GroupDetailViewModelTest {
         groupId: String,
         authRepository: AuthRepository = FakeAuthRepository(initialSession = null),
         remoteGroupRepository: RemoteGroupRepository = FakeRemoteGroupRepository(),
+        remoteExpenseRepository: RemoteExpenseRepository = FakeRemoteExpenseRepository(),
         groupRealtimeGateway: GroupRealtimeGateway = FakeGroupRealtimeGateway(),
     ) = GroupDetailViewModel(
         groupId = groupId,
@@ -93,6 +95,7 @@ class GroupDetailViewModelTest {
         settlementRepository = settlementRepository,
         authRepository = authRepository,
         remoteGroupRepository = remoteGroupRepository,
+        remoteExpenseRepository = remoteExpenseRepository,
         debtSimplificationEngine = GreedyDebtSimplificationEngine(),
         groupRealtimeGateway = groupRealtimeGateway,
     )
@@ -206,6 +209,85 @@ class GroupDetailViewModelTest {
         val persisted = database.groupDao().getGroupById(groupId)!!
         assertFalse("falha de rede nao pode deixar o grupo marcado como sincronizado", persisted.isSynced)
         assertNull(persisted.remoteId)
+    }
+
+    /**
+     * Marca o grupo como sincronizado via `UPDATE` direto, nunca via `GroupDao.insert`
+     * (`@Insert(OnConflictStrategy.REPLACE)`): re-inserir a MESMA linha (mesmo id) faz o SQLite
+     * apagar e reinserir a linha, o que dispara `onDelete = CASCADE` das chaves estrangeiras de
+     * `participants`/`expenses` pra `groups` — apagando silenciosamente os participantes/despesa
+     * já semeados por [seedGroupWithExpense] (confirmado isolando o comportamento: contagem de
+     * participantes vai a zero depois do REPLACE). **Bug real e pré-existente, fora do escopo de
+     * T29** — a mesma chamada acontece em produção em [GroupDetailViewModel.syncGroup] (T19,
+     * "Sincronizar este grupo"), reportado à parte, não corrigido aqui.
+     */
+    private fun markGroupAsSynced(groupId: String, remoteId: String) {
+        database.openHelper.writableDatabase.execSQL(
+            "UPDATE groups SET isSynced = 1, remoteId = ? WHERE id = ?",
+            arrayOf(remoteId, groupId),
+        )
+    }
+
+    // --- T29.2: excluir despesa ---
+
+    @Test
+    fun `excluir despesa local remove do Room e recalcula saldo`() = runTest(testDispatcher) {
+        val groupId = seedGroupWithExpense()
+        val viewModel = buildViewModel(groupId)
+        viewModel.uiState.first { it is GroupDetailUiState.Content && it.expenses.isNotEmpty() }
+
+        viewModel.onDeleteExpenseClick("e1")
+
+        val stateAposExcluir = viewModel.uiState
+            .first { it is GroupDetailUiState.Content && it.expenses.isEmpty() } as GroupDetailUiState.Content
+        assertTrue("sem despesas, todo mundo volta a ficar quitado", stateAposExcluir.balances.all { it.balance is ParticipantBalance.Settled })
+        assertTrue(expenseRepository.getExpensesFlow(groupId).first().isEmpty())
+    }
+
+    @Test
+    fun `excluir despesa de grupo nao sincronizado nao chama o backend`() = runTest(testDispatcher) {
+        val groupId = seedGroupWithExpense()
+        val remoteExpenseRepository = FakeRemoteExpenseRepository()
+        val viewModel = buildViewModel(groupId, remoteExpenseRepository = remoteExpenseRepository)
+        viewModel.uiState.first { it is GroupDetailUiState.Content }
+
+        viewModel.onDeleteExpenseClick("e1")
+        viewModel.uiState.first { it is GroupDetailUiState.Content && it.expenses.isEmpty() }
+
+        assertNull("grupo local (nao sincronizado) nunca deve tentar falar com o backend", remoteExpenseRepository.lastDeletedExpenseId)
+    }
+
+    @Test
+    fun `excluir despesa de grupo sincronizado propaga a exclusao pro backend`() = runTest(testDispatcher) {
+        val groupId = seedGroupWithExpense()
+        markGroupAsSynced(groupId, remoteId = "remote-$groupId")
+        val remoteExpenseRepository = FakeRemoteExpenseRepository()
+        val viewModel = buildViewModel(groupId, remoteExpenseRepository = remoteExpenseRepository)
+        viewModel.uiState.first { it is GroupDetailUiState.Content }
+
+        viewModel.onDeleteExpenseClick("e1")
+        val (remoteGroupId, deletedExpenseId) = remoteExpenseRepository.awaitDelete()
+
+        assertEquals("remote-$groupId", remoteGroupId)
+        assertEquals("e1", deletedExpenseId)
+    }
+
+    @Test
+    fun `falha de rede ao propagar exclusao nao desfaz a remocao local`() = runTest(testDispatcher) {
+        val groupId = seedGroupWithExpense()
+        markGroupAsSynced(groupId, remoteId = "remote-$groupId")
+        val remoteExpenseRepository = FakeRemoteExpenseRepository(
+            failure = { GroupSyncException("Sem conexão com o servidor do Rateio.") },
+        )
+        val viewModel = buildViewModel(groupId, remoteExpenseRepository = remoteExpenseRepository)
+        viewModel.uiState.first { it is GroupDetailUiState.Content }
+
+        viewModel.onDeleteExpenseClick("e1")
+        remoteExpenseRepository.awaitDelete() // espera a tentativa de propagação (que vai falhar) acontecer.
+
+        val stateAposExcluir = viewModel.uiState
+            .first { it is GroupDetailUiState.Content && it.expenses.isEmpty() } as GroupDetailUiState.Content
+        assertTrue("exclusao local vale independente da falha de rede (local-first)", stateAposExcluir.expenses.isEmpty())
     }
 
     // T40.1: GroupDetailViewModel.startRealtimeUpdates()/stopRealtimeUpdates() só orquestram QUANDO
@@ -349,5 +431,38 @@ class GroupDetailViewModelTest {
         override suspend fun joinByCode(inviteCode: String): String {
             throw UnsupportedOperationException("não usado neste teste — ver JoinGroupViewModelTest (T22)")
         }
+    }
+
+    /**
+     * [awaitDelete] existe pela mesma razão de [FakeGroupRealtimeGateway.awaitConnect]:
+     * [GroupDetailViewModel.onDeleteExpenseClick] dispara num `viewModelScope.launch` próprio, e o
+     * `Flow` de despesas (Room) já pode ter emitido "lista vazia" — o sinal que os testes usam pra
+     * saber que a exclusão local aconteceu — antes da chamada de propagação pro backend, mais
+     * adiante na mesma coroutine, ter rodado. Suspender de verdade num `Channel` é a forma
+     * determinística de esperar a tentativa de propagação (sucesso ou falha) acontecer.
+     */
+    private class FakeRemoteExpenseRepository(
+        private val failure: (() -> Throwable)? = null,
+    ) : RemoteExpenseRepository {
+        var lastRemoteGroupId: String? = null
+            private set
+        var lastDeletedExpenseId: String? = null
+            private set
+        private val deleteSignal = kotlinx.coroutines.channels.Channel<Pair<String, String>>(
+            kotlinx.coroutines.channels.Channel.UNLIMITED,
+        )
+
+        override suspend fun updateExpense(remoteGroupId: String, expense: Expense) {
+            throw UnsupportedOperationException("não usado neste teste — ver CreateExpenseViewModelTest (T29.1)")
+        }
+
+        override suspend fun deleteExpense(remoteGroupId: String, expenseId: String) {
+            lastRemoteGroupId = remoteGroupId
+            lastDeletedExpenseId = expenseId
+            deleteSignal.send(remoteGroupId to expenseId)
+            failure?.invoke()?.let { throw it }
+        }
+
+        suspend fun awaitDelete(): Pair<String, String> = deleteSignal.receive()
     }
 }
