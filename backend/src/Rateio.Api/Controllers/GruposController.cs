@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rateio.Api.Contracts;
 using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
+using Rateio.Application.Quitacoes;
 using Rateio.Application.Simplificacao;
 
 namespace Rateio.Api.Controllers;
@@ -16,10 +17,12 @@ namespace Rateio.Api.Controllers;
 /// grupo (RF07): <c>POST /groups/{id}/invite-code</c> (só o dono) e
 /// <c>POST /groups/join/{codigo}</c> (qualquer autenticado). T32.1 acrescentou
 /// <c>GET /groups/{id}/settlement</c>: a simplificação de dívidas do grupo, recomputada sob
-/// demanda (nunca armazenada). O controller só traduz HTTP↔caso de uso — toda orquestração vive
-/// nos casos de uso (<see cref="SincronizarGrupoUseCase"/>, <see cref="CriarDespesaUseCase"/>,
-/// <see cref="GerarCodigoConviteUseCase"/>, <see cref="EntrarNoGrupoViaConviteUseCase"/>,
-/// <see cref="ObterSimplificacaoDeDividasUseCase"/>).
+/// demanda (nunca armazenada). T35.1 acrescentou <c>POST /groups/{id}/settlements</c>: registra que
+/// uma das transações sugeridas foi paga. O controller só traduz HTTP↔caso de uso — toda
+/// orquestração vive nos casos de uso (<see cref="SincronizarGrupoUseCase"/>,
+/// <see cref="CriarDespesaUseCase"/>, <see cref="GerarCodigoConviteUseCase"/>,
+/// <see cref="EntrarNoGrupoViaConviteUseCase"/>, <see cref="ObterSimplificacaoDeDividasUseCase"/>,
+/// <see cref="RegistrarQuitacaoUseCase"/>).
 /// </summary>
 [ApiController]
 [Authorize]
@@ -29,7 +32,8 @@ public class GruposController(
     CriarDespesaUseCase criarDespesa,
     GerarCodigoConviteUseCase gerarCodigoConvite,
     EntrarNoGrupoViaConviteUseCase entrarNoGrupoViaConvite,
-    ObterSimplificacaoDeDividasUseCase obterSimplificacaoDeDividas) : ControllerBase
+    ObterSimplificacaoDeDividasUseCase obterSimplificacaoDeDividas,
+    RegistrarQuitacaoUseCase registrarQuitacao) : ControllerBase
 {
     /// <summary>
     /// RNF07: o dono do grupo sincronizado é sempre o usuário do JWT validado
@@ -176,6 +180,54 @@ public class GruposController(
                 title: "Usuário sem acesso ao grupo.",
                 detail: erro.Message,
                 statusCode: StatusCodes.Status403Forbidden);
+        }
+    }
+
+    /// <summary>
+    /// T35.1: registra que uma das transações sugeridas por <see cref="ObterSettlement"/> foi paga
+    /// (RF31/RF33) — <paramref name="requisicao"/> é <c>{ deParticipanteId, paraParticipanteId,
+    /// valorCentavos }</c>. Mesmo padrão de acesso/erro de <see cref="CriarDespesa"/>: 404 se o
+    /// grupo não existe, 403 se o usuário autenticado não tem acesso a ele (RNF07), 400 se o
+    /// payload viola uma invariante de domínio (valor não positivo, pagador igual ao recebedor).
+    /// Não devolve saldo recalculado — a próxima chamada a <c>GET /groups/{id}/settlement</c> já
+    /// reflete a quitação (T35.2).
+    /// </summary>
+    [HttpPost("{id:guid}/settlements")]
+    public async Task<ActionResult<RegistrarQuitacaoResponse>> RegistrarQuitacao(
+        Guid id,
+        [FromBody] RegistrarQuitacaoRequest requisicao,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var usuarioAutenticadoId = ObterUsuarioAutenticadoId();
+
+            var quitacaoId = await registrarQuitacao.ExecutarAsync(usuarioAutenticadoId, id, requisicao, cancellationToken);
+
+            return Created($"/groups/{id}/settlements/{quitacaoId}", new RegistrarQuitacaoResponse(quitacaoId));
+        }
+        catch (GrupoNaoEncontradoException erro)
+        {
+            return Problem(
+                title: "Grupo não encontrado.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        catch (AcessoNegadoException erro)
+        {
+            return Problem(
+                title: "Usuário sem acesso ao grupo.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status403Forbidden);
+        }
+        catch (ArgumentException erro)
+        {
+            // Mesmo padrão de CriarDespesa: payload violando invariante de domínio nunca é erro de
+            // servidor.
+            return Problem(
+                title: "Payload de quitação inválido.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status400BadRequest);
         }
     }
 
