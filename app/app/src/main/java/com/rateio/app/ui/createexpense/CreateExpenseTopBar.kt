@@ -12,13 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import com.rateio.app.ui.theme.LocalRateioColors
 
-/** `.topbar` de `nova-despesa.html` — volta pro grupo sem salvar. */
+/**
+ * `.topbar` de `nova-despesa.html` — volta pro grupo sem salvar. [isEditMode] (T29) troca só o
+ * título pra "Editar despesa"; o resto do formulário é idêntico ao modo criação (T29, "edição é
+ * estado, não tela nova").
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateExpenseTopBar(onBackClick: () -> Unit) {
+fun CreateExpenseTopBar(onBackClick: () -> Unit, isEditMode: Boolean = false) {
     val colors = LocalRateioColors.current
     TopAppBar(
-        title = { Text(text = "Nova despesa", fontWeight = FontWeight.Bold) },
+        title = { Text(text = if (isEditMode) "Editar despesa" else "Nova despesa", fontWeight = FontWeight.Bold) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")

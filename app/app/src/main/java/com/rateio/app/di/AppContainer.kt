@@ -14,6 +14,7 @@ import com.rateio.data.remote.groups.GroupEventsApi
 import com.rateio.data.remote.groups.GroupsApi
 import com.rateio.data.remote.realtime.SignalRGroupRealtimeGateway
 import com.rateio.data.repository.RemoteAuthRepository
+import com.rateio.data.repository.RemoteExpenseSyncRepository
 import com.rateio.data.repository.RemoteGroupSyncRepository
 import com.rateio.data.repository.RoomExpenseRepository
 import com.rateio.data.repository.RoomGroupRepository
@@ -29,6 +30,7 @@ import com.rateio.domain.repository.ExpenseRepository
 import com.rateio.domain.repository.GroupRepository
 import com.rateio.domain.repository.NotificationRepository
 import com.rateio.domain.repository.ParticipantRepository
+import com.rateio.domain.repository.RemoteExpenseRepository
 import com.rateio.domain.repository.RemoteGroupRepository
 import com.rateio.domain.repository.SettlementRepository
 
@@ -70,6 +72,12 @@ class AppContainer(context: Context) {
     // `tokenStorage` de T12 pra ler o access token na hora de montar o header Authorization.
     private val groupsApi: GroupsApi by lazy { RateioHttpClientFactory.createGroupsApi(BuildConfig.API_BASE_URL) }
     val remoteGroupRepository: RemoteGroupRepository by lazy { RemoteGroupSyncRepository(groupsApi, tokenStorage) }
+
+    // T29 — propagação de edição/exclusão de despesa pro backend quando o grupo está sincronizado
+    // (`PUT`/`DELETE /groups/{id}/expenses/{expenseId}`, T28). Mesmo `groupsApi`/`tokenStorage` de
+    // remoteGroupRepository, interface própria por responsabilidade única (ver KDoc de
+    // RemoteExpenseRepository).
+    val remoteExpenseRepository: RemoteExpenseRepository by lazy { RemoteExpenseSyncRepository(groupsApi, tokenStorage) }
 
     // T40/T41 — notificações locais (Room) + cliente SignalR (T38's Hub) + fallback de pull (T39).
     val notificationRepository: NotificationRepository by lazy { RoomNotificationRepository(database.notificationDao()) }

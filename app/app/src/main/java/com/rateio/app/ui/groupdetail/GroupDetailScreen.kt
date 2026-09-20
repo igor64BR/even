@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,9 +21,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +54,7 @@ fun GroupDetailRoute(
     factory: GroupDetailViewModelFactory,
     onBackClick: () -> Unit,
     onCreateExpenseClick: () -> Unit,
+    onEditExpenseClick: (String) -> Unit,
     onSettleDebtsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -66,6 +70,8 @@ fun GroupDetailRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onCreateExpenseClick = onCreateExpenseClick,
+        onEditExpenseClick = onEditExpenseClick,
+        onDeleteExpenseConfirmed = viewModel::onDeleteExpenseClick,
         onSettleDebtsClick = onSettleDebtsClick,
         onSyncClick = viewModel::onSyncGroupClick,
         modifier = modifier,
@@ -83,6 +89,8 @@ fun GroupDetailScreen(
     uiState: GroupDetailUiState,
     onBackClick: () -> Unit,
     onCreateExpenseClick: () -> Unit,
+    onEditExpenseClick: (String) -> Unit,
+    onDeleteExpenseConfirmed: (String) -> Unit,
     onSettleDebtsClick: () -> Unit,
     onSyncClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -112,6 +120,8 @@ fun GroupDetailScreen(
                 is GroupDetailUiState.NotFound -> GroupNotFoundState()
                 is GroupDetailUiState.Content -> GroupDetailContent(
                     uiState = uiState,
+                    onEditExpenseClick = onEditExpenseClick,
+                    onDeleteExpenseConfirmed = onDeleteExpenseConfirmed,
                     onSettleDebtsClick = onSettleDebtsClick,
                     onSyncClick = onSyncClick,
                 )
@@ -123,6 +133,8 @@ fun GroupDetailScreen(
 @Composable
 private fun GroupDetailContent(
     uiState: GroupDetailUiState.Content,
+    onEditExpenseClick: (String) -> Unit,
+    onDeleteExpenseConfirmed: (String) -> Unit,
     onSettleDebtsClick: () -> Unit,
     onSyncClick: () -> Unit,
 ) {
@@ -154,11 +166,68 @@ private fun GroupDetailContent(
         if (uiState.expenses.isEmpty()) {
             EmptyExpensesState()
         } else {
-            Column {
-                uiState.expenses.forEach { expense -> ExpenseRow(expense = expense) }
-            }
+            ExpenseList(
+                expenses = uiState.expenses,
+                onEditExpenseClick = onEditExpenseClick,
+                onDeleteExpenseConfirmed = onDeleteExpenseConfirmed,
+            )
         }
     }
+}
+
+/**
+ * T29.2: [ExpenseDeleteConfirmationState] guarda qual despesa está com exclusão pendente — o
+ * primeiro toque no ícone de lixeira de [ExpenseRow] só chega até [ExpenseDeleteConfirmationState
+ * .request] (abre o diálogo), nunca exclui direto; só "Excluir" no [AlertDialog] chama
+ * [ExpenseDeleteConfirmationState.confirm], que aí sim dispara [onDeleteExpenseConfirmed]. Estado
+ * de UI pura (não sobrevive rotação/processo morto, sem necessidade — reabrir a confirmação é
+ * barato), por isso `remember` em vez de morar no `ViewModel`.
+ */
+@Composable
+private fun ExpenseList(
+    expenses: List<ExpenseRowUiModel>,
+    onEditExpenseClick: (String) -> Unit,
+    onDeleteExpenseConfirmed: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val deleteConfirmation = remember { ExpenseDeleteConfirmationState() }
+
+    Column(modifier = modifier) {
+        expenses.forEach { expense ->
+            ExpenseRow(
+                expense = expense,
+                onClick = { onEditExpenseClick(expense.id) },
+                onDeleteClick = { deleteConfirmation.request(expense.id) },
+            )
+        }
+    }
+
+    if (deleteConfirmation.pendingExpenseId != null) {
+        DeleteExpenseConfirmationDialog(
+            onConfirm = { deleteConfirmation.confirm(onConfirmed = onDeleteExpenseConfirmed) },
+            onDismiss = deleteConfirmation::dismiss,
+        )
+    }
+}
+
+@Composable
+private fun DeleteExpenseConfirmationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val colors = LocalRateioColors.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Excluir despesa?", fontWeight = FontWeight.Bold) },
+        text = { Text(text = "Essa despesa some da lista e o saldo do grupo é recalculado. Não dá pra desfazer.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = "Excluir", color = colors.danger, fontWeight = FontWeight.SemiBold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = "Cancelar")
+            }
+        },
+    )
 }
 
 @Composable

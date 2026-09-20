@@ -30,12 +30,14 @@ import java.time.LocalDate
  * até T42.4 era aberta direto do [com.rateio.app.ui.groups.GroupCard] na lista de grupos, atalho
  * temporário porque a tela de detalhe ainda não existia. `factory` injeta o
  * [CreateExpenseViewModel] pela composição manual de [com.rateio.app.di.AppContainer], mesmo
- * padrão de [com.rateio.app.ui.creategroup.CreateGroupRoute].
+ * padrão de [com.rateio.app.ui.creategroup.CreateGroupRoute]. `factory.expenseId` não-nulo (T29)
+ * é o único gatilho do modo edição — nem esta Route nem [CreateExpenseScreen] decidem isso, só
+ * repassam [CreateExpenseUiState.isEditMode] pra pintar título/botão.
  */
 @Composable
 fun CreateExpenseRoute(
     factory: CreateExpenseViewModelFactory,
-    onExpenseCreated: () -> Unit,
+    onSaved: () -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -45,7 +47,7 @@ fun CreateExpenseRoute(
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                CreateExpenseEvent.ExpenseCreated -> onExpenseCreated()
+                CreateExpenseEvent.Saved -> onSaved()
             }
         }
     }
@@ -92,7 +94,7 @@ fun CreateExpenseScreen(
     Scaffold(
         modifier = modifier,
         containerColor = colors.paper,
-        topBar = { CreateExpenseTopBar(onBackClick = onBackClick) },
+        topBar = { CreateExpenseTopBar(onBackClick = onBackClick, isEditMode = uiState.isEditMode) },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -154,7 +156,10 @@ fun CreateExpenseScreen(
                     .fillMaxWidth()
                     .padding(bottom = 24.dp),
             ) {
-                Text(text = "Salvar despesa", fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = if (uiState.isEditMode) "Salvar alterações" else "Salvar despesa",
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         }
     }

@@ -21,6 +21,11 @@ import java.time.LocalDate
  * nas listas daquelas abas ([PercentageSplitList]/[FixedAmountSplitList], mesmo `#split-sum`
  * sempre-ligado do protótipo), e `onSaveClick` bloqueia sem persistir quando a soma não fecha
  * (ver [CreateExpenseViewModel.validate]).
+ *
+ * [expenseId] é `null` em modo criação (T24) e o id da despesa sendo editada em modo edição (T29)
+ * — mesmo formulário para os dois modos ("edição é estado, não tela nova", T29-app-editar-excluir-
+ * despesa.md), só troca o que `onSaveClick` faz com o resultado (insert vs. update) e o texto que
+ * [com.rateio.app.ui.createexpense.CreateExpenseScreen]/[CreateExpenseTopBar] mostram.
  */
 data class CreateExpenseUiState(
     val description: String = "",
@@ -34,7 +39,11 @@ data class CreateExpenseUiState(
     val amountError: Boolean = false,
     val participantsError: Boolean = false,
     val isSaving: Boolean = false,
-)
+    val expenseId: String? = null,
+) {
+    /** `true` só quando o formulário está pré-carregado com uma despesa existente (T29.1). */
+    val isEditMode: Boolean get() = expenseId != null
+}
 
 /**
  * Uma linha de `#split-area`, com os campos dos três modos coexistindo (só um é mostrado por vez,
@@ -54,7 +63,11 @@ data class ExpenseSplitRowUiModel(
     val fixedAmountInput: String = "",
 )
 
-/** Evento de navegação, emitido depois que a despesa é persistida no Room. */
+/**
+ * Evento de navegação, emitido depois que a despesa é persistida no Room — mesmo evento para
+ * criação (T24) e edição (T29), já que os dois voltam pra "Detalhes do grupo" do mesmo jeito e o
+ * saldo recalculado chega lá via `Flow` reativo (não precisa carregar dado nenhum no evento).
+ */
 sealed interface CreateExpenseEvent {
-    data object ExpenseCreated : CreateExpenseEvent
+    data object Saved : CreateExpenseEvent
 }

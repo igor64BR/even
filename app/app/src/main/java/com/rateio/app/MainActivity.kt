@@ -100,12 +100,17 @@ private const val DEEP_LINK_HOST = "join"
  *
  * [Notifications] (T41.1, RF35/RF36) é o destino da aba "Avisos" da bottom nav — alcançável tanto
  * de [GroupList] quanto de [Notifications] em si (`RateioBottomBar` está presente nas duas telas).
+ *
+ * [CreateExpense.expenseId] (T29) é `null` pra "Nova despesa" (alcançada pelo FAB de
+ * [GroupDetail]) e o id da despesa sendo editada quando vem de [GroupDetail]'s
+ * `onEditExpenseClick` (tocar numa [com.rateio.app.ui.groupdetail.ExpenseRow]) — mesmo destino
+ * pros dois fluxos, só muda o parâmetro (T29, "edição é estado, não tela nova").
  */
 private sealed interface RateioDestination {
     data object GroupList : RateioDestination
     data object CreateGroup : RateioDestination
     data class GroupDetail(val groupId: String) : RateioDestination
-    data class CreateExpense(val groupId: String) : RateioDestination
+    data class CreateExpense(val groupId: String, val expenseId: String? = null) : RateioDestination
     data class SettleDebts(val groupId: String) : RateioDestination
     data class Login(val pendingInviteCode: String? = null) : RateioDestination
     data class JoinGroup(val inviteCode: String) : RateioDestination
@@ -173,21 +178,28 @@ private fun RateioApp(
                     settlementRepository = container.settlementRepository,
                     authRepository = container.authRepository,
                     remoteGroupRepository = container.remoteGroupRepository,
+                    remoteExpenseRepository = container.remoteExpenseRepository,
                     debtSimplificationEngine = container.debtSimplificationEngine,
                     groupRealtimeGateway = container.groupRealtimeGateway,
                 ),
                 onBackClick = { destination = RateioDestination.GroupList },
                 onCreateExpenseClick = { destination = RateioDestination.CreateExpense(current.groupId) },
+                onEditExpenseClick = { expenseId ->
+                    destination = RateioDestination.CreateExpense(current.groupId, expenseId)
+                },
                 onSettleDebtsClick = { destination = RateioDestination.SettleDebts(current.groupId) },
             )
 
             is RateioDestination.CreateExpense -> CreateExpenseRoute(
                 factory = CreateExpenseViewModelFactory(
                     groupId = current.groupId,
+                    expenseId = current.expenseId,
                     participantRepository = container.participantRepository,
                     expenseRepository = container.expenseRepository,
+                    groupRepository = container.groupRepository,
+                    remoteExpenseRepository = container.remoteExpenseRepository,
                 ),
-                onExpenseCreated = { destination = RateioDestination.GroupDetail(current.groupId) },
+                onSaved = { destination = RateioDestination.GroupDetail(current.groupId) },
                 onBackClick = { destination = RateioDestination.GroupDetail(current.groupId) },
             )
 

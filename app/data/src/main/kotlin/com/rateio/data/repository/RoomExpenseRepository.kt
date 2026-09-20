@@ -20,6 +20,9 @@ class RoomExpenseRepository(private val expenseDao: ExpenseDao) : ExpenseReposit
         expenseDao.getExpensesWithSplitsFlow(groupId)
             .map { rows -> rows.map(ExpenseWithSplitsEntity::toDomain) }
 
+    override suspend fun getExpenseById(expenseId: String): Expense? =
+        expenseDao.getExpenseWithSplitsById(expenseId)?.toDomain()
+
     override suspend fun insertExpense(expense: Expense) =
         expenseDao.insertWithSplits(
             expense = expense.toEntity(),

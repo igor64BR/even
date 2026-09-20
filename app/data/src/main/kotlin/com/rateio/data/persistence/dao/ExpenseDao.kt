@@ -16,6 +16,19 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE groupId = :groupId ORDER BY createdAtEpochMillis DESC")
     fun getExpensesWithSplitsFlow(groupId: String): Flow<List<ExpenseWithSplitsEntity>>
 
+    /**
+     * T29.1: leitura pontual (não-`Flow`) de uma despesa por id — usada só pra pré-carregar o
+     * formulário de edição uma vez, ao abrir a tela (`CreateExpenseViewModel.loadExpenseForEditing`).
+     * Deliberadamente não reaproveita [getExpensesWithSplitsFlow] + `.first()` (assinar a lista
+     * inteira só pra pegar um item e cancelar a assinatura em seguida): esse padrão de "Flow
+     * cancelado logo depois de emitir", seguido de perto por uma escrita na mesma tabela
+     * (`onSaveClick`), mostrou-se instável sob o SQLite do Robolectric em teste (deadlock
+     * intermitente) — uma query direta evita o `InvalidationTracker` por completo pra esse caso.
+     */
+    @Transaction
+    @Query("SELECT * FROM expenses WHERE id = :expenseId")
+    suspend fun getExpenseWithSplitsById(expenseId: String): ExpenseWithSplitsEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExpense(expense: ExpenseEntity)
 

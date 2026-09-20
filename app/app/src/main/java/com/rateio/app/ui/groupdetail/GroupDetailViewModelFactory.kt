@@ -9,6 +9,7 @@ import com.rateio.domain.repository.AuthRepository
 import com.rateio.domain.repository.ExpenseRepository
 import com.rateio.domain.repository.GroupRepository
 import com.rateio.domain.repository.ParticipantRepository
+import com.rateio.domain.repository.RemoteExpenseRepository
 import com.rateio.domain.repository.RemoteGroupRepository
 import com.rateio.domain.repository.SettlementRepository
 
@@ -27,6 +28,7 @@ class GroupDetailViewModelFactory(
     private val settlementRepository: SettlementRepository,
     private val authRepository: AuthRepository,
     private val remoteGroupRepository: RemoteGroupRepository,
+    private val remoteExpenseRepository: RemoteExpenseRepository,
     private val debtSimplificationEngine: DebtSimplificationEngine,
     private val groupRealtimeGateway: GroupRealtimeGateway,
 ) : ViewModelProvider.Factory {
@@ -44,6 +46,7 @@ class GroupDetailViewModelFactory(
             settlementRepository = settlementRepository,
             authRepository = authRepository,
             remoteGroupRepository = remoteGroupRepository,
+            remoteExpenseRepository = remoteExpenseRepository,
             debtSimplificationEngine = debtSimplificationEngine,
             groupRealtimeGateway = groupRealtimeGateway,
         ) as T
