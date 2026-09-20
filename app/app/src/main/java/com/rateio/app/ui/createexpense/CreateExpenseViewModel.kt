@@ -76,6 +76,34 @@ class CreateExpenseViewModel(
         }
     }
 
+    /** Troca a aba ativa em "Como dividir" (T26). `participantsError` só faz sentido no modo Igual
+     * — some ao trocar de aba, igual o protótipo troca `#split-area` sem carregar erro da aba anterior. */
+    fun onSplitModeSelected(mode: SplitMode) {
+        _uiState.update { it.copy(splitMode = mode, participantsError = false) }
+    }
+
+    /** `data-id` do input de `%` na aba Percentual (T26.1). */
+    fun onPercentageChanged(participantId: String, percentageInput: String) {
+        _uiState.update { state ->
+            state.copy(
+                splitRows = state.splitRows.map { row ->
+                    if (row.participantId == participantId) row.copy(percentageInput = percentageInput) else row
+                },
+            )
+        }
+    }
+
+    /** `data-id` do input de R$ na aba Valor fixo (T26.2). */
+    fun onFixedAmountChanged(participantId: String, fixedAmountInput: String) {
+        _uiState.update { state ->
+            state.copy(
+                splitRows = state.splitRows.map { row ->
+                    if (row.participantId == participantId) row.copy(fixedAmountInput = fixedAmountInput) else row
+                },
+            )
+        }
+    }
+
     fun onSaveClick() {
         val state = _uiState.value
         if (state.isSaving) return
@@ -85,7 +113,10 @@ class CreateExpenseViewModel(
             it.copy(
                 descriptionError = !validation.descriptionValid,
                 amountError = !validation.amountValid,
-                participantsError = !validation.participantsValid,
+                // Só o modo Igual usa esse flag pra pintar a lista de participantes de erro — nos
+                // outros dois modos a soma inválida já é visível ao vivo em #split-sum, não precisa
+                // de um segundo aviso (ver nota de classe de CreateExpenseUiState).
+                participantsError = state.splitMode == SplitMode.EQUAL && !validation.splitValid,
             )
         }
         if (!validation.isValid) return
@@ -105,9 +136,7 @@ class CreateExpenseViewModel(
      */
     private suspend fun saveExpense(state: CreateExpenseUiState, amountCents: Long) {
         val payerId = requireNotNull(state.payerId) { "Nenhum pagador selecionado pro grupo $groupId." }
-        val splits = state.splitRows
-            .filter { it.isIncluded }
-            .map { row -> ExpenseSplit.Equal(participantId = row.participantId) }
+        val splits = buildSplits(state.splitMode, state.splitRows)
 
         expenseRepository.insertExpense(
             Expense(
@@ -127,15 +156,21 @@ class CreateExpenseViewModel(
     }
 }
 
-/** Participantes recém-carregados do Room: todos entram na divisão, pagador default é "Você". */
+/**
+ * Participantes recém-carregados do Room: todos entram na divisão, pagador default é "Você". O
+ * percentual default (`Math.round(100 / n)`, [defaultPercentage]) é semeado igual ao protótipo —
+ * o valor fixo fica vazio (não existe "valor fixo padrão" sensato pra propor).
+ */
 private fun CreateExpenseUiState.withParticipants(participants: List<Participant>): CreateExpenseUiState {
     val defaultPayerId = participants.firstOrNull { it.isYou }?.id ?: participants.firstOrNull()?.id
+    val defaultPercentageInput = defaultPercentage(participants.size).toString()
     val rows = participants.map { participant ->
         ExpenseSplitRowUiModel(
             participantId = participant.id,
             name = participant.name,
             isYou = participant.isYou,
             isIncluded = true,
+            percentageInput = defaultPercentageInput,
         )
     }
     return copy(participants = participants, payerId = defaultPayerId, splitRows = rows).withRecalculatedSplit()
@@ -155,19 +190,63 @@ private fun CreateExpenseUiState.withRecalculatedSplit(): CreateExpenseUiState {
 private data class FormValidation(
     val descriptionValid: Boolean,
     val amountValid: Boolean,
-    val participantsValid: Boolean,
+    val splitValid: Boolean,
     val amountCents: Long,
 ) {
-    val isValid: Boolean get() = descriptionValid && amountValid && participantsValid
+    val isValid: Boolean get() = descriptionValid && amountValid && splitValid
 }
 
-/** T24.4: descrição obrigatória, valor > 0, pelo menos 1 participante selecionado. */
+/**
+ * T24.4 + T26.1/T26.2: descrição obrigatória, valor > 0, e a divisão precisa fechar de acordo com
+ * a aba ativa — pelo menos 1 participante selecionado no modo Igual, soma = 100% no Percentual
+ * (ver [isPercentageSplitComplete]), soma = valor total no Valor fixo (ver
+ * [isFixedAmountSplitComplete]).
+ */
 private fun CreateExpenseUiState.validate(): FormValidation {
     val amountCents = parseAmountInputToCents(amountInput) ?: 0L
+    val splitValid = when (splitMode) {
+        SplitMode.EQUAL -> splitRows.any { it.isIncluded }
+        SplitMode.PERCENTAGE -> isPercentageSplitComplete(splitRows)
+        SplitMode.FIXED_AMOUNT -> isFixedAmountSplitComplete(splitRows, Money.ofCents(amountCents))
+    }
     return FormValidation(
         descriptionValid = description.isNotBlank(),
         amountValid = amountCents > 0,
-        participantsValid = splitRows.any { it.isIncluded },
+        splitValid = splitValid,
         amountCents = amountCents,
     )
 }
+
+/**
+ * Traduz [rows] pro subtipo [ExpenseSplit] certo de acordo com [mode] (T26.3: "ao salvar, constrói
+ * Weight/FixedAmount pros participantes selecionados").
+ * - Igual: só os participantes marcados, [ExpenseSplit.Equal] — inalterado desde T24.
+ * - Percentual: todos os participantes (não há checkbox nessa aba, igual ao protótipo), peso =
+ *   percentual digitado (0 se a entrada estiver vazia/inválida — só chega aqui se a soma já fechou
+ *   100%, então "vazio" não deveria sobrar, mas não há por que persistir `null` como estado
+ *   inválido em vez de 0).
+ * - Valor fixo: só participantes com valor digitado e positivo (`fixos[p.id] > 0` no protótipo) —
+ *   quem ficou com 0/vazio não participa da despesa.
+ */
+private fun buildSplits(mode: SplitMode, rows: List<ExpenseSplitRowUiModel>): List<ExpenseSplit> =
+    when (mode) {
+        SplitMode.EQUAL -> rows
+            .filter { it.isIncluded }
+            .map { row -> ExpenseSplit.Equal(participantId = row.participantId) }
+
+        SplitMode.PERCENTAGE -> rows.map { row ->
+            ExpenseSplit.Weight(
+                participantId = row.participantId,
+                weight = parsePercentageInput(row.percentageInput) ?: 0L,
+            )
+        }
+
+        SplitMode.FIXED_AMOUNT -> rows.mapNotNull { row ->
+            val amount = parseFixedAmountInput(row.fixedAmountInput)
+            if (amount != null && amount.isPositive) {
+                ExpenseSplit.FixedAmount(participantId = row.participantId, amount = amount)
+            } else {
+                null
+            }
+        }
+    }

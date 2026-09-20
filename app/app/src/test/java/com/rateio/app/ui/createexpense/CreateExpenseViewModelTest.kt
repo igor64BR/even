@@ -191,4 +191,96 @@ class CreateExpenseViewModelTest {
         assertTrue(expense.splits.all { it is ExpenseSplit.Equal })
         assertEquals(setOf("p1", "p2", "p3"), expense.splits.map { it.participantId }.toSet())
     }
+
+    // --- T26.1: aba Percentual ---
+
+    @Test
+    fun `salvar com percentual que nao fecha 100 por cento nao persiste nada`() = runTest(testDispatcher) {
+        seedParticipants(
+            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p2", groupId = groupId, name = "Marina"),
+        )
+        val viewModel = createViewModelWithParticipantsLoaded()
+
+        viewModel.onSplitModeSelected(SplitMode.PERCENTAGE)
+        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onAmountChanged("100,00")
+        viewModel.onPercentageChanged("p1", "40")
+        viewModel.onPercentageChanged("p2", "40")
+        viewModel.onSaveClick()
+
+        assertTrue(expenseRepository.getExpensesFlow(groupId).first().isEmpty())
+    }
+
+    @Test
+    fun `salvar despesa com divisao percentual persiste splits Weight correspondentes`() = runTest(testDispatcher) {
+        seedParticipants(
+            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p2", groupId = groupId, name = "Marina"),
+        )
+        val viewModel = createViewModelWithParticipantsLoaded()
+
+        viewModel.onSplitModeSelected(SplitMode.PERCENTAGE)
+        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onAmountChanged("100,00")
+        viewModel.onPayerSelected("p1")
+        viewModel.onPercentageChanged("p1", "60")
+        viewModel.onPercentageChanged("p2", "40")
+        viewModel.onSaveClick()
+
+        viewModel.events.first()
+
+        val expense = expenseRepository.getExpensesFlow(groupId).first().single()
+        assertEquals(2, expense.splits.size)
+        assertTrue(expense.splits.all { it is ExpenseSplit.Weight })
+        val weights = expense.splits.associate { it.participantId to (it as ExpenseSplit.Weight).weight }
+        assertEquals(60L, weights.getValue("p1"))
+        assertEquals(40L, weights.getValue("p2"))
+    }
+
+    // --- T26.2: aba Valor fixo ---
+
+    @Test
+    fun `salvar com valor fixo que nao fecha o total nao persiste nada`() = runTest(testDispatcher) {
+        seedParticipants(
+            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p2", groupId = groupId, name = "Marina"),
+        )
+        val viewModel = createViewModelWithParticipantsLoaded()
+
+        viewModel.onSplitModeSelected(SplitMode.FIXED_AMOUNT)
+        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onAmountChanged("100,00")
+        viewModel.onFixedAmountChanged("p1", "40,00")
+        viewModel.onFixedAmountChanged("p2", "40,00")
+        viewModel.onSaveClick()
+
+        assertTrue(expenseRepository.getExpensesFlow(groupId).first().isEmpty())
+    }
+
+    @Test
+    fun `salvar despesa com divisao por valor fixo persiste splits FixedAmount correspondentes`() = runTest(testDispatcher) {
+        seedParticipants(
+            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p2", groupId = groupId, name = "Marina"),
+        )
+        val viewModel = createViewModelWithParticipantsLoaded()
+
+        viewModel.onSplitModeSelected(SplitMode.FIXED_AMOUNT)
+        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onAmountChanged("100,00")
+        viewModel.onPayerSelected("p1")
+        viewModel.onFixedAmountChanged("p1", "70,00")
+        viewModel.onFixedAmountChanged("p2", "30,00")
+        viewModel.onSaveClick()
+
+        viewModel.events.first()
+
+        val expense = expenseRepository.getExpensesFlow(groupId).first().single()
+        assertEquals(2, expense.splits.size)
+        assertTrue(expense.splits.all { it is ExpenseSplit.FixedAmount })
+        val amounts = expense.splits.associate { it.participantId to (it as ExpenseSplit.FixedAmount).amount.cents }
+        assertEquals(7000L, amounts.getValue("p1"))
+        assertEquals(3000L, amounts.getValue("p2"))
+    }
 }

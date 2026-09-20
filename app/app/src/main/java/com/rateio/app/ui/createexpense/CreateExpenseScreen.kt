@@ -20,7 +20,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rateio.app.ui.format.parseAmountInputToCents
 import com.rateio.app.ui.theme.LocalRateioColors
+import com.rateio.domain.model.Money
 import java.time.LocalDate
 
 /**
@@ -55,7 +57,10 @@ fun CreateExpenseRoute(
         onAmountChange = viewModel::onAmountChanged,
         onPayerSelected = viewModel::onPayerSelected,
         onDateSelected = viewModel::onDateSelected,
+        onSplitModeSelected = viewModel::onSplitModeSelected,
         onParticipantToggled = viewModel::onParticipantToggled,
+        onPercentageChanged = viewModel::onPercentageChanged,
+        onFixedAmountChanged = viewModel::onFixedAmountChanged,
         onSaveClick = viewModel::onSaveClick,
         modifier = modifier,
     )
@@ -75,7 +80,10 @@ fun CreateExpenseScreen(
     onAmountChange: (String) -> Unit,
     onPayerSelected: (String) -> Unit,
     onDateSelected: (LocalDate) -> Unit,
+    onSplitModeSelected: (SplitMode) -> Unit,
     onParticipantToggled: (String) -> Unit,
+    onPercentageChanged: (participantId: String, percentageInput: String) -> Unit,
+    onFixedAmountChanged: (participantId: String, fixedAmountInput: String) -> Unit,
     onSaveClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -114,12 +122,25 @@ fun CreateExpenseScreen(
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = "Como dividir", fontWeight = FontWeight.SemiBold)
-                SplitTypeTabs()
-                ParticipantSplitList(
-                    rows = uiState.splitRows,
-                    isError = uiState.participantsError,
-                    onParticipantToggled = onParticipantToggled,
-                )
+                SplitTypeTabs(selectedMode = uiState.splitMode, onModeSelected = onSplitModeSelected)
+                when (uiState.splitMode) {
+                    SplitMode.EQUAL -> ParticipantSplitList(
+                        rows = uiState.splitRows,
+                        isError = uiState.participantsError,
+                        onParticipantToggled = onParticipantToggled,
+                    )
+
+                    SplitMode.PERCENTAGE -> PercentageSplitList(
+                        rows = uiState.splitRows,
+                        onPercentageChanged = onPercentageChanged,
+                    )
+
+                    SplitMode.FIXED_AMOUNT -> FixedAmountSplitList(
+                        rows = uiState.splitRows,
+                        total = Money.ofCents(parseAmountInputToCents(uiState.amountInput) ?: 0L),
+                        onFixedAmountChanged = onFixedAmountChanged,
+                    )
+                }
             }
 
             Button(

@@ -11,34 +11,56 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * `#tabs` do protótipo ("Igual / Percentual / Valor fixo"). T24 só implementa a divisão Igual
- * (T24.2) — as outras duas aparecem desabilitadas, como a própria task prevê ("podem aparecer
- * desabilitadas ou ocultas"); T26 troca isso por abas de verdade.
+ * `#tabs` do protótipo ("Igual / Percentual / Valor fixo"). T24 só implementava a divisão Igual —
+ * as outras duas apareciam desabilitadas; T26 troca isso por abas de verdade, todas habilitadas,
+ * trocando [CreateExpenseUiState.splitMode] via [onModeSelected].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SplitTypeTabs(modifier: Modifier = Modifier) {
+fun SplitTypeTabs(
+    selectedMode: SplitMode,
+    onModeSelected: (SplitMode) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(
-            selected = true,
-            enabled = true,
-            onClick = {},
-            label = { Text(text = "Igual") },
+        SplitModeChip(
+            label = "Igual",
+            mode = SplitMode.EQUAL,
+            selectedMode = selectedMode,
+            onModeSelected = onModeSelected,
             modifier = Modifier.weight(1f),
         )
-        FilterChip(
-            selected = false,
-            enabled = false,
-            onClick = {},
-            label = { Text(text = "Percentual") },
+        SplitModeChip(
+            label = "Percentual",
+            mode = SplitMode.PERCENTAGE,
+            selectedMode = selectedMode,
+            onModeSelected = onModeSelected,
             modifier = Modifier.weight(1f),
         )
-        FilterChip(
-            selected = false,
-            enabled = false,
-            onClick = {},
-            label = { Text(text = "Valor fixo") },
+        SplitModeChip(
+            label = "Valor fixo",
+            mode = SplitMode.FIXED_AMOUNT,
+            selectedMode = selectedMode,
+            onModeSelected = onModeSelected,
             modifier = Modifier.weight(1f),
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SplitModeChip(
+    label: String,
+    mode: SplitMode,
+    selectedMode: SplitMode,
+    onModeSelected: (SplitMode) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FilterChip(
+        selected = selectedMode == mode,
+        enabled = true,
+        onClick = { onModeSelected(mode) },
+        label = { Text(text = label) },
+        modifier = modifier,
+    )
 }
