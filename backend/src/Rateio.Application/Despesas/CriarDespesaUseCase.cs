@@ -1,4 +1,5 @@
 using Rateio.Application.Grupos;
+using Rateio.Application.Notificacoes;
 
 namespace Rateio.Application.Despesas;
 
@@ -13,12 +14,17 @@ namespace Rateio.Application.Despesas;
 /// de domínio via <see cref="MapeadorDeDespesa"/> (o mesmo mapeamento DTO→Domínio que T18 escreveu
 /// pra sincronização, extraído pra <c>Rateio.Application.Despesas</c> porque os dois casos de uso
 /// precisam dele) e (4) persiste via <see cref="IDespesaRepository"/> — sem recalcular/guardar
-/// saldo, isso é sob demanda via T32.
+/// saldo, isso é sob demanda via T32. (5) T38.2: com a despesa já persistida com sucesso, notifica
+/// <see cref="INotificadorDeEventoDeGrupo"/> (RF35/RF36) — depende só da abstração de Application,
+/// nunca de SignalR diretamente (Dependency Inversion).
 ///
 /// <paramref name="usuarioAutenticadoId"/> só é usado pra checar acesso, nunca é gravado como parte
 /// da despesa — igual à garantia estrutural de T18 pro dono do grupo.
 /// </summary>
-public sealed class CriarDespesaUseCase(IGrupoRepository grupoRepository, IDespesaRepository despesaRepository)
+public sealed class CriarDespesaUseCase(
+    IGrupoRepository grupoRepository,
+    IDespesaRepository despesaRepository,
+    INotificadorDeEventoDeGrupo notificadorDeEventoDeGrupo)
 {
     public async Task<Guid> ExecutarAsync(
         Guid usuarioAutenticadoId,
@@ -32,6 +38,14 @@ public sealed class CriarDespesaUseCase(IGrupoRepository grupoRepository, IDespe
         var despesaParaPersistir = new DespesaParaPersistir(despesa, requisicao.Descricao, requisicao.Data);
 
         await despesaRepository.AdicionarAsync(grupoId, despesaParaPersistir, cancellationToken);
+
+        var evento = new EventoDespesaCriada(
+            grupoId,
+            despesa.Id,
+            despesaParaPersistir.Descricao,
+            despesa.ValorTotal.Centavos,
+            despesa.PagadorId.Valor);
+        await notificadorDeEventoDeGrupo.NotificarAsync(evento, cancellationToken);
 
         return despesa.Id;
     }
