@@ -5,6 +5,7 @@ import com.rateio.data.persistence.entity.SettlementEntity
 import com.rateio.domain.model.Money
 import com.rateio.domain.model.Settlement
 import com.rateio.domain.repository.SettlementRepository
+import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -24,6 +25,7 @@ private fun SettlementEntity.toDomain() = Settlement(
     payerId = payerId,
     receiverId = receiverId,
     amount = Money.ofCents(amountCents),
+    createdAt = Instant.ofEpochMilli(createdAtEpochMillis),
 )
 
 private fun Settlement.toEntity() = SettlementEntity(
@@ -32,4 +34,5 @@ private fun Settlement.toEntity() = SettlementEntity(
     payerId = payerId,
     receiverId = receiverId,
     amountCents = amount.cents,
+    createdAtEpochMillis = createdAt.toEpochMilli(),
 )

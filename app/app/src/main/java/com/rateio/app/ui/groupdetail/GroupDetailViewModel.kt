@@ -216,6 +216,9 @@ class GroupDetailViewModel(
             expenses = expenses
                 .sortedByDescending { it.createdAt }
                 .map { expense -> expense.toRowUiModel(participantNames) },
+            settlements = settlements
+                .sortedByDescending { it.createdAt }
+                .map { settlement -> settlement.toRowUiModel(participantNames) },
             syncAction = group.syncActionFor(isAuthenticated, syncOverride),
         )
     }
@@ -243,6 +246,14 @@ private fun Expense.toRowUiModel(participantNames: Map<String, String>) = Expens
     dateLabel = formatInstantAsShortDate(createdAt),
     amountCents = amountCents,
     splitTypeLabel = splits.splitTypeLabel(),
+)
+
+private fun Settlement.toRowUiModel(participantNames: Map<String, String>) = SettlementRowUiModel(
+    id = id,
+    payerName = participantNames[payerId] ?: "Alguém",
+    receiverName = participantNames[receiverId] ?: "Alguém",
+    dateLabel = formatInstantAsShortDate(createdAt),
+    amountCents = amount.cents,
 )
 
 /** "dividido igual" / "dividido por %" / "valor fixo por pessoa" — mesmo texto de `tipoLabel()` em `grupo.html`. */

@@ -9,3 +9,10 @@
 .externalNativeBuild/
 .cxx/
 .kotlin/
+
+# Artefatos de Eclipse/Buildship (não são módulos reais — ver settings.gradle.kts)
+.project
+.classpath
+.settings/
+/bin/
+**/bin/

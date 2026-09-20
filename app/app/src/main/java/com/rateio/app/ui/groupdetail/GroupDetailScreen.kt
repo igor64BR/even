@@ -172,6 +172,13 @@ private fun GroupDetailContent(
                 onDeleteExpenseConfirmed = onDeleteExpenseConfirmed,
             )
         }
+
+        if (uiState.settlements.isNotEmpty()) {
+            SectionLabel(text = "Histórico de quitações")
+            Column {
+                uiState.settlements.forEach { settlement -> SettlementRow(settlement = settlement) }
+            }
+        }
     }
 }
 

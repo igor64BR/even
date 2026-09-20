@@ -10,6 +10,7 @@ import com.rateio.domain.repository.ExpenseRepository
 import com.rateio.domain.repository.GroupRepository
 import com.rateio.domain.repository.ParticipantRepository
 import com.rateio.domain.repository.SettlementRepository
+import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -73,6 +74,7 @@ class SettleDebtsViewModel(
                     payerId = suggestion.fromParticipantId,
                     receiverId = suggestion.toParticipantId,
                     amount = Money.ofCents(suggestion.amountCents),
+                    createdAt = Instant.now(),
                 ),
             )
         }

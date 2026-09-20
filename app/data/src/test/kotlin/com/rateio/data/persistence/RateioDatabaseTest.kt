@@ -210,7 +210,7 @@ class RateioDatabaseTest {
         database.participantDao().insert(payer)
         database.participantDao().insert(receiver)
 
-        val settlement = SettlementEntity(id = "s1", groupId = "g1", payerId = "p1", receiverId = "p2", amountCents = 500)
+        val settlement = SettlementEntity(id = "s1", groupId = "g1", payerId = "p1", receiverId = "p2", amountCents = 500, createdAtEpochMillis = 4_000L)
         database.settlementDao().insert(settlement)
 
         assertEquals(listOf(settlement), database.settlementDao().getSettlementsFlow("g1").first())
@@ -225,7 +225,7 @@ class RateioDatabaseTest {
         database.participantDao().insert(payer)
         database.participantDao().insert(receiver)
         database.settlementDao().insert(
-            SettlementEntity(id = "s1", groupId = "g1", payerId = "p1", receiverId = "p2", amountCents = 500),
+            SettlementEntity(id = "s1", groupId = "g1", payerId = "p1", receiverId = "p2", amountCents = 500, createdAtEpochMillis = 4_000L),
         )
 
         database.groupDao().deleteById("g1")

@@ -24,7 +24,9 @@ import com.rateio.data.persistence.entity.SettlementEntity
  * (`SettlementEntity`) — motor de simplificação (T33) já existia, mas não havia onde persistir uma
  * quitação registrada pela tela "Quitar dívidas". Versão 5 (T40.1): adiciona a tabela
  * `notifications` (`NotificationEntity`) — persistência local dos eventos de grupo recebidos via
- * SignalR (T40) ou recuperados pelo fallback de pull (T39). Sem migration explícita e sem
+ * SignalR (T40) ou recuperados pelo fallback de pull (T39). Versão 6 (T37): adiciona
+ * `SettlementEntity.createdAtEpochMillis`, necessário pra ordenar a tela "Histórico de
+ * quitações" (RF31/RF33) por data. Sem migration explícita e sem
  * `fallbackToDestructiveMigration` em nenhuma delas — ainda não existe build distribuído
  * (nenhum usuário real a preservar), então recriar o schema do zero é seguro; uma migration real
  * entra assim que houver uma versão publicada para migrar a partir dela.
@@ -41,7 +43,7 @@ import com.rateio.data.persistence.entity.SettlementEntity
         SettlementEntity::class,
         NotificationEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class RateioDatabase : RoomDatabase() {

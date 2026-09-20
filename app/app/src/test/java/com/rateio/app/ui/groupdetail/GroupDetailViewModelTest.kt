@@ -13,7 +13,9 @@ import com.rateio.domain.model.AuthenticatedUser
 import com.rateio.domain.model.Expense
 import com.rateio.domain.model.ExpenseSplit
 import com.rateio.domain.model.Group
+import com.rateio.domain.model.Money
 import com.rateio.domain.model.Participant
+import com.rateio.domain.model.Settlement
 import com.rateio.domain.realtime.GroupRealtimeGateway
 import com.rateio.domain.repository.AuthRepository
 import com.rateio.domain.repository.GroupSyncException
@@ -212,20 +214,62 @@ class GroupDetailViewModelTest {
     }
 
     /**
-     * Marca o grupo como sincronizado via `UPDATE` direto, nunca via `GroupDao.insert`
-     * (`@Insert(OnConflictStrategy.REPLACE)`): re-inserir a MESMA linha (mesmo id) faz o SQLite
-     * apagar e reinserir a linha, o que dispara `onDelete = CASCADE` das chaves estrangeiras de
-     * `participants`/`expenses` pra `groups` — apagando silenciosamente os participantes/despesa
-     * já semeados por [seedGroupWithExpense] (confirmado isolando o comportamento: contagem de
-     * participantes vai a zero depois do REPLACE). **Bug real e pré-existente, fora do escopo de
-     * T29** — a mesma chamada acontece em produção em [GroupDetailViewModel.syncGroup] (T19,
-     * "Sincronizar este grupo"), reportado à parte, não corrigido aqui.
+     * Marca o grupo como sincronizado reinserindo a mesma linha com `isSynced=true` — mesmo
+     * caminho de produção ([GroupDetailViewModel.syncGroup], T19). Antes de `GroupDao.insert`
+     * virar `@Upsert` (achado em T29, corrigido à parte), isso apagava silenciosamente
+     * participantes/despesas via `ON DELETE CASCADE` (SQLite `INSERT OR REPLACE` é DELETE+INSERT);
+     * `@Upsert` faz um `UPDATE` de verdade, então este helper hoje é só um atalho de teste, não um
+     * workaround.
      */
-    private fun markGroupAsSynced(groupId: String, remoteId: String) {
-        database.openHelper.writableDatabase.execSQL(
-            "UPDATE groups SET isSynced = 1, remoteId = ? WHERE id = ?",
-            arrayOf(remoteId, groupId),
+    private suspend fun markGroupAsSynced(groupId: String, remoteId: String) {
+        val group = requireNotNull(groupRepository.getGroupById(groupId))
+        groupRepository.insertGroup(group.copy(isSynced = true, remoteId = remoteId))
+    }
+
+    // --- T37: histórico de quitações ---
+
+    @Test
+    fun `quitacoes registradas aparecem no historico, mais recente primeiro`() = runTest(testDispatcher) {
+        val groupId = seedGroupWithExpense()
+        settlementRepository.insertSettlement(
+            Settlement(
+                id = "s1",
+                groupId = groupId,
+                payerId = "p2",
+                receiverId = "p1",
+                amount = Money.ofCents(333),
+                createdAt = Instant.ofEpochMilli(1_000),
+            ),
         )
+        settlementRepository.insertSettlement(
+            Settlement(
+                id = "s2",
+                groupId = groupId,
+                payerId = "p3",
+                receiverId = "p1",
+                amount = Money.ofCents(333),
+                createdAt = Instant.ofEpochMilli(2_000),
+            ),
+        )
+        val viewModel = buildViewModel(groupId)
+
+        val state = viewModel.uiState
+            .first { it is GroupDetailUiState.Content && it.settlements.size == 2 } as GroupDetailUiState.Content
+
+        assertEquals(listOf("s2", "s1"), state.settlements.map { it.id })
+        assertEquals("Diego", state.settlements.first().payerName)
+        assertEquals("Você", state.settlements.first().receiverName)
+        assertEquals(333L, state.settlements.first().amountCents)
+    }
+
+    @Test
+    fun `grupo sem quitacoes tem historico vazio`() = runTest(testDispatcher) {
+        val groupId = seedGroupWithExpense()
+        val viewModel = buildViewModel(groupId)
+
+        val state = viewModel.uiState.first { it is GroupDetailUiState.Content } as GroupDetailUiState.Content
+
+        assertTrue(state.settlements.isEmpty())
     }
 
     // --- T29.2: excluir despesa ---

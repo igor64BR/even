@@ -17,6 +17,7 @@ sealed interface GroupDetailUiState {
         val isSynced: Boolean,
         val balances: List<ParticipantBalanceUiModel>,
         val expenses: List<ExpenseRowUiModel>,
+        val settlements: List<SettlementRowUiModel>,
         val syncAction: GroupSyncActionUiState,
     ) : GroupDetailUiState
 }
@@ -57,6 +58,19 @@ data class ExpenseRowUiModel(
     val dateLabel: String,
     val amountCents: Long,
     val splitTypeLabel: String,
+)
+
+/**
+ * Uma linha de "Histórico de quitações" (T37, RF31/RF33): quem pagou, quem recebeu, quanto e
+ * quando — só apresentação, `SettleDebtsViewModel` já registrou a quitação em si (T42.1); esta
+ * lista nunca recalcula nada, é puramente o histórico do que já aconteceu.
+ */
+data class SettlementRowUiModel(
+    val id: String,
+    val payerName: String,
+    val receiverName: String,
+    val dateLabel: String,
+    val amountCents: Long,
 )
 
 /**

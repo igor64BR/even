@@ -41,4 +41,5 @@ data class SettlementEntity(
     val payerId: String,
     val receiverId: String,
     val amountCents: Long,
+    val createdAtEpochMillis: Long,
 )

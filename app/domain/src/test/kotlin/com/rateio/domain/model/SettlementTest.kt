@@ -1,5 +1,6 @@
 package com.rateio.domain.model
 
+import java.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -14,6 +15,7 @@ class SettlementTest {
             payerId = "A",
             receiverId = "B",
             amount = Money.ofCents(1000),
+            createdAt = Instant.EPOCH,
         )
 
         assertEquals("A", settlement.payerId)
