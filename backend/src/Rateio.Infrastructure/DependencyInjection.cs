@@ -11,6 +11,7 @@ using Rateio.Application.Quitacoes;
 using Rateio.Infrastructure.Auth;
 using Rateio.Infrastructure.Despesas;
 using Rateio.Infrastructure.Grupos;
+using Rateio.Infrastructure.Notificacoes;
 using Rateio.Infrastructure.Persistence;
 using Rateio.Infrastructure.Quitacoes;
 
@@ -91,6 +92,13 @@ public static class DependencyInjection
     /// <c>MapInboundClaims = false</c> é necessário pra ler o claim <c>sub</c> exatamente como
     /// <see cref="JwtIssuer"/> o emitiu — sem isso o handler padrão remapeia "sub" pro URI legado
     /// de <see cref="System.Security.Claims.ClaimTypes.NameIdentifier"/>.
+    ///
+    /// T38.1: <c>OnMessageReceived</c> é o único acréscimo pro Hub SignalR (<c>RateioHub</c>,
+    /// Rateio.Api) funcionar autenticado. Um cliente de Hub não consegue mandar header
+    /// <c>Authorization</c> no handshake de WebSocket — a própria documentação do ASP.NET Core
+    /// recomenda ler o token da query string <c>access_token</c> nesse caso, restrito à rota do Hub
+    /// (<see cref="RotaDoHubDeNotificacoes.Caminho"/>) pra não abrir esse caminho alternativo de
+    /// autenticação pros endpoints REST comuns, que continuam exigindo o header normal.
     /// </summary>
     private static IServiceCollection AddAutenticacaoJwt(this IServiceCollection services)
     {
@@ -111,6 +119,22 @@ public static class DependencyInjection
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
                     ClockSkew = TimeSpan.FromSeconds(30),
+                };
+                bearerOptions.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var caminhoDaRequisicao = context.HttpContext.Request.Path;
+
+                        if (!string.IsNullOrEmpty(accessToken)
+                            && caminhoDaRequisicao.StartsWithSegments(RotaDoHubDeNotificacoes.Caminho))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    },
                 };
             });
 

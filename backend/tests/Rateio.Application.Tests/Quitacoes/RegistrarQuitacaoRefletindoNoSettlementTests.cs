@@ -1,6 +1,7 @@
 using Moq;
 using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
+using Rateio.Application.Notificacoes;
 using Rateio.Application.Quitacoes;
 using Rateio.Application.Simplificacao;
 using Rateio.Domain;
@@ -53,7 +54,8 @@ public class RegistrarQuitacaoRefletindoNoSettlementTests
         Assert.Equal([new Transacao(a, b, Dinheiro.EmCentavos(1000))], antesDaQuitacao);
 
         // T35.1: A paga 400 a B via POST /groups/{id}/settlements.
-        var registrarQuitacao = new RegistrarQuitacaoUseCase(_grupoRepository.Object, _quitacaoRepository);
+        var registrarQuitacao = new RegistrarQuitacaoUseCase(
+            _grupoRepository.Object, _quitacaoRepository, Mock.Of<INotificadorDeEventoDeGrupo>());
         var requisicao = new RegistrarQuitacaoRequest(a.Valor, b.Valor, ValorCentavos: 400);
         await registrarQuitacao.ExecutarAsync(donoUsuarioId, grupoId, requisicao);
 

@@ -1,6 +1,9 @@
+using Rateio.Api.Hubs;
 using Rateio.Api.Middleware;
 using Rateio.Application;
+using Rateio.Application.Notificacoes;
 using Rateio.Infrastructure;
+using Rateio.Infrastructure.Notificacoes;
 using Serilog;
 using Serilog.Formatting.Compact;
 
@@ -26,6 +29,13 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// T38.1: RateioHub (RF35/RF36) — a implementação real de INotificadorDeEventoDeGrupo (Application)
+// vive aqui, em Rateio.Api, porque é onde IHubContext<RateioHub> existe; registrada no composition
+// root em vez de em Rateio.Infrastructure.DependencyInjection.AddInfrastructure porque Infrastructure
+// não referencia Rateio.Api (RateioHub vive na camada mais externa).
+builder.Services.AddSignalR();
+builder.Services.AddScoped<INotificadorDeEventoDeGrupo, NotificadorDeEventoDeGrupoSignalR>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -49,6 +59,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// T38.1: mesma rota que Rateio.Infrastructure.DependencyInjection.AddAutenticacaoJwt usa pra saber
+// que uma requisição é handshake de Hub (e ler o JWT da query string em vez do header Authorization).
+app.MapHub<RateioHub>(RotaDoHubDeNotificacoes.Caminho);
 
 // RNF08: 200 quando as dependências (hoje: DB) estão saudáveis, 503 caso contrário.
 // Checks registrados em Rateio.Infrastructure.DependencyInjection.AddInfrastructure.

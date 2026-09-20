@@ -1,6 +1,7 @@
 using Moq;
 using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
+using Rateio.Application.Notificacoes;
 using Rateio.Domain;
 
 namespace Rateio.Application.Tests.Despesas;
@@ -11,13 +12,17 @@ namespace Rateio.Application.Tests.Despesas;
 /// regras do entregável da task — despesa válida persiste, grupo inexistente vira
 /// <see cref="GrupoNaoEncontradoException"/> (o controller mapeia pra 404), usuário sem acesso vira
 /// <see cref="AcessoNegadoException"/> (controller mapeia pra 403) — cada uma tem seu teste próprio.
+/// T38.2 acrescenta a cobertura de <see cref="INotificadorDeEventoDeGrupo"/>: mockado aqui (sem Hub
+/// real), com um teste próprio confirmando que o evento certo é disparado após persistir.
 /// </summary>
 public class CriarDespesaUseCaseTests
 {
     private readonly Mock<IGrupoRepository> _grupoRepository = new();
     private readonly Mock<IDespesaRepository> _despesaRepository = new();
+    private readonly Mock<INotificadorDeEventoDeGrupo> _notificadorDeEventoDeGrupo = new();
 
-    private CriarDespesaUseCase CriarUseCase() => new(_grupoRepository.Object, _despesaRepository.Object);
+    private CriarDespesaUseCase CriarUseCase() =>
+        new(_grupoRepository.Object, _despesaRepository.Object, _notificadorDeEventoDeGrupo.Object);
 
     [Fact]
     public async Task ExecutarAsync_DespesaValidaEUsuarioComAcesso_PersisteNoGrupoCorreto()
@@ -59,6 +64,46 @@ public class CriarDespesaUseCaseTests
     }
 
     [Fact]
+    public async Task ExecutarAsync_DespesaValidaEUsuarioComAcesso_NotificaEventoDespesaCriadaAposPersistir()
+    {
+        var grupoId = Guid.NewGuid();
+        var donoUsuarioId = Guid.NewGuid();
+        ConfigurarAcesso(grupoId, donoUsuarioId);
+
+        var ordemDasChamadas = new List<string>();
+        _despesaRepository
+            .Setup(r => r.AdicionarAsync(It.IsAny<Guid>(), It.IsAny<DespesaParaPersistir>(), It.IsAny<CancellationToken>()))
+            .Callback(() => ordemDasChamadas.Add("persistiu"))
+            .Returns(Task.CompletedTask);
+
+        IEventoDeGrupo? eventoNotificado = null;
+        _notificadorDeEventoDeGrupo
+            .Setup(n => n.NotificarAsync(It.IsAny<IEventoDeGrupo>(), It.IsAny<CancellationToken>()))
+            .Callback<IEventoDeGrupo, CancellationToken>((evento, _) =>
+            {
+                ordemDasChamadas.Add("notificou");
+                eventoNotificado = evento;
+            })
+            .Returns(Task.CompletedTask);
+
+        var useCase = CriarUseCase();
+        var requisicao = RequisicaoValida(out var anaId, out _);
+
+        var despesaId = await useCase.ExecutarAsync(donoUsuarioId, grupoId, requisicao);
+
+        // A notificação só faz sentido depois que a despesa já está persistida com sucesso.
+        Assert.Equal(["persistiu", "notificou"], ordemDasChamadas);
+
+        var eventoDespesaCriada = Assert.IsType<EventoDespesaCriada>(eventoNotificado);
+        Assert.Equal(grupoId, eventoDespesaCriada.GrupoId);
+        Assert.Equal(despesaId, eventoDespesaCriada.DespesaId);
+        Assert.Equal(requisicao.Descricao, eventoDespesaCriada.Descricao);
+        Assert.Equal(requisicao.ValorTotalCentavos, eventoDespesaCriada.ValorTotalCentavos);
+        Assert.Equal(anaId, eventoDespesaCriada.PagadorId);
+        Assert.Equal(TipoEventoDeGrupo.DespesaCriada, eventoDespesaCriada.Tipo);
+    }
+
+    [Fact]
     public async Task ExecutarAsync_GrupoInexistente_LancaGrupoNaoEncontradoSemPersistir()
     {
         var grupoId = Guid.NewGuid();
@@ -75,6 +120,9 @@ public class CriarDespesaUseCaseTests
         Assert.Equal(grupoId, excecao.GrupoId);
         _despesaRepository.Verify(
             r => r.AdicionarAsync(It.IsAny<Guid>(), It.IsAny<DespesaParaPersistir>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _notificadorDeEventoDeGrupo.Verify(
+            n => n.NotificarAsync(It.IsAny<IEventoDeGrupo>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -96,6 +144,9 @@ public class CriarDespesaUseCaseTests
         Assert.Equal(grupoId, excecao.GrupoId);
         _despesaRepository.Verify(
             r => r.AdicionarAsync(It.IsAny<Guid>(), It.IsAny<DespesaParaPersistir>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _notificadorDeEventoDeGrupo.Verify(
+            n => n.NotificarAsync(It.IsAny<IEventoDeGrupo>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -147,6 +198,9 @@ public class CriarDespesaUseCaseTests
 
         _despesaRepository.Verify(
             r => r.AdicionarAsync(It.IsAny<Guid>(), It.IsAny<DespesaParaPersistir>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _notificadorDeEventoDeGrupo.Verify(
+            n => n.NotificarAsync(It.IsAny<IEventoDeGrupo>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 

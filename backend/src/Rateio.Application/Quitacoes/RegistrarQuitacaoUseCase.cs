@@ -1,4 +1,5 @@
 using Rateio.Application.Grupos;
+using Rateio.Application.Notificacoes;
 
 namespace Rateio.Application.Quitacoes;
 
@@ -10,6 +11,9 @@ namespace Rateio.Application.Quitacoes;
 /// não existe (404), <see cref="AcessoNegadoException"/> se existe mas o usuário autenticado não tem
 /// acesso a ele (403, RNF07); só então (2) o payload vira <see cref="Domain.Quitacao"/> de domínio
 /// (T31) via <see cref="MapeadorDeQuitacao"/> e (3) persiste via <see cref="IQuitacaoRepository"/>.
+/// (4) T38.3: com a quitação já persistida com sucesso, notifica
+/// <see cref="INotificadorDeEventoDeGrupo"/> (RF35/RF36) — mesma abstração de Application usada por
+/// <c>CriarDespesaUseCase</c>, nunca SignalR direto.
 ///
 /// Não recalcula nem guarda saldo (T35.2): a próxima chamada a <c>GET /groups/{id}/settlement</c> já
 /// recomputa sob demanda a partir do histórico vigente de despesas e quitações — mesma garantia que
@@ -18,7 +22,10 @@ namespace Rateio.Application.Quitacoes;
 /// <paramref name="usuarioAutenticadoId"/> só é usado pra checar acesso, nunca é gravado como parte
 /// da quitação — igual à garantia estrutural de <c>CriarDespesaUseCase</c>.
 /// </summary>
-public sealed class RegistrarQuitacaoUseCase(IGrupoRepository grupoRepository, IQuitacaoRepository quitacaoRepository)
+public sealed class RegistrarQuitacaoUseCase(
+    IGrupoRepository grupoRepository,
+    IQuitacaoRepository quitacaoRepository,
+    INotificadorDeEventoDeGrupo notificadorDeEventoDeGrupo)
 {
     public async Task<Guid> ExecutarAsync(
         Guid usuarioAutenticadoId,
@@ -31,6 +38,14 @@ public sealed class RegistrarQuitacaoUseCase(IGrupoRepository grupoRepository, I
         var quitacao = MapeadorDeQuitacao.Construir(requisicao);
 
         await quitacaoRepository.AdicionarAsync(grupoId, quitacao, cancellationToken);
+
+        var evento = new EventoDividaQuitada(
+            grupoId,
+            quitacao.Id,
+            quitacao.PagadorId.Valor,
+            quitacao.RecebedorId.Valor,
+            quitacao.Valor.Centavos);
+        await notificadorDeEventoDeGrupo.NotificarAsync(evento, cancellationToken);
 
         return quitacao.Id;
     }
