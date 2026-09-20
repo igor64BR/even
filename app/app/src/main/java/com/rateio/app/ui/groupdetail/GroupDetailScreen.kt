@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,12 @@ import com.rateio.app.ui.theme.LocalRateioColors
  * (T24) ou "Sincronizar" (T19), atalhos temporários porque esta tela não existia. `factory` injeta
  * o [GroupDetailViewModel] pela composição manual de [com.rateio.app.di.AppContainer], mesmo
  * padrão de [com.rateio.app.ui.createexpense.CreateExpenseRoute].
+ *
+ * `DisposableEffect` liga o cliente SignalR (T40.1) à presença desta tela na composição — conecta
+ * ao entrar, desconecta ao sair, independente do ciclo de vida do `ViewModel` em si (que hoje pode
+ * sobreviver à navegação, já que o app ainda não usa `NavHost`/back stack real). É essa
+ * `DisposableEffect`, não o `ViewModel`, que garante "só conecta enquanto a tela está sendo
+ * vista" (constitution.md princípio 3).
  */
 @Composable
 fun GroupDetailRoute(
@@ -49,6 +56,11 @@ fun GroupDetailRoute(
 ) {
     val viewModel: GroupDetailViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    DisposableEffect(viewModel) {
+        viewModel.startRealtimeUpdates()
+        onDispose { viewModel.stopRealtimeUpdates() }
+    }
 
     GroupDetailScreen(
         uiState = uiState,

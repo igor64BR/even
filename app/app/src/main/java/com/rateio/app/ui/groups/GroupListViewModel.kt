@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rateio.domain.model.Group
 import com.rateio.domain.repository.GroupRepository
+import com.rateio.domain.repository.NotificationRepository
 import com.rateio.domain.repository.ParticipantRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -40,6 +41,7 @@ import kotlinx.coroutines.flow.stateIn
 class GroupListViewModel(
     private val groupRepository: GroupRepository,
     private val participantRepository: ParticipantRepository,
+    private val notificationRepository: NotificationRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<GroupListUiState> = groupRepository.getGroupsFlow()
@@ -48,6 +50,14 @@ class GroupListViewModel(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = GroupListUiState.Loading,
+        )
+
+    /** Badge da aba "Avisos" (T41.2) — mesma fonte que `NotificationsViewModel` usa. */
+    val unreadNotificationsCount: StateFlow<Int> = notificationRepository.getUnreadCountFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            initialValue = 0,
         )
 
     private fun observeContent(groups: List<Group>): Flow<GroupListUiState> {

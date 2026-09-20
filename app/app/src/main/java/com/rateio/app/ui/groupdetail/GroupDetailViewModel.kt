@@ -10,6 +10,7 @@ import com.rateio.domain.model.Group
 import com.rateio.domain.model.Money
 import com.rateio.domain.model.Participant
 import com.rateio.domain.model.Settlement
+import com.rateio.domain.realtime.GroupRealtimeGateway
 import com.rateio.domain.repository.AuthRepository
 import com.rateio.domain.repository.ExpenseRepository
 import com.rateio.domain.repository.GroupRepository
@@ -18,10 +19,15 @@ import com.rateio.domain.repository.ParticipantRepository
 import com.rateio.domain.repository.RemoteGroupRepository
 import com.rateio.domain.repository.SettlementRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -53,10 +59,13 @@ class GroupDetailViewModel(
     private val authRepository: AuthRepository,
     private val remoteGroupRepository: RemoteGroupRepository,
     private val debtSimplificationEngine: DebtSimplificationEngine,
+    private val groupRealtimeGateway: GroupRealtimeGateway,
 ) : ViewModel() {
 
     /** Override transiente de [GroupSyncActionUiState] — só guarda InProgress/Failed da última tentativa. */
     private val syncOverride = MutableStateFlow<GroupSyncActionUiState?>(null)
+
+    private var realtimeJob: Job? = null
 
     val uiState: StateFlow<GroupDetailUiState> = combine(
         groupRepository.getGroupsFlow().map { groups -> groups.firstOrNull { it.id == groupId } },
@@ -101,6 +110,58 @@ class GroupDetailViewModel(
         val remoteId = remoteGroupRepository.syncGroup(group, participants, expenses)
 
         groupRepository.insertGroup(group.copy(isSynced = true, remoteId = remoteId))
+    }
+
+    /**
+     * T40.1: conecta o [groupRealtimeGateway] enquanto este grupo está sincronizado e o usuário
+     * autenticado — desconecta assim que qualquer uma das duas condições deixar de valer (grupo
+     * ainda não sincronizado, sessão encerrada) e reconecta se voltar a valer. Chamado
+     * explicitamente por [GroupDetailRoute] via `DisposableEffect` (não automaticamente no `init`)
+     * porque a tela, não o `ViewModel`, sabe quando está de fato em primeiro plano — mesmo cuidado
+     * que a constitution.md princípio 3 pede: "não conecte o Hub globalmente, só quando há grupo
+     * sincronizado sendo visualizado".
+     *
+     * Idempotente: chamar de novo com um job já rodando não faz nada.
+     */
+    fun startRealtimeUpdates() {
+        if (realtimeJob != null) return
+
+        realtimeJob = viewModelScope.launch {
+            syncedGroupWhileAuthenticatedFlow().collectLatestConnection()
+        }
+    }
+
+    /** `null` sempre que o grupo não está sincronizado ou não há sessão — as duas condições de [startRealtimeUpdates]. */
+    private fun syncedGroupWhileAuthenticatedFlow(): Flow<Group?> = combine(
+        groupRepository.getGroupsFlow().map { groups -> groups.firstOrNull { it.id == groupId } },
+        authRepository.getSessionFlow(),
+    ) { group, session -> group.takeIf { it?.isSynced == true && session != null } }.distinctUntilChanged()
+
+    /** Encerra a conexão em tempo real, se houver uma ativa — chamado por [GroupDetailRoute] e por [onCleared]. */
+    fun stopRealtimeUpdates() {
+        realtimeJob?.cancel()
+        realtimeJob = null
+    }
+
+    override fun onCleared() {
+        stopRealtimeUpdates()
+    }
+
+    /**
+     * Mantém no máximo uma conexão em tempo real ativa por vez: cada nova emissão de "deveria
+     * estar conectado a este grupo" cancela a anterior (via `collectLatest`) e conecta de novo;
+     * `null` (grupo não sincronizado ou sem sessão) só desconecta e espera a próxima emissão.
+     * `remoteId` sempre não-nulo aqui: [com.rateio.domain.model.Group.isSynced] e
+     * [com.rateio.domain.model.Group.remoteId] transicionam juntos (ver KDoc de `Group.remoteId`).
+     */
+    private suspend fun Flow<Group?>.collectLatestConnection() = collectLatest { group ->
+        val remoteId = group?.remoteId ?: return@collectLatest
+        try {
+            groupRealtimeGateway.connect(localGroupId = group.id, remoteGroupId = remoteId)
+            awaitCancellation()
+        } finally {
+            groupRealtimeGateway.disconnect()
+        }
     }
 
     private fun toUiState(

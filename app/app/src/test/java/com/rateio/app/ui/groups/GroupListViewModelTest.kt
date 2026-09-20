@@ -4,8 +4,10 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.rateio.data.persistence.RateioDatabase
 import com.rateio.data.persistence.entity.GroupEntity
+import com.rateio.data.persistence.entity.NotificationEntity
 import com.rateio.data.persistence.entity.ParticipantEntity
 import com.rateio.data.repository.RoomGroupRepository
+import com.rateio.data.repository.RoomNotificationRepository
 import com.rateio.data.repository.RoomParticipantRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,8 +34,9 @@ import org.robolectric.RobolectricTestRunner
  *
  * T19.1/T19.2 tinha acrescentado cobertura de "Sincronizar este grupo" aqui, como atalho
  * temporário (não existia tela de detalhe de grupo ainda). T42.4 moveu essa ação e seus testes
- * para [com.rateio.app.ui.groupdetail.GroupDetailViewModelTest] — esta classe volta a cobrir só o
- * que [GroupListViewModel] de fato faz hoje.
+ * para [com.rateio.app.ui.groupdetail.GroupDetailViewModelTest]. T41.2 acrescenta
+ * `unreadNotificationsCount` (badge da aba "Avisos") — esta classe volta a cobrir só o que
+ * [GroupListViewModel] de fato faz hoje, mais essa contagem.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -53,6 +56,7 @@ class GroupListViewModelTest {
         viewModel = GroupListViewModel(
             groupRepository = RoomGroupRepository(database.groupDao()),
             participantRepository = RoomParticipantRepository(database.participantDao()),
+            notificationRepository = RoomNotificationRepository(database.notificationDao()),
         )
     }
 
@@ -107,5 +111,22 @@ class GroupListViewModelTest {
             "GroupListViewModel.toUiModel() precisa repassar Group.isSynced real (T7B), não mais o false fixo de T8",
             group.isSynced,
         )
+    }
+
+    @Test
+    fun `badge de nao lidas reflete NotificationEntity com isRead false`() = runTest(testDispatcher) {
+        database.groupDao().insert(
+            GroupEntity(id = "churras", name = "Churras de sábado", createdAtEpochMillis = 1_000L),
+        )
+        database.notificationDao().insert(
+            NotificationEntity(id = "despesa:e1", groupId = "churras", message = "Marina lançou algo.", occurredAtEpochMillis = 1_000L, isRead = false),
+        )
+        database.notificationDao().insert(
+            NotificationEntity(id = "quitacao:s1", groupId = "churras", message = "Você quitou algo.", occurredAtEpochMillis = 2_000L, isRead = true),
+        )
+
+        val count = viewModel.unreadNotificationsCount.first { it == 1 }
+
+        assertEquals(1, count)
     }
 }

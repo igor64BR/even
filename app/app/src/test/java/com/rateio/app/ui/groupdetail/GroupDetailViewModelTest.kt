@@ -14,6 +14,7 @@ import com.rateio.domain.model.Expense
 import com.rateio.domain.model.ExpenseSplit
 import com.rateio.domain.model.Group
 import com.rateio.domain.model.Participant
+import com.rateio.domain.realtime.GroupRealtimeGateway
 import com.rateio.domain.repository.AuthRepository
 import com.rateio.domain.repository.GroupSyncException
 import com.rateio.domain.repository.RemoteGroupRepository
@@ -83,6 +84,7 @@ class GroupDetailViewModelTest {
         groupId: String,
         authRepository: AuthRepository = FakeAuthRepository(initialSession = null),
         remoteGroupRepository: RemoteGroupRepository = FakeRemoteGroupRepository(),
+        groupRealtimeGateway: GroupRealtimeGateway = FakeGroupRealtimeGateway(),
     ) = GroupDetailViewModel(
         groupId = groupId,
         groupRepository = groupRepository,
@@ -92,6 +94,7 @@ class GroupDetailViewModelTest {
         authRepository = authRepository,
         remoteGroupRepository = remoteGroupRepository,
         debtSimplificationEngine = GreedyDebtSimplificationEngine(),
+        groupRealtimeGateway = groupRealtimeGateway,
     )
 
     private suspend fun seedGroupWithExpense(): String {
@@ -203,6 +206,122 @@ class GroupDetailViewModelTest {
         val persisted = database.groupDao().getGroupById(groupId)!!
         assertFalse("falha de rede nao pode deixar o grupo marcado como sincronizado", persisted.isSynced)
         assertNull(persisted.remoteId)
+    }
+
+    // T40.1: GroupDetailViewModel.startRealtimeUpdates()/stopRealtimeUpdates() só orquestram QUANDO
+    // conectar/desconectar — a lógica de conexão em si (SignalRGroupRealtimeGateway) é testada à
+    // parte em :data, sem HubConnection nenhum (ver GroupEventRecorderTest/
+    // MissedGroupEventsSynchronizerTest). Aqui só verificamos que o gateway é chamado com os ids
+    // certos, nas condições certas.
+
+    @Test
+    fun `startRealtimeUpdates conecta o gateway com localGroupId e remoteId quando grupo sincronizado e autenticado`() =
+        runTest(testDispatcher) {
+            val groupId = seedGroupWithExpense()
+            database.groupDao().insert(
+                database.groupDao().getGroupById(groupId)!!.copy(isSynced = true, remoteId = "remote-$groupId"),
+            )
+            val gateway = FakeGroupRealtimeGateway()
+            val viewModel = buildViewModel(
+                groupId = groupId,
+                authRepository = FakeAuthRepository(authenticatedSession),
+                groupRealtimeGateway = gateway,
+            )
+            viewModel.uiState.first { it is GroupDetailUiState.Content }
+
+            viewModel.startRealtimeUpdates()
+            val firstConnect = gateway.awaitConnect()
+
+            assertEquals(groupId to "remote-$groupId", firstConnect)
+            assertEquals(0, gateway.disconnectCallCount)
+        }
+
+    @Test
+    fun `startRealtimeUpdates nao conecta o gateway quando grupo nao esta sincronizado`() = runTest(testDispatcher) {
+        val groupId = seedGroupWithExpense()
+        val gateway = FakeGroupRealtimeGateway()
+        val viewModel = buildViewModel(
+            groupId = groupId,
+            authRepository = FakeAuthRepository(authenticatedSession),
+            groupRealtimeGateway = gateway,
+        )
+        viewModel.uiState.first { it is GroupDetailUiState.Content }
+
+        viewModel.startRealtimeUpdates()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue("grupo nao sincronizado nao pode abrir conexao (nao tem remoteId)", gateway.connectCalls.isEmpty())
+    }
+
+    @Test
+    fun `startRealtimeUpdates nao conecta o gateway quando nao ha sessao autenticada`() = runTest(testDispatcher) {
+        val groupId = seedGroupWithExpense()
+        database.groupDao().insert(
+            database.groupDao().getGroupById(groupId)!!.copy(isSynced = true, remoteId = "remote-$groupId"),
+        )
+        val gateway = FakeGroupRealtimeGateway()
+        val viewModel = buildViewModel(
+            groupId = groupId,
+            authRepository = FakeAuthRepository(initialSession = null),
+            groupRealtimeGateway = gateway,
+        )
+        viewModel.uiState.first { it is GroupDetailUiState.Content }
+
+        viewModel.startRealtimeUpdates()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue("sem sessao nao pode abrir conexao", gateway.connectCalls.isEmpty())
+    }
+
+    @Test
+    fun `stopRealtimeUpdates desconecta uma conexao ativa`() = runTest(testDispatcher) {
+        val groupId = seedGroupWithExpense()
+        database.groupDao().insert(
+            database.groupDao().getGroupById(groupId)!!.copy(isSynced = true, remoteId = "remote-$groupId"),
+        )
+        val gateway = FakeGroupRealtimeGateway()
+        val viewModel = buildViewModel(
+            groupId = groupId,
+            authRepository = FakeAuthRepository(authenticatedSession),
+            groupRealtimeGateway = gateway,
+        )
+        viewModel.uiState.first { it is GroupDetailUiState.Content }
+        viewModel.startRealtimeUpdates()
+        gateway.awaitConnect()
+
+        viewModel.stopRealtimeUpdates()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(1, gateway.disconnectCallCount)
+    }
+
+    /**
+     * [awaitConnect] existe porque [com.rateio.domain.repository.GroupRepository.getGroupsFlow]
+     * (Room) entrega sua primeira emissão a partir de um executor real, fora do controle do
+     * `TestCoroutineScheduler` — `testDispatcher.scheduler.advanceUntilIdle()` não espera por isso
+     * de forma confiável (corrida: nada garante que a query do Room já terminou quando
+     * `advanceUntilIdle()` roda). Suspender de verdade em cima de um `Channel` é a forma
+     * determinística de esperar o primeiro `connect()` acontecer.
+     */
+    private class FakeGroupRealtimeGateway : GroupRealtimeGateway {
+        val connectCalls = mutableListOf<Pair<String, String>>()
+        var disconnectCallCount = 0
+            private set
+        private val connectSignal = kotlinx.coroutines.channels.Channel<Pair<String, String>>(
+            kotlinx.coroutines.channels.Channel.UNLIMITED,
+        )
+
+        override suspend fun connect(localGroupId: String, remoteGroupId: String) {
+            val call = localGroupId to remoteGroupId
+            connectCalls += call
+            connectSignal.send(call)
+        }
+
+        override suspend fun disconnect() {
+            disconnectCallCount += 1
+        }
+
+        suspend fun awaitConnect(): Pair<String, String> = connectSignal.receive()
     }
 
     private class FakeAuthRepository(initialSession: AuthSession?) : AuthRepository {

@@ -56,6 +56,16 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.security.crypto)
 
+    // T40 — cliente SignalR (biblioteca oficial) pro Hub de notificações em tempo real (T38,
+    // constitution.md princípio 3: sistema próprio, sem push de terceiros). rxjava3/gson são
+    // dependências de tempo de execução do artefato `signalr` em si (confirmado no POM publicado:
+    // io.reactivex.rxjava3:rxjava + com.google.code.gson:gson, não RxJava2/Jackson) — declaradas
+    // explicitamente porque `SignalRGroupRealtimeGateway` referencia `io.reactivex.rxjava3.core.Single`
+    // diretamente na API de `withAccessTokenProvider`.
+    implementation(libs.signalr)
+    implementation(libs.rxjava3)
+    implementation(libs.gson)
+
     testImplementation(libs.junit4)
     // Room em memória não roda em teste unitário puro (precisa de um Context Android) — Robolectric
     // fornece isso na JVM, sem exigir emulador/dispositivo conectado (nenhum estava disponível neste

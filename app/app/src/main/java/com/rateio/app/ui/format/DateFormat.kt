@@ -1,5 +1,6 @@
 package com.rateio.app.ui.format
 
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -15,3 +16,21 @@ private val EXPENSE_DATE_FORMATTER: DateTimeFormatter =
  */
 fun formatInstantAsShortDate(instant: Instant): String =
     EXPENSE_DATE_FORMATTER.format(instant.atZone(ZoneId.systemDefault()))
+
+/**
+ * "hoje" / "ontem" / "há 3 dias" / "há 2 meses" — mesma escala de `fmtRelative()` em
+ * `prototype/app.js`, usada na lista de notificações (T41.1). [now] só existe pra deixar o teste
+ * determinístico (`DateFormatTest`); todo chamador real usa o default.
+ */
+fun formatInstantAsRelative(instant: Instant, now: Instant = Instant.now()): String {
+    val days = Duration.between(instant, now).toDays()
+    return when {
+        days <= 0 -> "hoje"
+        days == 1L -> "ontem"
+        days < 30 -> "há $days dias"
+        else -> {
+            val months = days / 30
+            "há $months ${if (months == 1L) "mês" else "meses"}"
+        }
+    }
+}
