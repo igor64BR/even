@@ -24,6 +24,8 @@ import com.rateio.app.ui.groups.GroupListRoute
 import com.rateio.app.ui.groups.GroupListViewModelFactory
 import com.rateio.app.ui.joingroup.JoinGroupRoute
 import com.rateio.app.ui.joingroup.JoinGroupViewModelFactory
+import com.rateio.app.ui.notifications.NotificationsRoute
+import com.rateio.app.ui.notifications.NotificationsViewModelFactory
 import com.rateio.app.ui.settledebts.SettleDebtsRoute
 import com.rateio.app.ui.settledebts.SettleDebtsViewModelFactory
 import com.rateio.app.ui.theme.RateioTheme
@@ -95,6 +97,9 @@ private const val DEEP_LINK_HOST = "join"
  * chega com o usuário deslogado — `null` no acesso normal (ícone de perfil). [JoinGroup] é o
  * destino da tela de confirmação (T22.2), alcançado direto do deep link (usuário logado) ou como
  * retomada depois de [Login] (usuário logava primeiro).
+ *
+ * [Notifications] (T41.1, RF35/RF36) é o destino da aba "Avisos" da bottom nav — alcançável tanto
+ * de [GroupList] quanto de [Notifications] em si (`RateioBottomBar` está presente nas duas telas).
  */
 private sealed interface RateioDestination {
     data object GroupList : RateioDestination
@@ -104,6 +109,7 @@ private sealed interface RateioDestination {
     data class SettleDebts(val groupId: String) : RateioDestination
     data class Login(val pendingInviteCode: String? = null) : RateioDestination
     data class JoinGroup(val inviteCode: String) : RateioDestination
+    data object Notifications : RateioDestination
 }
 
 @Composable
@@ -127,6 +133,11 @@ private fun RateioApp(
     val groupListViewModelFactory = GroupListViewModelFactory(
         groupRepository = container.groupRepository,
         participantRepository = container.participantRepository,
+        notificationRepository = container.notificationRepository,
+    )
+    val notificationsViewModelFactory = NotificationsViewModelFactory(
+        notificationRepository = container.notificationRepository,
+        authRepository = container.authRepository,
     )
     val createGroupViewModelFactory = CreateGroupViewModelFactory(
         groupRepository = container.groupRepository,
@@ -144,6 +155,7 @@ private fun RateioApp(
                 onCreateGroupClick = { destination = RateioDestination.CreateGroup },
                 onGroupClick = { groupId -> destination = RateioDestination.GroupDetail(groupId) },
                 onProfileClick = { destination = RateioDestination.Login() },
+                onNotificationsClick = { destination = RateioDestination.Notifications },
             )
 
             RateioDestination.CreateGroup -> CreateGroupRoute(
@@ -162,6 +174,7 @@ private fun RateioApp(
                     authRepository = container.authRepository,
                     remoteGroupRepository = container.remoteGroupRepository,
                     debtSimplificationEngine = container.debtSimplificationEngine,
+                    groupRealtimeGateway = container.groupRealtimeGateway,
                 ),
                 onBackClick = { destination = RateioDestination.GroupList },
                 onCreateExpenseClick = { destination = RateioDestination.CreateExpense(current.groupId) },
@@ -207,6 +220,12 @@ private fun RateioApp(
                 ),
                 onNeedsLogin = { code -> destination = RateioDestination.Login(pendingInviteCode = code) },
                 onDone = { destination = RateioDestination.GroupList },
+            )
+
+            RateioDestination.Notifications -> NotificationsRoute(
+                factory = notificationsViewModelFactory,
+                onGroupsClick = { destination = RateioDestination.GroupList },
+                onProfileClick = { destination = RateioDestination.Login() },
             )
         }
     }

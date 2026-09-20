@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.rateio.domain.engine.DebtSimplificationEngine
+import com.rateio.domain.realtime.GroupRealtimeGateway
 import com.rateio.domain.repository.AuthRepository
 import com.rateio.domain.repository.ExpenseRepository
 import com.rateio.domain.repository.GroupRepository
@@ -15,7 +16,8 @@ import com.rateio.domain.repository.SettlementRepository
  * Sem framework de DI no projeto ainda — fábrica manual que injeta os repositórios de
  * [com.rateio.app.di.AppContainer] no [GroupDetailViewModel]. Mesmo padrão de
  * [com.rateio.app.ui.createexpense.CreateExpenseViewModelFactory] (T24), com [groupId] porque a
- * tela sempre pertence a um grupo já existente.
+ * tela sempre pertence a um grupo já existente. T40.1 acrescenta [groupRealtimeGateway] pro
+ * cliente SignalR.
  */
 class GroupDetailViewModelFactory(
     private val groupId: String,
@@ -26,6 +28,7 @@ class GroupDetailViewModelFactory(
     private val authRepository: AuthRepository,
     private val remoteGroupRepository: RemoteGroupRepository,
     private val debtSimplificationEngine: DebtSimplificationEngine,
+    private val groupRealtimeGateway: GroupRealtimeGateway,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -42,6 +45,7 @@ class GroupDetailViewModelFactory(
             authRepository = authRepository,
             remoteGroupRepository = remoteGroupRepository,
             debtSimplificationEngine = debtSimplificationEngine,
+            groupRealtimeGateway = groupRealtimeGateway,
         ) as T
     }
 }

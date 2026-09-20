@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.rateio.data.persistence.entity.ExpenseEntity
 import com.rateio.data.persistence.entity.ExpenseSplitEntity
 import com.rateio.data.persistence.entity.GroupEntity
+import com.rateio.data.persistence.entity.NotificationEntity
 import com.rateio.data.persistence.entity.ParticipantEntity
 import com.rateio.data.persistence.entity.SettlementEntity
 import com.rateio.data.persistence.entity.SplitTypeEntity
@@ -200,5 +201,81 @@ class RateioDatabaseTest {
         database.groupDao().deleteById("g1")
 
         assertEquals(emptyList<SettlementEntity>(), database.settlementDao().getSettlementsFlow("g1").first())
+    }
+
+    @Test
+    fun `insere notificacao vinculada ao grupo e le de volta pelo NotificationDao (T40-1)`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+        database.groupDao().insert(group)
+
+        val notification = NotificationEntity(
+            id = "despesa:e1",
+            groupId = "g1",
+            message = "Duda lançou \"Mercado\" — R$ 30,00 — em \"Viagem pra praia\".",
+            occurredAtEpochMillis = 5_000L,
+            isRead = false,
+        )
+        database.notificationDao().insert(notification)
+
+        assertEquals(listOf(notification), database.notificationDao().getNotificationsFlow().first())
+    }
+
+    @Test
+    fun `insert com id repetido e OnConflictStrategy IGNORE nao sobrescreve isRead ja marcado`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+        database.groupDao().insert(group)
+        database.notificationDao().insert(
+            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "original", occurredAtEpochMillis = 5_000L, isRead = false),
+        )
+        database.notificationDao().markAllAsRead()
+
+        // Mesmo evento chegando de novo (tempo real + pull de reconexão, T40.2) — não pode
+        // reverter isRead=true de volta pra false.
+        database.notificationDao().insert(
+            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "original", occurredAtEpochMillis = 5_000L, isRead = false),
+        )
+
+        assertTrue(database.notificationDao().getNotificationsFlow().first().single().isRead)
+    }
+
+    @Test
+    fun `getUnreadCountFlow conta so as nao lidas`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+        database.groupDao().insert(group)
+        database.notificationDao().insert(
+            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
+        )
+        database.notificationDao().insert(
+            NotificationEntity(id = "quitacao:s1", groupId = "g1", message = "b", occurredAtEpochMillis = 2_000L, isRead = true),
+        )
+
+        assertEquals(1, database.notificationDao().getUnreadCountFlow().first())
+    }
+
+    @Test
+    fun `getLastEventEpochMillis devolve o maior timestamp entre as notificacoes gravadas`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+        database.groupDao().insert(group)
+        database.notificationDao().insert(
+            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
+        )
+        database.notificationDao().insert(
+            NotificationEntity(id = "quitacao:s1", groupId = "g1", message = "b", occurredAtEpochMillis = 9_000L, isRead = false),
+        )
+
+        assertEquals(9_000L, database.notificationDao().getLastEventEpochMillis())
+    }
+
+    @Test
+    fun `remove grupo em cascata remove notificacoes do grupo`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+        database.groupDao().insert(group)
+        database.notificationDao().insert(
+            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
+        )
+
+        database.groupDao().deleteById("g1")
+
+        assertEquals(emptyList<NotificationEntity>(), database.notificationDao().getNotificationsFlow().first())
     }
 }

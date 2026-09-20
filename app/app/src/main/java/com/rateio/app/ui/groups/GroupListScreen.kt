@@ -10,9 +10,6 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -30,16 +27,20 @@ fun GroupListRoute(
     onCreateGroupClick: () -> Unit,
     onGroupClick: (String) -> Unit,
     onProfileClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: GroupListViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val unreadNotificationsCount by viewModel.unreadNotificationsCount.collectAsStateWithLifecycle()
 
     GroupListScreen(
         uiState = uiState,
+        unreadNotificationsCount = unreadNotificationsCount,
         onCreateGroupClick = onCreateGroupClick,
         onGroupClick = onGroupClick,
         onProfileClick = onProfileClick,
+        onNotificationsClick = onNotificationsClick,
         modifier = modifier,
     )
 }
@@ -53,13 +54,14 @@ fun GroupListRoute(
 @Composable
 fun GroupListScreen(
     uiState: GroupListUiState,
+    unreadNotificationsCount: Int = 0,
     onCreateGroupClick: () -> Unit,
     onGroupClick: (String) -> Unit,
     onProfileClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
-    var selectedTab by remember { mutableStateOf(RateioBottomTab.GRUPOS) }
 
     Scaffold(
         modifier = modifier,
@@ -69,12 +71,17 @@ fun GroupListScreen(
         floatingActionButtonPosition = FabPosition.End,
         bottomBar = {
             RateioBottomBar(
-                selectedTab = selectedTab,
+                selectedTab = RateioBottomTab.GRUPOS,
+                unreadNotificationsCount = unreadNotificationsCount,
                 onTabSelected = { tab ->
-                    selectedTab = tab
-                    // T12 — aba "Perfil" é o equivalente ao auth-slot do protótipo
-                    // (ver prototype/app.js, renderHeaderAuth): entrada pra tela de login/conta.
-                    if (tab == RateioBottomTab.PERFIL) onProfileClick()
+                    // T12/T41 — "Perfil" é o equivalente ao auth-slot do protótipo (ver
+                    // prototype/app.js, renderHeaderAuth); "Avisos" abre a central de notificações
+                    // (T41.1). "Grupos" é a própria tela, não navega.
+                    when (tab) {
+                        RateioBottomTab.GRUPOS -> Unit
+                        RateioBottomTab.AVISOS -> onNotificationsClick()
+                        RateioBottomTab.PERFIL -> onProfileClick()
+                    }
                 },
             )
         },
