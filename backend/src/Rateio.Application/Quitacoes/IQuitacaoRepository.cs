@@ -27,4 +27,16 @@ public interface IQuitacaoRepository
     /// sob demanda via T32 na próxima leitura de <c>ObterPorGrupoAsync</c>.
     /// </summary>
     Task AdicionarAsync(Guid grupoId, Quitacao quitacao, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// T39.1: quitações do grupo persistidas no servidor depois de <paramref name="desde"/>
+    /// (comparado contra <c>CriadoEm</c>). Mesmo papel de
+    /// <c>Despesas.IDespesaRepository.ObterOcorridasDesdeAsync</c>: projeção própria para o
+    /// fallback de pull (<see cref="QuitacaoOcorrida"/>), usada só por
+    /// <c>Notificacoes.ObterEventosDeGrupoUseCase</c> — não o <see cref="Quitacao"/> de domínio que
+    /// <see cref="ObterPorGrupoAsync"/> devolve pro motor de simplificação. <paramref name="grupoId"/>
+    /// já foi validado por quem chama (RNF07).
+    /// </summary>
+    Task<IReadOnlyList<QuitacaoOcorrida>> ObterOcorridasDesdeAsync(
+        Guid grupoId, DateTimeOffset desde, CancellationToken cancellationToken = default);
 }

@@ -39,4 +39,25 @@ public sealed class QuitacaoRepository(AppDbContext dbContext) : IQuitacaoReposi
         dbContext.Quitacoes.Add(entidade);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// T39.1: mesmo padrão de <c>DespesaRepository.ObterOcorridasDesdeAsync</c> — leitura
+    /// <c>AsNoTracking</c> projetada direto na consulta, filtrada por grupo e por <c>CriadoEm</c>
+    /// depois de <paramref name="desde"/>. Acesso ao grupo já foi validado por quem chama
+    /// (<c>Notificacoes.ObterEventosDeGrupoUseCase</c>).
+    /// </summary>
+    public async Task<IReadOnlyList<QuitacaoOcorrida>> ObterOcorridasDesdeAsync(
+        Guid grupoId, DateTimeOffset desde, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Quitacoes
+            .AsNoTracking()
+            .Where(quitacao => quitacao.GrupoId == grupoId && quitacao.CriadoEm > desde)
+            .Select(quitacao => new QuitacaoOcorrida(
+                quitacao.Id,
+                quitacao.PagadorId,
+                quitacao.RecebedorId,
+                quitacao.ValorCentavos,
+                quitacao.CriadoEm))
+            .ToListAsync(cancellationToken);
+    }
 }

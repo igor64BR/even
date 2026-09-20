@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rateio.Api.Contracts;
 using Rateio.Application.Despesas;
 using Rateio.Application.Grupos;
+using Rateio.Application.Notificacoes;
 using Rateio.Application.Quitacoes;
 using Rateio.Application.Simplificacao;
 
@@ -22,7 +23,10 @@ namespace Rateio.Api.Controllers;
 /// orquestração vive nos casos de uso (<see cref="SincronizarGrupoUseCase"/>,
 /// <see cref="CriarDespesaUseCase"/>, <see cref="GerarCodigoConviteUseCase"/>,
 /// <see cref="EntrarNoGrupoViaConviteUseCase"/>, <see cref="ObterSimplificacaoDeDividasUseCase"/>,
-/// <see cref="RegistrarQuitacaoUseCase"/>).
+/// <see cref="RegistrarQuitacaoUseCase"/>). T39.1 acrescentou
+/// <c>GET /groups/{id}/events?desde={timestampIso8601}</c>: fallback de pull dos eventos de
+/// despesa/quitação perdidos enquanto o app estava desconectado do Hub SignalR (T38,
+/// constitution.md princípio 3) — ver <see cref="ObterEventosDeGrupoUseCase"/>.
 /// </summary>
 [ApiController]
 [Authorize]
@@ -33,7 +37,8 @@ public class GruposController(
     GerarCodigoConviteUseCase gerarCodigoConvite,
     EntrarNoGrupoViaConviteUseCase entrarNoGrupoViaConvite,
     ObterSimplificacaoDeDividasUseCase obterSimplificacaoDeDividas,
-    RegistrarQuitacaoUseCase registrarQuitacao) : ControllerBase
+    RegistrarQuitacaoUseCase registrarQuitacao,
+    ObterEventosDeGrupoUseCase obterEventosDeGrupo) : ControllerBase
 {
     /// <summary>
     /// RNF07: o dono do grupo sincronizado é sempre o usuário do JWT validado
@@ -228,6 +233,55 @@ public class GruposController(
                 title: "Payload de quitação inválido.",
                 detail: erro.Message,
                 statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    /// <summary>
+    /// T39.1: <c>GET /groups/{id}/events?desde={timestampIso8601}</c> — fallback de pull
+    /// (constitution.md princípio 3): eventos de despesa/quitação do grupo persistidos no servidor
+    /// depois de <paramref name="desde"/>, ordenados por data crescente, no mesmo formato que T38 já
+    /// envia em tempo real via SignalR (<see cref="EventoDespesaCriada"/>/<see cref="EventoDividaQuitada"/>)
+    /// — o app usa isso pra recuperar o que perdeu enquanto desconectado do Hub (T40). Mesmo padrão
+    /// de acesso/erro de <see cref="ObterSettlement"/>: 404 se o grupo não existe, 403 se o usuário
+    /// autenticado não tem acesso a ele (RNF07). Grupo sem eventos novos devolve lista vazia (200),
+    /// nunca 404.
+    ///
+    /// A resposta é projetada para <c>IReadOnlyList&lt;object&gt;</c> (não
+    /// <c>IReadOnlyList&lt;IEventoDeGrupo&gt;</c>) porque <c>System.Text.Json</c> serializa cada
+    /// elemento de uma coleção pelo tipo declarado, não pelo tipo concreto em tempo de execução —
+    /// devolver a interface faria o serializador incluir só <c>Tipo</c>/<c>GrupoId</c> (os membros
+    /// da interface) e descartar <c>Descricao</c>/<c>ValorTotalCentavos</c>/etc. Declarar cada item
+    /// como <c>object</c> força o serializador a usar o tipo concreto de cada evento — mesmo cuidado
+    /// que <c>NotificadorDeEventoDeGrupoSignalR</c> (T38) já toma, só que lá via <c>switch</c>
+    /// despachando pro tipo concreto em cada chamada a <c>SendAsync</c>.
+    /// </summary>
+    [HttpGet("{id:guid}/events")]
+    public async Task<ActionResult<IReadOnlyList<object>>> ObterEventos(
+        Guid id,
+        [FromQuery] DateTimeOffset desde,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var usuarioAutenticadoId = ObterUsuarioAutenticadoId();
+
+            var eventos = await obterEventosDeGrupo.ExecutarAsync(usuarioAutenticadoId, id, desde, cancellationToken);
+
+            return Ok(eventos.Cast<object>().ToList());
+        }
+        catch (GrupoNaoEncontradoException erro)
+        {
+            return Problem(
+                title: "Grupo não encontrado.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        catch (AcessoNegadoException erro)
+        {
+            return Problem(
+                title: "Usuário sem acesso ao grupo.",
+                detail: erro.Message,
+                statusCode: StatusCodes.Status403Forbidden);
         }
     }
 

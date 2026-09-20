@@ -88,5 +88,14 @@ public class RegistrarQuitacaoRefletindoNoSettlementTests
             quitacoes.Add(quitacao);
             return Task.CompletedTask;
         }
+
+        // T39.1: este fake cobre só o fluxo de settlement (ObterPorGrupoAsync/AdicionarAsync) que
+        // este teste exercita — o fallback de pull tem cobertura própria em
+        // Notificacoes.ObterEventosDeGrupoUseCaseTests, com um repositório mockado (Moq), não este
+        // fake em memória.
+        public Task<IReadOnlyList<QuitacaoOcorrida>> ObterOcorridasDesdeAsync(
+            Guid grupoId, DateTimeOffset desde, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException(
+                $"{nameof(QuitacaoRepositoryEmMemoria)} não implementa {nameof(ObterOcorridasDesdeAsync)} — fora do escopo deste teste.");
     }
 }

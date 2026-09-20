@@ -41,4 +41,26 @@ public sealed class DespesaRepository(AppDbContext dbContext) : IDespesaReposito
 
         return entidades.Select(MapeadorDeDespesaParaDominio.Construir).ToList();
     }
+
+    /// <summary>
+    /// T39.1: leitura <c>AsNoTracking</c> projetada direto na consulta (sem <c>Include</c> de
+    /// participações — o fallback de pull não precisa da divisão da despesa, só do resumo que
+    /// compõe <see cref="Notificacoes.EventoDespesaCriada"/>), filtrada por grupo e por
+    /// <c>CriadoEm</c> depois de <paramref name="desde"/>. Acesso ao grupo já foi validado por quem
+    /// chama (<c>Notificacoes.ObterEventosDeGrupoUseCase</c>).
+    /// </summary>
+    public async Task<IReadOnlyList<DespesaOcorrida>> ObterOcorridasDesdeAsync(
+        Guid grupoId, DateTimeOffset desde, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Despesas
+            .AsNoTracking()
+            .Where(despesa => despesa.GrupoId == grupoId && despesa.CriadoEm > desde)
+            .Select(despesa => new DespesaOcorrida(
+                despesa.Id,
+                despesa.Descricao,
+                despesa.ValorTotalCentavos,
+                despesa.PagadorId,
+                despesa.CriadoEm))
+            .ToListAsync(cancellationToken);
+    }
 }
