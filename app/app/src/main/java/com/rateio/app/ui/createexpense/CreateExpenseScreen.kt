@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rateio.app.ui.format.parseAmountInputToCents
+import com.rateio.app.ui.groups.RateioBottomBar
+import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.domain.model.Money
 import java.time.LocalDate
@@ -39,6 +41,11 @@ fun CreateExpenseRoute(
     factory: CreateExpenseViewModelFactory,
     onSaved: () -> Unit,
     onBackClick: () -> Unit,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: CreateExpenseViewModel = viewModel(factory = factory)
@@ -64,6 +71,11 @@ fun CreateExpenseRoute(
         onPercentageChanged = viewModel::onPercentageChanged,
         onFixedAmountChanged = viewModel::onFixedAmountChanged,
         onSaveClick = viewModel::onSaveClick,
+        unreadNotificationsCount = unreadNotificationsCount,
+        onGroupsClick = onGroupsClick,
+        onNotificationsClick = onNotificationsClick,
+        onProfileClick = onProfileClick,
+        authenticatedUserName = authenticatedUserName,
         modifier = modifier,
     )
 }
@@ -87,6 +99,11 @@ fun CreateExpenseScreen(
     onPercentageChanged: (participantId: String, percentageInput: String) -> Unit,
     onFixedAmountChanged: (participantId: String, fixedAmountInput: String) -> Unit,
     onSaveClick: () -> Unit,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -95,6 +112,20 @@ fun CreateExpenseScreen(
         modifier = modifier,
         containerColor = colors.paper,
         topBar = { CreateExpenseTopBar(onBackClick = onBackClick, isEditMode = uiState.isEditMode) },
+        bottomBar = {
+            RateioBottomBar(
+                selectedTab = RateioBottomTab.GRUPOS,
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onTabSelected = { tab ->
+                    when (tab) {
+                        RateioBottomTab.GRUPOS -> onGroupsClick()
+                        RateioBottomTab.AVISOS -> onNotificationsClick()
+                        RateioBottomTab.PERFIL -> onProfileClick()
+                    }
+                },
+            )
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier

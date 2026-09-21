@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -58,7 +58,7 @@ fun ExpenseRow(
                 .background(color = colors.paperAlt, shape = RoundedCornerShape(9.dp)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(imageVector = Icons.Filled.Receipt, contentDescription = null, tint = colors.inkSoft)
+            Icon(imageVector = Icons.Filled.AttachMoney, contentDescription = null, tint = colors.inkSoft)
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(text = expense.description, fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp, color = colors.ink)

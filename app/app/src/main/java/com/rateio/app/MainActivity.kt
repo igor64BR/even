@@ -11,7 +11,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rateio.app.di.AppContainer
+import kotlinx.coroutines.flow.map
 import com.rateio.app.ui.auth.AuthViewModelFactory
 import com.rateio.app.ui.auth.LoginRoute
 import com.rateio.app.ui.creategroup.CreateGroupRoute
@@ -98,8 +100,11 @@ private const val DEEP_LINK_HOST = "join"
  * destino da tela de confirmação (T22.2), alcançado direto do deep link (usuário logado) ou como
  * retomada depois de [Login] (usuário logava primeiro).
  *
- * [Notifications] (T41.1, RF35/RF36) é o destino da aba "Avisos" da bottom nav — alcançável tanto
- * de [GroupList] quanto de [Notifications] em si (`RateioBottomBar` está presente nas duas telas).
+ * [Notifications] (T41.1, RF35/RF36) é o destino da aba "Avisos" da bottom nav —
+ * `RateioBottomBar` está presente em toda tela alcançável a partir da raiz (mesmo padrão do
+ * protótipo: `grupo.html`/`nova-despesa.html`/`quitar.html`/`criar-grupo.html`/`login.html`
+ * sempre têm `.bottombar`, com "Grupos" marcada ativa nas telas que são sub-fluxo da lista de
+ * grupos e "Perfil" ativa em [Login]), não só em [GroupList]/[Notifications].
  *
  * [CreateExpense.expenseId] (T29) é `null` pra "Nova despesa" (alcançada pelo FAB de
  * [GroupDetail]) e o id da despesa sendo editada quando vem de [GroupDetail]'s
@@ -124,6 +129,22 @@ private fun RateioApp(
     onPendingInviteCodeConsumed: () -> Unit = {},
 ) {
     var destination by remember { mutableStateOf<RateioDestination>(RateioDestination.GroupList) }
+
+    // Badge de não lidas (T41.2) hoisted aqui em vez de injetado em cada ViewModel: é a única
+    // peça de estado que toda tela por trás de RateioBottomBar precisa, e nenhuma delas (edição de
+    // despesa, criar grupo, login, ...) tem qualquer outro motivo pra conhecer
+    // NotificationRepository — adicionar essa dependência a cada uma só pra pintar um badge violaria
+    // a responsabilidade única de cada ViewModel. GroupList/Notifications continuam com sua própria
+    // fonte (já existia antes desta tela ganhar `RateioBottomBar` em todo lugar).
+    val unreadNotificationsCount by container.notificationRepository.getUnreadCountFlow()
+        .collectAsStateWithLifecycle(initialValue = 0)
+
+    // Nome do usuário autenticado (ou `null` deslogado) hoisted pelo mesmo motivo do badge acima —
+    // troca o rótulo "Entrar"/"Perfil" e o ícone (genérico/avatar com iniciais) de `RateioBottomBar`
+    // em toda tela, espelhando `renderHeaderAuth` do protótipo (`prototype/app.js`).
+    val authenticatedUserName by container.authRepository.getSessionFlow()
+        .map { session -> session?.user?.name }
+        .collectAsStateWithLifecycle(initialValue = null)
 
     // T22.1 — deep link `rateio://join/{codigo}` (extraído do Intent em MainActivity). Roteia
     // direto pra JoinGroup independente de sessão: é o próprio JoinGroupViewModel que checa login
@@ -161,12 +182,18 @@ private fun RateioApp(
                 onGroupClick = { groupId -> destination = RateioDestination.GroupDetail(groupId) },
                 onProfileClick = { destination = RateioDestination.Login() },
                 onNotificationsClick = { destination = RateioDestination.Notifications },
+                authenticatedUserName = authenticatedUserName,
             )
 
             RateioDestination.CreateGroup -> CreateGroupRoute(
                 factory = createGroupViewModelFactory,
                 onGroupCreated = { destination = RateioDestination.GroupList },
                 onBackClick = { destination = RateioDestination.GroupList },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onGroupsClick = { destination = RateioDestination.GroupList },
+                onNotificationsClick = { destination = RateioDestination.Notifications },
+                onProfileClick = { destination = RateioDestination.Login() },
             )
 
             is RateioDestination.GroupDetail -> GroupDetailRoute(
@@ -188,6 +215,11 @@ private fun RateioApp(
                     destination = RateioDestination.CreateExpense(current.groupId, expenseId)
                 },
                 onSettleDebtsClick = { destination = RateioDestination.SettleDebts(current.groupId) },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onGroupsClick = { destination = RateioDestination.GroupList },
+                onNotificationsClick = { destination = RateioDestination.Notifications },
+                onProfileClick = { destination = RateioDestination.Login() },
             )
 
             is RateioDestination.CreateExpense -> CreateExpenseRoute(
@@ -201,6 +233,11 @@ private fun RateioApp(
                 ),
                 onSaved = { destination = RateioDestination.GroupDetail(current.groupId) },
                 onBackClick = { destination = RateioDestination.GroupDetail(current.groupId) },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onGroupsClick = { destination = RateioDestination.GroupList },
+                onNotificationsClick = { destination = RateioDestination.Notifications },
+                onProfileClick = { destination = RateioDestination.Login() },
             )
 
             is RateioDestination.SettleDebts -> SettleDebtsRoute(
@@ -213,6 +250,11 @@ private fun RateioApp(
                     debtSimplificationEngine = container.debtSimplificationEngine,
                 ),
                 onBackClick = { destination = RateioDestination.GroupDetail(current.groupId) },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onGroupsClick = { destination = RateioDestination.GroupList },
+                onNotificationsClick = { destination = RateioDestination.Notifications },
+                onProfileClick = { destination = RateioDestination.Login() },
             )
 
             is RateioDestination.Login -> LoginRoute(
@@ -222,6 +264,10 @@ private fun RateioApp(
                 onSignedIn = current.pendingInviteCode?.let { code ->
                     { destination = RateioDestination.JoinGroup(code) }
                 },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onGroupsClick = { destination = RateioDestination.GroupList },
+                onNotificationsClick = { destination = RateioDestination.Notifications },
             )
 
             is RateioDestination.JoinGroup -> JoinGroupRoute(
@@ -232,12 +278,18 @@ private fun RateioApp(
                 ),
                 onNeedsLogin = { code -> destination = RateioDestination.Login(pendingInviteCode = code) },
                 onDone = { destination = RateioDestination.GroupList },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onGroupsClick = { destination = RateioDestination.GroupList },
+                onNotificationsClick = { destination = RateioDestination.Notifications },
+                onProfileClick = { destination = RateioDestination.Login() },
             )
 
             RateioDestination.Notifications -> NotificationsRoute(
                 factory = notificationsViewModelFactory,
                 onGroupsClick = { destination = RateioDestination.GroupList },
                 onProfileClick = { destination = RateioDestination.Login() },
+                authenticatedUserName = authenticatedUserName,
             )
         }
     }

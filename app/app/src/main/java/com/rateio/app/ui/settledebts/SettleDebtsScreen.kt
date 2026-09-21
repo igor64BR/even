@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rateio.app.ui.groups.RateioBottomBar
+import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
@@ -27,6 +29,11 @@ import com.rateio.app.ui.theme.LocalRateioColors
 fun SettleDebtsRoute(
     factory: SettleDebtsViewModelFactory,
     onBackClick: () -> Unit,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: SettleDebtsViewModel = viewModel(factory = factory)
@@ -36,6 +43,11 @@ fun SettleDebtsRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onMarkAsPaidClick = viewModel::onMarkAsPaidClick,
+        unreadNotificationsCount = unreadNotificationsCount,
+        onGroupsClick = onGroupsClick,
+        onNotificationsClick = onNotificationsClick,
+        onProfileClick = onProfileClick,
+        authenticatedUserName = authenticatedUserName,
         modifier = modifier,
     )
 }
@@ -50,6 +62,11 @@ fun SettleDebtsScreen(
     uiState: SettleDebtsUiState,
     onBackClick: () -> Unit,
     onMarkAsPaidClick: (SettlementSuggestionRowUiModel) -> Unit,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -58,6 +75,20 @@ fun SettleDebtsScreen(
         modifier = modifier,
         containerColor = colors.paper,
         topBar = { SettleDebtsTopBar(onBackClick = onBackClick) },
+        bottomBar = {
+            RateioBottomBar(
+                selectedTab = RateioBottomTab.GRUPOS,
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onTabSelected = { tab ->
+                    when (tab) {
+                        RateioBottomTab.GRUPOS -> onGroupsClick()
+                        RateioBottomTab.AVISOS -> onNotificationsClick()
+                        RateioBottomTab.PERFIL -> onProfileClick()
+                    }
+                },
+            )
+        },
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             when (uiState) {

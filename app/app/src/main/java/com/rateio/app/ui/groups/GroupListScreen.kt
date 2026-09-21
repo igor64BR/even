@@ -28,6 +28,7 @@ fun GroupListRoute(
     onGroupClick: (String) -> Unit,
     onProfileClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: GroupListViewModel = viewModel(factory = factory)
@@ -41,6 +42,7 @@ fun GroupListRoute(
         onGroupClick = onGroupClick,
         onProfileClick = onProfileClick,
         onNotificationsClick = onNotificationsClick,
+        authenticatedUserName = authenticatedUserName,
         modifier = modifier,
     )
 }
@@ -59,6 +61,7 @@ fun GroupListScreen(
     onGroupClick: (String) -> Unit,
     onProfileClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -73,6 +76,7 @@ fun GroupListScreen(
             RateioBottomBar(
                 selectedTab = RateioBottomTab.GRUPOS,
                 unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
                     // T12/T41 — "Perfil" é o equivalente ao auth-slot do protótipo (ver
                     // prototype/app.js, renderHeaderAuth); "Avisos" abre a central de notificações

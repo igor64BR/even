@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rateio.app.ui.groups.RateioBottomBar
+import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
@@ -33,6 +35,11 @@ fun CreateGroupRoute(
     factory: CreateGroupViewModelFactory,
     onGroupCreated: () -> Unit,
     onBackClick: () -> Unit,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: CreateGroupViewModel = viewModel(factory = factory)
@@ -55,6 +62,11 @@ fun CreateGroupRoute(
         onAddParticipant = viewModel::onAddParticipant,
         onRemoveParticipant = viewModel::onRemoveParticipant,
         onSaveClick = viewModel::onSaveClick,
+        unreadNotificationsCount = unreadNotificationsCount,
+        onGroupsClick = onGroupsClick,
+        onNotificationsClick = onNotificationsClick,
+        onProfileClick = onProfileClick,
+        authenticatedUserName = authenticatedUserName,
         modifier = modifier,
     )
 }
@@ -75,6 +87,11 @@ fun CreateGroupScreen(
     onAddParticipant: () -> Unit,
     onRemoveParticipant: (String) -> Unit,
     onSaveClick: () -> Unit,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -83,6 +100,20 @@ fun CreateGroupScreen(
         modifier = modifier,
         containerColor = colors.paper,
         topBar = { CreateGroupTopBar(onBackClick = onBackClick) },
+        bottomBar = {
+            RateioBottomBar(
+                selectedTab = RateioBottomTab.GRUPOS,
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onTabSelected = { tab ->
+                    when (tab) {
+                        RateioBottomTab.GRUPOS -> onGroupsClick()
+                        RateioBottomTab.AVISOS -> onNotificationsClick()
+                        RateioBottomTab.PERFIL -> onProfileClick()
+                    }
+                },
+            )
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier

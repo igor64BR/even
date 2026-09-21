@@ -51,6 +51,7 @@ fun NotificationsRoute(
     factory: NotificationsViewModelFactory,
     onGroupsClick: () -> Unit,
     onProfileClick: () -> Unit,
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: NotificationsViewModel = viewModel(factory = factory)
@@ -67,6 +68,7 @@ fun NotificationsRoute(
         onBackClick = onGroupsClick,
         onGroupsClick = onGroupsClick,
         onProfileClick = onProfileClick,
+        authenticatedUserName = authenticatedUserName,
         modifier = modifier,
     )
 }
@@ -79,6 +81,7 @@ fun NotificationsScreen(
     onBackClick: () -> Unit,
     onGroupsClick: () -> Unit,
     onProfileClick: () -> Unit,
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -91,6 +94,7 @@ fun NotificationsScreen(
             RateioBottomBar(
                 selectedTab = RateioBottomTab.AVISOS,
                 unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
                     when (tab) {
                         RateioBottomTab.AVISOS -> Unit

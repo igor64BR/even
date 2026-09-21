@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rateio.app.R
+import com.rateio.app.ui.groups.RateioBottomBar
+import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.domain.model.AuthenticatedUser
 
@@ -62,6 +64,10 @@ fun LoginRoute(
     onBackClick: () -> Unit,
     onContinueWithoutAccount: () -> Unit,
     onSignedIn: (() -> Unit)? = null,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: AuthViewModel = viewModel(factory = factory)
@@ -77,6 +83,10 @@ fun LoginRoute(
         onSignInClick = viewModel::signInWithGoogle,
         onSignOutClick = viewModel::signOut,
         onContinueWithoutAccount = onContinueWithoutAccount,
+        unreadNotificationsCount = unreadNotificationsCount,
+        onGroupsClick = onGroupsClick,
+        onNotificationsClick = onNotificationsClick,
+        authenticatedUserName = authenticatedUserName,
         modifier = modifier,
     )
 }
@@ -94,6 +104,10 @@ fun LoginScreen(
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
     onContinueWithoutAccount: () -> Unit,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -102,6 +116,20 @@ fun LoginScreen(
         modifier = modifier,
         containerColor = colors.paper,
         topBar = { LoginTopBar(uiState = uiState, onBackClick = onBackClick) },
+        bottomBar = {
+            RateioBottomBar(
+                selectedTab = RateioBottomTab.PERFIL,
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onTabSelected = { tab ->
+                    when (tab) {
+                        RateioBottomTab.GRUPOS -> onGroupsClick()
+                        RateioBottomTab.AVISOS -> onNotificationsClick()
+                        RateioBottomTab.PERFIL -> Unit
+                    }
+                },
+            )
+        },
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             when (uiState) {

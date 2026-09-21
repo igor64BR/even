@@ -18,7 +18,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rateio.app.ui.groups.RateioBottomBar
+import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.groups.SyncStatusIcon
 import com.rateio.app.ui.theme.LocalRateioColors
 
@@ -56,6 +57,11 @@ fun GroupDetailRoute(
     onCreateExpenseClick: () -> Unit,
     onEditExpenseClick: (String) -> Unit,
     onSettleDebtsClick: () -> Unit,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: GroupDetailViewModel = viewModel(factory = factory)
@@ -74,6 +80,11 @@ fun GroupDetailRoute(
         onDeleteExpenseConfirmed = viewModel::onDeleteExpenseClick,
         onSettleDebtsClick = onSettleDebtsClick,
         onSyncClick = viewModel::onSyncGroupClick,
+        unreadNotificationsCount = unreadNotificationsCount,
+        onGroupsClick = onGroupsClick,
+        onNotificationsClick = onNotificationsClick,
+        onProfileClick = onProfileClick,
+        authenticatedUserName = authenticatedUserName,
         modifier = modifier,
     )
 }
@@ -93,6 +104,11 @@ fun GroupDetailScreen(
     onDeleteExpenseConfirmed: (String) -> Unit,
     onSettleDebtsClick: () -> Unit,
     onSyncClick: () -> Unit,
+    unreadNotificationsCount: Int = 0,
+    onGroupsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    authenticatedUserName: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -112,6 +128,20 @@ fun GroupDetailScreen(
                     Icon(imageVector = Icons.Filled.Add, contentDescription = "Nova despesa")
                 }
             }
+        },
+        bottomBar = {
+            RateioBottomBar(
+                selectedTab = RateioBottomTab.GRUPOS,
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                onTabSelected = { tab ->
+                    when (tab) {
+                        RateioBottomTab.GRUPOS -> onGroupsClick()
+                        RateioBottomTab.AVISOS -> onNotificationsClick()
+                        RateioBottomTab.PERFIL -> onProfileClick()
+                    }
+                },
+            )
         },
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
@@ -276,11 +306,12 @@ private fun SyncSection(syncAction: GroupSyncActionUiState, onSyncClick: () -> U
     when (syncAction) {
         GroupSyncActionUiState.Hidden -> Unit
 
-        GroupSyncActionUiState.Available -> OutlinedButton(
+        GroupSyncActionUiState.Available -> Button(
             onClick = onSyncClick,
+            colors = ButtonDefaults.buttonColors(containerColor = colors.paperAlt, contentColor = colors.ink),
             modifier = modifier.fillMaxWidth().padding(top = 10.dp),
         ) {
-            Text(text = "Sincronizar este grupo", fontWeight = FontWeight.SemiBold, color = colors.brandInk)
+            Text(text = "Sincronizar este grupo", fontWeight = FontWeight.SemiBold)
         }
 
         GroupSyncActionUiState.InProgress -> Text(

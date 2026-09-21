@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,7 +45,10 @@ fun SettlementSuggestionRow(
                 color = colors.ink,
             )
         }
-        OutlinedButton(onClick = { onMarkAsPaidClick(suggestion) }) {
+        Button(
+            onClick = { onMarkAsPaidClick(suggestion) },
+            colors = ButtonDefaults.buttonColors(containerColor = colors.paperAlt, contentColor = colors.ink),
+        ) {
             Text(text = "Marcar como pago", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         }
     }
