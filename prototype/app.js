@@ -6,19 +6,32 @@
 const STORAGE_KEY = 'rateio:v1';
 const THEME_KEY = 'rateio:theme';
 
+/**
+ * Botão de tema (sol/lua) no `.topbar` de toda tela, lado oposto ao título — componente global,
+ * não uma feature de uma tela só. O ícone mostrado é sempre o do modo PRA ONDE o toque leva (sol
+ * visível = "toque pra clarear", lua visível = "toque pra escurecer"), nunca o modo atual.
+ */
+const THEME_ICONS = {
+  sun: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
+  moon: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
+};
+
 function initThemeToggle() {
   const btn = document.getElementById('theme-toggle');
   if (!btn) return;
-  const setLabel = () => {
+  const render = () => {
     const dark = document.documentElement.dataset.theme === 'dark';
-    btn.textContent = dark ? '◐ modo claro' : '◑ modo escuro';
+    btn.innerHTML = dark ? THEME_ICONS.sun : THEME_ICONS.moon;
+    const label = dark ? 'Mudar para tema claro' : 'Mudar para tema escuro';
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
   };
-  setLabel();
+  render();
   btn.addEventListener('click', () => {
     const dark = document.documentElement.dataset.theme === 'dark';
     document.documentElement.dataset.theme = dark ? 'light' : 'dark';
     localStorage.setItem(THEME_KEY, dark ? 'light' : 'dark');
-    setLabel();
+    render();
   });
 }
 document.addEventListener('DOMContentLoaded', initThemeToggle);
