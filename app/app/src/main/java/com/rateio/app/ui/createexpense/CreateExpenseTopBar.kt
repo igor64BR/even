@@ -11,6 +11,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import com.rateio.app.ui.theme.LocalRateioColors
+import com.rateio.app.ui.theme.ThemeToggleButton
 
 /**
  * `.topbar` de `nova-despesa.html` — volta pro grupo sem salvar. [isEditMode] (T29) troca só o
@@ -19,7 +20,12 @@ import com.rateio.app.ui.theme.LocalRateioColors
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateExpenseTopBar(onBackClick: () -> Unit, isEditMode: Boolean = false) {
+fun CreateExpenseTopBar(
+    onBackClick: () -> Unit,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit,
+    isEditMode: Boolean = false,
+) {
     val colors = LocalRateioColors.current
     TopAppBar(
         title = { Text(text = if (isEditMode) "Editar despesa" else "Nova despesa", fontWeight = FontWeight.Bold) },
@@ -28,9 +34,11 @@ fun CreateExpenseTopBar(onBackClick: () -> Unit, isEditMode: Boolean = false) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
             }
         },
+        actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = colors.paper,
             titleContentColor = colors.ink,
+            actionIconContentColor = colors.ink,
         ),
     )
 }

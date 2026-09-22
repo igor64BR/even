@@ -34,6 +34,8 @@ fun SettleDebtsRoute(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: SettleDebtsViewModel = viewModel(factory = factory)
@@ -48,6 +50,8 @@ fun SettleDebtsRoute(
         onNotificationsClick = onNotificationsClick,
         onProfileClick = onProfileClick,
         authenticatedUserName = authenticatedUserName,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme,
         modifier = modifier,
     )
 }
@@ -67,6 +71,8 @@ fun SettleDebtsScreen(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -74,7 +80,9 @@ fun SettleDebtsScreen(
     Scaffold(
         modifier = modifier,
         containerColor = colors.paper,
-        topBar = { SettleDebtsTopBar(onBackClick = onBackClick) },
+        topBar = {
+            SettleDebtsTopBar(onBackClick = onBackClick, isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme)
+        },
         bottomBar = {
             RateioBottomBar(
                 selectedTab = RateioBottomTab.GRUPOS,

@@ -11,11 +11,17 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import com.rateio.app.ui.theme.LocalRateioColors
+import com.rateio.app.ui.theme.ThemeToggleButton
 
 /** `.topbar` de `grupo.html` — título é o nome do grupo, volta pra "Seus grupos". */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupDetailTopBar(groupName: String, onBackClick: () -> Unit) {
+fun GroupDetailTopBar(
+    groupName: String,
+    onBackClick: () -> Unit,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit,
+) {
     val colors = LocalRateioColors.current
     TopAppBar(
         title = { Text(text = groupName, fontWeight = FontWeight.Bold) },
@@ -24,9 +30,11 @@ fun GroupDetailTopBar(groupName: String, onBackClick: () -> Unit) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
             }
         },
+        actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = colors.paper,
             titleContentColor = colors.ink,
+            actionIconContentColor = colors.ink,
         ),
     )
 }

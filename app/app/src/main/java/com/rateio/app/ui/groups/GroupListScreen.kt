@@ -29,6 +29,8 @@ fun GroupListRoute(
     onProfileClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: GroupListViewModel = viewModel(factory = factory)
@@ -43,6 +45,8 @@ fun GroupListRoute(
         onProfileClick = onProfileClick,
         onNotificationsClick = onNotificationsClick,
         authenticatedUserName = authenticatedUserName,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme,
         modifier = modifier,
     )
 }
@@ -62,6 +66,8 @@ fun GroupListScreen(
     onProfileClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -69,7 +75,7 @@ fun GroupListScreen(
     Scaffold(
         modifier = modifier,
         containerColor = colors.paper,
-        topBar = { GroupListTopBar() },
+        topBar = { GroupListTopBar(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme) },
         floatingActionButton = { CreateGroupFab(onClick = onCreateGroupClick) },
         floatingActionButtonPosition = FabPosition.End,
         bottomBar = {

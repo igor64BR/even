@@ -21,6 +21,7 @@ import com.rateio.data.repository.RoomGroupRepository
 import com.rateio.data.repository.RoomNotificationRepository
 import com.rateio.data.repository.RoomParticipantRepository
 import com.rateio.data.repository.RoomSettlementRepository
+import com.rateio.data.repository.SharedPreferencesThemeRepository
 import com.rateio.domain.engine.DebtSimplificationEngine
 import com.rateio.domain.engine.GreedyDebtSimplificationEngine
 import com.rateio.domain.format.MoneyFormatter
@@ -33,6 +34,7 @@ import com.rateio.domain.repository.ParticipantRepository
 import com.rateio.domain.repository.RemoteExpenseRepository
 import com.rateio.domain.repository.RemoteGroupRepository
 import com.rateio.domain.repository.SettlementRepository
+import com.rateio.domain.repository.ThemeRepository
 
 /**
  * Raiz de composição manual do módulo `:app` — não há framework de DI no projeto ainda. Monta o
@@ -46,6 +48,11 @@ class AppContainer(context: Context) {
         RateioDatabase::class.java,
         DATABASE_NAME,
     ).build()
+
+    // Preferência de tema claro/escuro (botão sol/lua no TopAppBar de toda tela) — não é dado do
+    // domínio de negócio como o resto abaixo, só está aqui em cima por ser a única dependência que
+    // MainActivity precisa resolver antes mesmo de montar `RateioTheme`.
+    val themeRepository: ThemeRepository by lazy { SharedPreferencesThemeRepository(context.applicationContext) }
 
     val groupRepository: GroupRepository by lazy { RoomGroupRepository(database.groupDao()) }
     val participantRepository: ParticipantRepository by lazy { RoomParticipantRepository(database.participantDao()) }

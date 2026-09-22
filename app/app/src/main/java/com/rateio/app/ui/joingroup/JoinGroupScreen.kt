@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rateio.app.ui.groups.RateioBottomBar
 import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.theme.LocalRateioColors
+import com.rateio.app.ui.theme.ThemeToggleButton
 
 /**
  * Ponto de entrada do fluxo "entrar no grupo por link" (T22.2). `factory` injeta o
@@ -50,6 +51,8 @@ fun JoinGroupRoute(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: JoinGroupViewModel = viewModel(factory = factory)
@@ -71,6 +74,8 @@ fun JoinGroupRoute(
         onNotificationsClick = onNotificationsClick,
         onProfileClick = onProfileClick,
         authenticatedUserName = authenticatedUserName,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme,
         modifier = modifier,
     )
 }
@@ -95,6 +100,8 @@ fun JoinGroupScreen(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -105,7 +112,12 @@ fun JoinGroupScreen(
         topBar = {
             TopAppBar(
                 title = { Text(text = "Entrar no grupo", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.paper, titleContentColor = colors.ink),
+                actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colors.paper,
+                    titleContentColor = colors.ink,
+                    actionIconContentColor = colors.ink,
+                ),
             )
         },
         bottomBar = {

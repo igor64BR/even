@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rateio.app.ui.groups.RateioBottomBar
 import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.theme.LocalRateioColors
+import com.rateio.app.ui.theme.ThemeToggleButton
 
 /**
  * Tela "Notificações" (T41.1, RF35/RF36), fiel a `prototype/notificacoes.html`. `factory` injeta o
@@ -52,6 +53,8 @@ fun NotificationsRoute(
     onGroupsClick: () -> Unit,
     onProfileClick: () -> Unit,
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: NotificationsViewModel = viewModel(factory = factory)
@@ -69,6 +72,8 @@ fun NotificationsRoute(
         onGroupsClick = onGroupsClick,
         onProfileClick = onProfileClick,
         authenticatedUserName = authenticatedUserName,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme,
         modifier = modifier,
     )
 }
@@ -82,6 +87,8 @@ fun NotificationsScreen(
     onGroupsClick: () -> Unit,
     onProfileClick: () -> Unit,
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -89,7 +96,13 @@ fun NotificationsScreen(
     Scaffold(
         modifier = modifier,
         containerColor = colors.paper,
-        topBar = { NotificationsTopBar(onBackClick = onBackClick) },
+        topBar = {
+            NotificationsTopBar(
+                onBackClick = onBackClick,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+            )
+        },
         bottomBar = {
             RateioBottomBar(
                 selectedTab = RateioBottomTab.AVISOS,
@@ -113,7 +126,7 @@ fun NotificationsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NotificationsTopBar(onBackClick: () -> Unit) {
+private fun NotificationsTopBar(onBackClick: () -> Unit, isDarkTheme: Boolean, onToggleTheme: () -> Unit) {
     val colors = LocalRateioColors.current
     TopAppBar(
         title = { Text(text = "Notificações", fontWeight = FontWeight.Bold) },
@@ -122,7 +135,12 @@ private fun NotificationsTopBar(onBackClick: () -> Unit) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.paper, titleContentColor = colors.ink),
+        actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = colors.paper,
+            titleContentColor = colors.ink,
+            actionIconContentColor = colors.ink,
+        ),
     )
 }
 

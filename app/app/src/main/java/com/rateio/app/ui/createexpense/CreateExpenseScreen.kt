@@ -46,6 +46,8 @@ fun CreateExpenseRoute(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: CreateExpenseViewModel = viewModel(factory = factory)
@@ -76,6 +78,8 @@ fun CreateExpenseRoute(
         onNotificationsClick = onNotificationsClick,
         onProfileClick = onProfileClick,
         authenticatedUserName = authenticatedUserName,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme,
         modifier = modifier,
     )
 }
@@ -104,6 +108,8 @@ fun CreateExpenseScreen(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -111,7 +117,14 @@ fun CreateExpenseScreen(
     Scaffold(
         modifier = modifier,
         containerColor = colors.paper,
-        topBar = { CreateExpenseTopBar(onBackClick = onBackClick, isEditMode = uiState.isEditMode) },
+        topBar = {
+            CreateExpenseTopBar(
+                onBackClick = onBackClick,
+                isEditMode = uiState.isEditMode,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+            )
+        },
         bottomBar = {
             RateioBottomBar(
                 selectedTab = RateioBottomTab.GRUPOS,

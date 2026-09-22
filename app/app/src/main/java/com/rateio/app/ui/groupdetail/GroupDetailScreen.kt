@@ -62,6 +62,8 @@ fun GroupDetailRoute(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: GroupDetailViewModel = viewModel(factory = factory)
@@ -85,6 +87,8 @@ fun GroupDetailRoute(
         onNotificationsClick = onNotificationsClick,
         onProfileClick = onProfileClick,
         authenticatedUserName = authenticatedUserName,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme,
         modifier = modifier,
     )
 }
@@ -109,6 +113,8 @@ fun GroupDetailScreen(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -117,7 +123,14 @@ fun GroupDetailScreen(
     Scaffold(
         modifier = modifier,
         containerColor = colors.paper,
-        topBar = { GroupDetailTopBar(groupName = title, onBackClick = onBackClick) },
+        topBar = {
+            GroupDetailTopBar(
+                groupName = title,
+                onBackClick = onBackClick,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+            )
+        },
         floatingActionButton = {
             if (uiState is GroupDetailUiState.Content) {
                 FloatingActionButton(

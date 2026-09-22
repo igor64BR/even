@@ -45,6 +45,7 @@ import com.rateio.app.R
 import com.rateio.app.ui.groups.RateioBottomBar
 import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.theme.LocalRateioColors
+import com.rateio.app.ui.theme.ThemeToggleButton
 import com.rateio.domain.model.AuthenticatedUser
 
 /**
@@ -68,6 +69,8 @@ fun LoginRoute(
     onGroupsClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: AuthViewModel = viewModel(factory = factory)
@@ -87,6 +90,8 @@ fun LoginRoute(
         onGroupsClick = onGroupsClick,
         onNotificationsClick = onNotificationsClick,
         authenticatedUserName = authenticatedUserName,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme,
         modifier = modifier,
     )
 }
@@ -108,6 +113,8 @@ fun LoginScreen(
     onGroupsClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -115,7 +122,14 @@ fun LoginScreen(
     Scaffold(
         modifier = modifier,
         containerColor = colors.paper,
-        topBar = { LoginTopBar(uiState = uiState, onBackClick = onBackClick) },
+        topBar = {
+            LoginTopBar(
+                uiState = uiState,
+                onBackClick = onBackClick,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+            )
+        },
         bottomBar = {
             RateioBottomBar(
                 selectedTab = RateioBottomTab.PERFIL,
@@ -153,7 +167,12 @@ fun LoginScreen(
 /** `.topbar h1` do protótipo — "Entrar" deslogado/conectando, "Sua conta" logado. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LoginTopBar(uiState: AuthUiState, onBackClick: () -> Unit) {
+private fun LoginTopBar(
+    uiState: AuthUiState,
+    onBackClick: () -> Unit,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit,
+) {
     val colors = LocalRateioColors.current
     val title = if (uiState is AuthUiState.SignedIn) "Sua conta" else "Entrar"
     TopAppBar(
@@ -163,9 +182,11 @@ private fun LoginTopBar(uiState: AuthUiState, onBackClick: () -> Unit) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
             }
         },
+        actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = colors.paper,
             titleContentColor = colors.ink,
+            actionIconContentColor = colors.ink,
         ),
     )
 }

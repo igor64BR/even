@@ -40,6 +40,8 @@ fun CreateGroupRoute(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val viewModel: CreateGroupViewModel = viewModel(factory = factory)
@@ -67,6 +69,8 @@ fun CreateGroupRoute(
         onNotificationsClick = onNotificationsClick,
         onProfileClick = onProfileClick,
         authenticatedUserName = authenticatedUserName,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme,
         modifier = modifier,
     )
 }
@@ -92,6 +96,8 @@ fun CreateGroupScreen(
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     authenticatedUserName: String? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
@@ -99,7 +105,9 @@ fun CreateGroupScreen(
     Scaffold(
         modifier = modifier,
         containerColor = colors.paper,
-        topBar = { CreateGroupTopBar(onBackClick = onBackClick) },
+        topBar = {
+            CreateGroupTopBar(onBackClick = onBackClick, isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme)
+        },
         bottomBar = {
             RateioBottomBar(
                 selectedTab = RateioBottomTab.GRUPOS,

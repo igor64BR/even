@@ -5,15 +5,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rateio.app.di.AppContainer
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import com.rateio.app.ui.auth.AuthViewModelFactory
 import com.rateio.app.ui.auth.LoginRoute
 import com.rateio.app.ui.creategroup.CreateGroupRoute
@@ -146,6 +149,19 @@ private fun RateioApp(
         .map { session -> session?.user?.name }
         .collectAsStateWithLifecycle(initialValue = null)
 
+    // Botão sol/lua (mesmo componente global de `prototype/app.js`'s `initThemeToggle`, presente
+    // no TopAppBar de toda tela). `storedThemePreference` é `null` até o usuário tocar no botão
+    // pela primeira vez — nesse caso o app segue o tema do sistema, igual o protótipo seguia
+    // `prefers-color-scheme` antes de qualquer escolha salva em `localStorage`. Depois do primeiro
+    // toque, o valor salvo manda, em todo lançamento futuro, até o usuário tocar de novo.
+    val storedThemePreference by container.themeRepository.getIsDarkThemeFlow()
+        .collectAsStateWithLifecycle(initialValue = null)
+    val isDarkTheme = storedThemePreference ?: isSystemInDarkTheme()
+    val coroutineScope = rememberCoroutineScope()
+    val onToggleTheme: () -> Unit = {
+        coroutineScope.launch { container.themeRepository.setDarkTheme(!isDarkTheme) }
+    }
+
     // T22.1 — deep link `rateio://join/{codigo}` (extraído do Intent em MainActivity). Roteia
     // direto pra JoinGroup independente de sessão: é o próprio JoinGroupViewModel que checa login
     // e expõe NeedsLogin — RateioApp só reage a esse estado (abaixo, no case JoinGroup) mandando
@@ -174,7 +190,7 @@ private fun RateioApp(
         googleIdentityClient = container.googleIdentityClient,
     )
 
-    RateioTheme {
+    RateioTheme(darkTheme = isDarkTheme) {
         when (val current = destination) {
             RateioDestination.GroupList -> GroupListRoute(
                 factory = groupListViewModelFactory,
@@ -183,6 +199,8 @@ private fun RateioApp(
                 onProfileClick = { destination = RateioDestination.Login() },
                 onNotificationsClick = { destination = RateioDestination.Notifications },
                 authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
             )
 
             RateioDestination.CreateGroup -> CreateGroupRoute(
@@ -191,6 +209,8 @@ private fun RateioApp(
                 onBackClick = { destination = RateioDestination.GroupList },
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
                 onGroupsClick = { destination = RateioDestination.GroupList },
                 onNotificationsClick = { destination = RateioDestination.Notifications },
                 onProfileClick = { destination = RateioDestination.Login() },
@@ -217,6 +237,8 @@ private fun RateioApp(
                 onSettleDebtsClick = { destination = RateioDestination.SettleDebts(current.groupId) },
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
                 onGroupsClick = { destination = RateioDestination.GroupList },
                 onNotificationsClick = { destination = RateioDestination.Notifications },
                 onProfileClick = { destination = RateioDestination.Login() },
@@ -235,6 +257,8 @@ private fun RateioApp(
                 onBackClick = { destination = RateioDestination.GroupDetail(current.groupId) },
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
                 onGroupsClick = { destination = RateioDestination.GroupList },
                 onNotificationsClick = { destination = RateioDestination.Notifications },
                 onProfileClick = { destination = RateioDestination.Login() },
@@ -252,6 +276,8 @@ private fun RateioApp(
                 onBackClick = { destination = RateioDestination.GroupDetail(current.groupId) },
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
                 onGroupsClick = { destination = RateioDestination.GroupList },
                 onNotificationsClick = { destination = RateioDestination.Notifications },
                 onProfileClick = { destination = RateioDestination.Login() },
@@ -266,6 +292,8 @@ private fun RateioApp(
                 },
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
                 onGroupsClick = { destination = RateioDestination.GroupList },
                 onNotificationsClick = { destination = RateioDestination.Notifications },
             )
@@ -280,6 +308,8 @@ private fun RateioApp(
                 onDone = { destination = RateioDestination.GroupList },
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
                 onGroupsClick = { destination = RateioDestination.GroupList },
                 onNotificationsClick = { destination = RateioDestination.Notifications },
                 onProfileClick = { destination = RateioDestination.Login() },
@@ -290,6 +320,8 @@ private fun RateioApp(
                 onGroupsClick = { destination = RateioDestination.GroupList },
                 onProfileClick = { destination = RateioDestination.Login() },
                 authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
             )
         }
     }
