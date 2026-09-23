@@ -35,12 +35,18 @@ import java.time.LocalDate
  * padrão de [com.rateio.app.ui.creategroup.CreateGroupRoute]. `factory.expenseId` não-nulo (T29)
  * é o único gatilho do modo edição — nem esta Route nem [CreateExpenseScreen] decidem isso, só
  * repassam [CreateExpenseUiState.isEditMode] pra pintar título/botão.
+ *
+ * [key] identifica esta visita à tela pro `viewModel()` do Compose (ver KDoc de
+ * `RateioDestination.CreateExpense.instanceId` em `MainActivity`) — sem ela, lançar uma segunda
+ * despesa seguida reaproveitava o `ViewModel` da primeira, com o formulário e `isSaving` da última
+ * submissão ainda presos.
  */
 @Composable
 fun CreateExpenseRoute(
     factory: CreateExpenseViewModelFactory,
     onSaved: () -> Unit,
     onBackClick: () -> Unit,
+    key: String? = null,
     unreadNotificationsCount: Int = 0,
     onGroupsClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -50,7 +56,7 @@ fun CreateExpenseRoute(
     onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: CreateExpenseViewModel = viewModel(factory = factory)
+    val viewModel: CreateExpenseViewModel = viewModel(factory = factory, key = key)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel) {

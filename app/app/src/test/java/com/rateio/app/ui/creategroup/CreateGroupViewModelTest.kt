@@ -120,4 +120,28 @@ class CreateGroupViewModelTest {
         assertTrue("CreateGroupEvent.GroupCreated deveria ter sido emitido", eventEmitted)
         collectorJob.cancel()
     }
+
+    /**
+     * Regressão: `onSaveClick` marcava `isSaving = true` e nunca voltava a `false` depois do
+     * `insertGroup` terminar — inofensivo enquanto a tela desmontava ao navegar de volta pra
+     * "Seus grupos" logo após, mas travava o botão "Criar grupo" (`enabled = !uiState.isSaving`)
+     * pra sempre assim que o mesmo `ViewModel` era reaproveitado numa visita seguinte (bug real
+     * relatado: formulário reaberto não deixava salvar mesmo com todos os campos preenchidos).
+     */
+    @Test
+    fun `isSaving volta a false depois de salvar com sucesso`() = runTest(testDispatcher) {
+        viewModel.onNameChanged("Churras de sábado")
+        viewModel.onNewParticipantNameChanged("Marina")
+        viewModel.onAddParticipant()
+
+        viewModel.onSaveClick()
+        // Suspensão real (não `advanceUntilIdle()` sozinho): `saveGroup` grava no Room via
+        // executor real, fora do `testDispatcher` (mesma corrida documentada em
+        // `CreateExpenseViewModelTest`) — só suspender de verdade até o evento garante que o
+        // `finally` que zera `isSaving` (que roda ANTES do emit, no mesmo corpo de corrotina) já
+        // aconteceu.
+        viewModel.events.first()
+
+        assertFalse("isSaving deve voltar a false após salvar, senão o botão trava", viewModel.uiState.value.isSaving)
+    }
 }

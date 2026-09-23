@@ -24,11 +24,16 @@ import com.rateio.app.ui.theme.LocalRateioColors
  * Tela "Quitar dívidas" (T42.3, RF44), aberta a partir do botão homônimo em "Detalhes do grupo"
  * (T42.2). `factory` injeta o [SettleDebtsViewModel] pela composição manual de
  * [com.rateio.app.di.AppContainer], mesmo padrão das demais telas do módulo.
+ *
+ * [key] = `"SettleDebts:$groupId"` (ver `RateioApp` em `MainActivity`, mesmo racional de
+ * [com.rateio.app.ui.groupdetail.GroupDetailRoute]) — sem ela, quitar dívidas de um grupo
+ * diferente do último visitado reaproveitava o `ViewModel` do primeiro.
  */
 @Composable
 fun SettleDebtsRoute(
     factory: SettleDebtsViewModelFactory,
     onBackClick: () -> Unit,
+    key: String? = null,
     unreadNotificationsCount: Int = 0,
     onGroupsClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -38,7 +43,7 @@ fun SettleDebtsRoute(
     onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: SettleDebtsViewModel = viewModel(factory = factory)
+    val viewModel: SettleDebtsViewModel = viewModel(factory = factory, key = key)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     SettleDebtsScreen(

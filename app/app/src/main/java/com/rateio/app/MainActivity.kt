@@ -34,6 +34,7 @@ import com.rateio.app.ui.notifications.NotificationsViewModelFactory
 import com.rateio.app.ui.settledebts.SettleDebtsRoute
 import com.rateio.app.ui.settledebts.SettleDebtsViewModelFactory
 import com.rateio.app.ui.theme.RateioTheme
+import java.util.UUID
 
 /**
  * Ponto de entrada do app (RF40 — abre direto em "Seus grupos", sem login). Só monta o tema e
@@ -113,12 +114,28 @@ private const val DEEP_LINK_HOST = "join"
  * [GroupDetail]) e o id da despesa sendo editada quando vem de [GroupDetail]'s
  * `onEditExpenseClick` (tocar numa [com.rateio.app.ui.groupdetail.ExpenseRow]) — mesmo destino
  * pros dois fluxos, só muda o parâmetro (T29, "edição é estado, não tela nova").
+ *
+ * [CreateGroup.instanceId]/[CreateExpense.instanceId]: sem `NavHost`, todo destino compartilha o
+ * mesmo `ViewModelStoreOwner` (a própria Activity) — `viewModel(factory=...)` sem uma `key`
+ * explícita cacheia por classe, não por navegação, então reabrir "Novo grupo"/"Nova despesa"
+ * devolvia o `ViewModel` da visita anterior, com o formulário inteiro (e `isSaving`) ainda no
+ * estado da última submissão. `instanceId` gera um valor novo a cada `RateioDestination.CreateGroup()`/
+ * `CreateExpense()` construído (default de `UUID.randomUUID()`), viram a `key` desse `viewModel()`
+ * (ver `RateioApp`) e garantem um formulário zerado a cada visita. [GroupDetail]/[SettleDebts] não
+ * precisam disso — o `ViewModel` dos dois é só um espelho de `Flow`s do Room (sem "isSaving" nem
+ * campo de formulário pra ficar velho), então a `key` ali é só o `groupId`: revisitar o MESMO
+ * grupo reaproveita a instância (barato, inofensivo), visitar um grupo DIFERENTE já força uma
+ * nova (que era o bug real ali — sem isso, o segundo grupo aberto mostraria os dados do primeiro).
  */
 private sealed interface RateioDestination {
     data object GroupList : RateioDestination
-    data object CreateGroup : RateioDestination
+    data class CreateGroup(val instanceId: String = UUID.randomUUID().toString()) : RateioDestination
     data class GroupDetail(val groupId: String) : RateioDestination
-    data class CreateExpense(val groupId: String, val expenseId: String? = null) : RateioDestination
+    data class CreateExpense(
+        val groupId: String,
+        val expenseId: String? = null,
+        val instanceId: String = UUID.randomUUID().toString(),
+    ) : RateioDestination
     data class SettleDebts(val groupId: String) : RateioDestination
     data class Login(val pendingInviteCode: String? = null) : RateioDestination
     data class JoinGroup(val inviteCode: String) : RateioDestination
@@ -194,7 +211,7 @@ private fun RateioApp(
         when (val current = destination) {
             RateioDestination.GroupList -> GroupListRoute(
                 factory = groupListViewModelFactory,
-                onCreateGroupClick = { destination = RateioDestination.CreateGroup },
+                onCreateGroupClick = { destination = RateioDestination.CreateGroup() },
                 onGroupClick = { groupId -> destination = RateioDestination.GroupDetail(groupId) },
                 onProfileClick = { destination = RateioDestination.Login() },
                 onNotificationsClick = { destination = RateioDestination.Notifications },
@@ -203,8 +220,9 @@ private fun RateioApp(
                 onToggleTheme = onToggleTheme,
             )
 
-            RateioDestination.CreateGroup -> CreateGroupRoute(
+            is RateioDestination.CreateGroup -> CreateGroupRoute(
                 factory = createGroupViewModelFactory,
+                key = "CreateGroup:${current.instanceId}",
                 onGroupCreated = { destination = RateioDestination.GroupList },
                 onBackClick = { destination = RateioDestination.GroupList },
                 unreadNotificationsCount = unreadNotificationsCount,
@@ -229,6 +247,7 @@ private fun RateioApp(
                     debtSimplificationEngine = container.debtSimplificationEngine,
                     groupRealtimeGateway = container.groupRealtimeGateway,
                 ),
+                key = "GroupDetail:${current.groupId}",
                 onBackClick = { destination = RateioDestination.GroupList },
                 onCreateExpenseClick = { destination = RateioDestination.CreateExpense(current.groupId) },
                 onEditExpenseClick = { expenseId ->
@@ -253,6 +272,7 @@ private fun RateioApp(
                     groupRepository = container.groupRepository,
                     remoteExpenseRepository = container.remoteExpenseRepository,
                 ),
+                key = "CreateExpense:${current.instanceId}",
                 onSaved = { destination = RateioDestination.GroupDetail(current.groupId) },
                 onBackClick = { destination = RateioDestination.GroupDetail(current.groupId) },
                 unreadNotificationsCount = unreadNotificationsCount,
@@ -273,6 +293,7 @@ private fun RateioApp(
                     settlementRepository = container.settlementRepository,
                     debtSimplificationEngine = container.debtSimplificationEngine,
                 ),
+                key = "SettleDebts:${current.groupId}",
                 onBackClick = { destination = RateioDestination.GroupDetail(current.groupId) },
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
@@ -304,6 +325,7 @@ private fun RateioApp(
                     authRepository = container.authRepository,
                     remoteGroupRepository = container.remoteGroupRepository,
                 ),
+                key = "JoinGroup:${current.inviteCode}",
                 onNeedsLogin = { code -> destination = RateioDestination.Login(pendingInviteCode = code) },
                 onDone = { destination = RateioDestination.GroupList },
                 unreadNotificationsCount = unreadNotificationsCount,

@@ -78,7 +78,19 @@ class CreateGroupViewModel(
 
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
-            saveGroup(state)
+            try {
+                saveGroup(state)
+            } finally {
+                // Sem isso, `isSaving` ficava `true` pra sempre — inofensivo enquanto a tela
+                // desmontava ao navegar pra "Seus grupos" logo após o evento abaixo, mas virava bug
+                // visível (botão "Criar grupo" travado desabilitado) assim que o mesmo ViewModel
+                // era reaproveitado numa visita seguinte a esta tela (ver key em CreateGroupRoute).
+                // Reseta ANTES de emitir o evento (não depois, num `finally` só em volta do emit
+                // também): "salvando" termina quando o grupo é persistido, não quando alguém reage
+                // à notificação de navegação — e só assim quem observa [events] já vê `isSaving
+                // = false` no mesmo instante em que o evento chega.
+                _uiState.update { it.copy(isSaving = false) }
+            }
             _events.emit(CreateGroupEvent.GroupCreated)
         }
     }

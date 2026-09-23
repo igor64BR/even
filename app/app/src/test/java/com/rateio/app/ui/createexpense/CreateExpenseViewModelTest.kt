@@ -388,22 +388,15 @@ class CreateExpenseViewModelTest {
     }
 
     /**
-     * Marca o grupo como sincronizado sem passar por `GroupRepository.insertGroup`/
-     * `@Insert(OnConflictStrategy.REPLACE)`: re-inserir a MESMA linha (mesmo id) via REPLACE faz o
-     * SQLite apagar e reinserir a linha, o que dispara `onDelete = CASCADE` das chaves estrangeiras
-     * de `participants`/`expenses` pra `groups` — apagando os participantes/despesa que acabamos
-     * de semear (confirmado isolando o comportamento: contagem de participantes vai de 2 pra 0
-     * depois do REPLACE). **Esse é um bug real e pré-existente fora do escopo de T29** — a mesma
-     * chamada acontece em produção em `GroupDetailViewModel.syncGroup` (T19, "Sincronizar este
-     * grupo"), então sincronizar um grupo que já tem participantes/despesas locais hoje os apaga
-     * silenciosamente; reportado à parte, não corrigido aqui. Pra não reproduzir esse bug só como
-     * armadilha de teste, este helper faz um `UPDATE` direto (não passa por REPLACE nenhum).
+     * Marca o grupo como sincronizado reinserindo a mesma linha com `isSynced=true` — mesmo
+     * caminho de produção (`GroupDetailViewModel.syncGroup`, T19). `GroupDao.insert` é `@Upsert`
+     * (achado em T29, corrigido à parte: `@Insert(OnConflictStrategy.REPLACE)` fazia SQLite
+     * apagar+reinserir a linha, disparando `ON DELETE CASCADE` e apagando participantes/despesas
+     * junto), então isso não apaga o que já foi semeado.
      */
-    private fun markGroupAsSynced(remoteId: String) {
-        database.openHelper.writableDatabase.execSQL(
-            "UPDATE groups SET isSynced = 1, remoteId = ? WHERE id = ?",
-            arrayOf(remoteId, groupId),
-        )
+    private suspend fun markGroupAsSynced(remoteId: String) {
+        val group = requireNotNull(groupRepository.getGroupById(groupId))
+        groupRepository.insertGroup(group.copy(isSynced = true, remoteId = remoteId))
     }
 
     @Test
@@ -454,6 +447,26 @@ class CreateExpenseViewModelTest {
 
         val updated = expenseRepository.getExpensesFlow(groupId).first().single()
         assertEquals("mudanca local vale independente da falha de rede (local-first)", "Carvão, carne e gelo", updated.description)
+    }
+
+    /**
+     * Regressão: `onSaveClick` marcava `isSaving = true` e nunca voltava a `false` depois do
+     * insert/update terminar — inofensivo enquanto a tela desmontava ao navegar de volta pro grupo
+     * logo após, mas travava o botão "Salvar despesa" (`enabled = !uiState.isSaving`) pra sempre
+     * assim que o mesmo `ViewModel` era reaproveitado numa visita seguinte (bug real relatado:
+     * lançar uma segunda despesa reabria o formulário sem conseguir salvar, mesmo preenchido).
+     */
+    @Test
+    fun `isSaving volta a false depois de salvar com sucesso`() = runTest(testDispatcher) {
+        seedParticipants(Participant(id = "p1", groupId = groupId, name = "Você", isYou = true))
+        val viewModel = createViewModelWithParticipantsLoaded()
+
+        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onAmountChanged("10,00")
+        viewModel.onSaveClick()
+        viewModel.events.first()
+
+        assertFalse("isSaving deve voltar a false após salvar, senão o botão trava", viewModel.uiState.value.isSaving)
     }
 
     private class FakeRemoteExpenseRepository(private val failure: (() -> Throwable)? = null) : RemoteExpenseRepository {

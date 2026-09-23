@@ -29,12 +29,18 @@ import com.rateio.app.ui.theme.LocalRateioColors
  * `factory` injeta o [CreateGroupViewModel] pela composição manual de
  * [com.rateio.app.di.AppContainer] — mesmo padrão de
  * [com.rateio.app.ui.groups.GroupListRoute].
+ *
+ * [key] identifica esta visita à tela pro `viewModel()` do Compose (ver KDoc de
+ * `RateioDestination.CreateGroup.instanceId` em `MainActivity`) — sem ela, reabrir "Novo grupo"
+ * reaproveitava o `ViewModel` da visita anterior, com o formulário e `isSaving` da última
+ * submissão ainda presos.
  */
 @Composable
 fun CreateGroupRoute(
     factory: CreateGroupViewModelFactory,
     onGroupCreated: () -> Unit,
     onBackClick: () -> Unit,
+    key: String? = null,
     unreadNotificationsCount: Int = 0,
     onGroupsClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -44,7 +50,7 @@ fun CreateGroupRoute(
     onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: CreateGroupViewModel = viewModel(factory = factory)
+    val viewModel: CreateGroupViewModel = viewModel(factory = factory, key = key)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel) {

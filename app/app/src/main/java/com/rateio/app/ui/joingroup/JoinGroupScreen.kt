@@ -40,12 +40,16 @@ import com.rateio.app.ui.theme.ThemeToggleButton
  * [onNeedsLogin] é chamado (via [LaunchedEffect]) quando [JoinGroupUiState.NeedsLogin] aparece —
  * quem monta a navegação (`MainActivity`) decide o que fazer (mandar pra tela de login guardando
  * o código pra retomar depois). Esta Composable não navega sozinha.
+ *
+ * [key] = `"JoinGroup:$inviteCode"` (ver `RateioApp` em `MainActivity`) — sem ela, abrir um
+ * segundo link de convite reaproveitaria o `ViewModel` do primeiro.
  */
 @Composable
 fun JoinGroupRoute(
     factory: JoinGroupViewModelFactory,
     onNeedsLogin: (inviteCode: String) -> Unit,
     onDone: () -> Unit,
+    key: String? = null,
     unreadNotificationsCount: Int = 0,
     onGroupsClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -55,7 +59,7 @@ fun JoinGroupRoute(
     onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: JoinGroupViewModel = viewModel(factory = factory)
+    val viewModel: JoinGroupViewModel = viewModel(factory = factory, key = key)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState) {

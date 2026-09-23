@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.OutlinedTextField
@@ -27,8 +29,10 @@ import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
  * `#field-part` do protótipo: chips de participante (removíveis, exceto "Você"), input que
- * adiciona no Enter/Done, erro "Precisa de pelo menos 2 participantes." e o texto de reforço
- * local-first ("Ninguém aqui precisa instalar o app nem ter conta").
+ * adiciona no Enter/Done — mais um botão "+" inline (`trailingIcon`) pra quem usa teclado sem
+ * tecla de ação de Enter visível (ex.: teclados físicos/layouts customizados) ou simplesmente
+ * prefere tocar em vez de confiar só no IME — erro "Precisa de pelo menos 2 participantes." e o
+ * texto de reforço local-first ("Ninguém aqui precisa instalar o app nem ter conta").
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +60,11 @@ fun ParticipantsField(
                 { Text(text = "Precisa de pelo menos 2 participantes.") }
             } else {
                 null
+            },
+            trailingIcon = {
+                IconButton(onClick = onAddParticipant, enabled = newParticipantName.isNotBlank()) {
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Adicionar participante")
+                }
             },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onAddParticipant() }),

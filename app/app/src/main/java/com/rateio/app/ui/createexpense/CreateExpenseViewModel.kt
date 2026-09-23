@@ -152,11 +152,23 @@ class CreateExpenseViewModel(
 
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
-            val editingId = expenseId
-            if (editingId != null) {
-                updateExistingExpense(state, validation.amountCents, editingId)
-            } else {
-                insertNewExpense(state, validation.amountCents)
+            try {
+                val editingId = expenseId
+                if (editingId != null) {
+                    updateExistingExpense(state, validation.amountCents, editingId)
+                } else {
+                    insertNewExpense(state, validation.amountCents)
+                }
+            } finally {
+                // Sem isso, `isSaving` ficava `true` pra sempre — inofensivo enquanto a tela
+                // desmontava ao navegar de volta pro grupo logo após o evento abaixo, mas virava
+                // bug visível (botão "Salvar despesa" travado desabilitado) assim que o mesmo
+                // ViewModel era reaproveitado numa visita seguinte a esta tela (ver key em
+                // CreateExpenseRoute). Reseta ANTES de emitir o evento (não depois, num `finally`
+                // só em volta do emit também): "salvando" termina quando a despesa é persistida,
+                // não quando alguém reage à notificação de navegação — e só assim quem observa
+                // [events] já vê `isSaving = false` no mesmo instante em que o evento chega.
+                _uiState.update { it.copy(isSaving = false) }
             }
             _events.emit(CreateExpenseEvent.Saved)
         }

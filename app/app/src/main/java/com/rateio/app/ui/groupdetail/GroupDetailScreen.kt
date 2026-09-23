@@ -45,10 +45,14 @@ import com.rateio.app.ui.theme.LocalRateioColors
  * padrão de [com.rateio.app.ui.createexpense.CreateExpenseRoute].
  *
  * `DisposableEffect` liga o cliente SignalR (T40.1) à presença desta tela na composição — conecta
- * ao entrar, desconecta ao sair, independente do ciclo de vida do `ViewModel` em si (que hoje pode
- * sobreviver à navegação, já que o app ainda não usa `NavHost`/back stack real). É essa
+ * ao entrar, desconecta ao sair, independente do ciclo de vida do `ViewModel` em si. É essa
  * `DisposableEffect`, não o `ViewModel`, que garante "só conecta enquanto a tela está sendo
  * vista" (constitution.md princípio 3).
+ *
+ * [key] = `"GroupDetail:$groupId"` (ver `RateioApp` em `MainActivity`) — sem `NavHost`/back stack
+ * real, todo destino compartilha o mesmo `ViewModelStoreOwner`; sem essa `key`, abrir um grupo
+ * diferente do último visitado reaproveitava o `ViewModel` (e o `groupId` travado nele) do
+ * primeiro, mostrando o grupo errado.
  */
 @Composable
 fun GroupDetailRoute(
@@ -57,6 +61,7 @@ fun GroupDetailRoute(
     onCreateExpenseClick: () -> Unit,
     onEditExpenseClick: (String) -> Unit,
     onSettleDebtsClick: () -> Unit,
+    key: String? = null,
     unreadNotificationsCount: Int = 0,
     onGroupsClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -66,7 +71,7 @@ fun GroupDetailRoute(
     onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: GroupDetailViewModel = viewModel(factory = factory)
+    val viewModel: GroupDetailViewModel = viewModel(factory = factory, key = key)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     DisposableEffect(viewModel) {
