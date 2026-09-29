@@ -4,11 +4,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".RateioApplication"
+        android:name=".TallyApplication"
         android:allowBackup="true"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Rateio">
+        android:theme="@style/Theme.Tally">
 
         <activity
             android:name=".MainActivity"
@@ -19,14 +19,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- T22.1 — "join group via link": rateio://join/{code}, shareable through any
+            <!-- T22.1 — "join group via link": tally://join/{code}, shareable through any
                  channel (WhatsApp, SMS, etc.), not an integration with anything specific. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="rateio"
+                    android:scheme="tally"
                     android:host="join" />
             </intent-filter>
         </activity>

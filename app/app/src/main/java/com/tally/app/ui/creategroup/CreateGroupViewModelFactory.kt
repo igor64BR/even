@@ -1,0 +1,26 @@
+package com.tally.app.ui.creategroup
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
+import com.tally.domain.repository.GroupRepository
+import com.tally.domain.repository.ParticipantRepository
+
+/**
+ * No DI framework in the project yet — a manual factory that injects
+ * [com.tally.app.di.AppContainer]'s repositories into the [CreateGroupViewModel]. Same pattern as
+ * [com.tally.app.ui.groups.GroupListViewModelFactory] (T8).
+ */
+class CreateGroupViewModelFactory(
+    private val groupRepository: GroupRepository,
+    private val participantRepository: ParticipantRepository,
+) : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+        require(modelClass.isAssignableFrom(CreateGroupViewModel::class.java)) {
+            "CreateGroupViewModelFactory only knows how to create CreateGroupViewModel, got $modelClass"
+        }
+        return CreateGroupViewModel(groupRepository, participantRepository) as T
+    }
+}

@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "rateio"
+rootProject.name = "tally"
 
 include(":app")
 include(":domain")

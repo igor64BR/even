@@ -9,10 +9,10 @@ plugins {
 }
 
 // T12 — a real OAuth client id doesn't exist yet (T11 documented the same problem on the
-// backend side, see `backend/src/Rateio.Api/appsettings.Development.json`). Read from
+// backend side, see `backend/src/Tally.Api/appsettings.Development.json`). Read from
 // `local.properties` (a per-developer file, already in .gitignore) with a fallback to an
 // obvious placeholder — never hardcoded as a "real" value in source code. Swap
-// `RATEIO_GOOGLE_WEB_CLIENT_ID` in `local.properties` once a Google Cloud project exists.
+// `TALLY_GOOGLE_WEB_CLIENT_ID` in `local.properties` once a Google Cloud project exists.
 val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
@@ -22,11 +22,11 @@ fun localOrDefault(key: String, default: String): String =
     (localProperties.getProperty(key) ?: System.getenv(key))?.takeIf { it.isNotBlank() } ?: default
 
 android {
-    namespace = "com.rateio.app"
+    namespace = "com.tally.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.rateio.app"
+        applicationId = "com.tally.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -37,16 +37,16 @@ android {
         buildConfigField(
             "String",
             "GOOGLE_WEB_CLIENT_ID",
-            "\"${localOrDefault("RATEIO_GOOGLE_WEB_CLIENT_ID", "PLACEHOLDER-CLIENT-ID.apps.googleusercontent.com")}\"",
+            "\"${localOrDefault("TALLY_GOOGLE_WEB_CLIENT_ID", "PLACEHOLDER-CLIENT-ID.apps.googleusercontent.com")}\"",
         )
         // 10.0.2.2 is the host alias from the Android emulator (loopback to the machine
         // running the backend, "http" profile from
-        // `backend/src/Rateio.Api/Properties/launchSettings.json`, port 5134) — doesn't work on a
+        // `backend/src/Tally.Api/Properties/launchSettings.json`, port 5134) — doesn't work on a
         // physical device on the same network, which would need the machine's real IP.
         buildConfigField(
             "String",
             "API_BASE_URL",
-            "\"${localOrDefault("RATEIO_API_BASE_URL", "http://10.0.2.2:5134/")}\"",
+            "\"${localOrDefault("TALLY_API_BASE_URL", "http://10.0.2.2:5134/")}\"",
         )
     }
 
@@ -75,7 +75,7 @@ android {
     }
 
     // Robolectric (T8 smoke test of GroupListViewModel against real Room, same pattern as
-    // :data's RateioDatabaseTest from T7) needs the module's resources (strings, manifest) on
+    // :data's TallyDatabaseTest from T7) needs the module's resources (strings, manifest) on
     // the unit test classpath.
     testOptions {
         unitTests.isIncludeAndroidResources = true
@@ -112,7 +112,7 @@ dependencies {
     implementation(libs.googleid)
 
     testImplementation(libs.junit4)
-    // Same reasoning as :data (see RateioDatabaseTest): in-memory Room needs an Android
+    // Same reasoning as :data (see TallyDatabaseTest): in-memory Room needs an Android
     // Context, which only exists in a plain unit test via Robolectric (no emulator available
     // in this environment).
     testImplementation(libs.robolectric)

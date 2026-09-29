@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.rateio.data"
+    namespace = "com.tally.data"
     compileSdk = 34
 
     defaultConfig {

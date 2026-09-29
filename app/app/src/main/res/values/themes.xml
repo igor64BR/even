@@ -1,12 +1,12 @@
 <resources>
     <!--
     Without a declared theme, Android fell back to the system default (with an ActionBar) — the
-    platform itself drew a native bar with the app label ("Rateio") on top of the real UI,
+    platform itself drew a native bar with the app label ("Tally") on top of the real UI,
     duplicating the `TopAppBar` each Compose screen already draws (found while porting the
     prototype's theme toggle: every TopAppBar got a sun/moon button, and the ghost native bar
     would have been left floating on top). NoActionBar removes that native bar; every real
-    color/decoration still comes from Compose (RateioTheme), never from this theme — it only
+    color/decoration still comes from Compose (TallyTheme), never from this theme — it only
     exists to turn off the system chrome.
     -->
-    <style name="Theme.Rateio" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Tally" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

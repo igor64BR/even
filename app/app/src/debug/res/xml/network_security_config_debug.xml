@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Only exists in the `debug` source set — never ships in a release build. Allows plain HTTP
-  (no TLS) exclusively for the hosts RATEIO_API_BASE_URL uses in local development (backend
+  (no TLS) exclusively for the hosts TALLY_API_BASE_URL uses in local development (backend
   running on the same machine, no certificate): `10.0.2.2` (host alias on the emulator) and
   `localhost` (via `adb reverse`, physical device). Android 9+ (targetSdk 34 here) blocks
   cleartext traffic by default — without this, every network call fails with an IOException
-  before leaving the device, showing "Could not connect to the Rateio server." even with the
+  before leaving the device, showing "Could not connect to the Tally server." even with the
   backend up and running.
 -->
 <network-security-config>

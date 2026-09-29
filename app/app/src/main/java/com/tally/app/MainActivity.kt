@@ -1,0 +1,351 @@
+package com.tally.app
+
+import android.content.Intent
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tally.app.di.AppContainer
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import com.tally.app.ui.auth.AuthViewModelFactory
+import com.tally.app.ui.auth.LoginRoute
+import com.tally.app.ui.creategroup.CreateGroupRoute
+import com.tally.app.ui.creategroup.CreateGroupViewModelFactory
+import com.tally.app.ui.createexpense.CreateExpenseRoute
+import com.tally.app.ui.createexpense.CreateExpenseViewModelFactory
+import com.tally.app.ui.groupdetail.GroupDetailRoute
+import com.tally.app.ui.groupdetail.GroupDetailViewModelFactory
+import com.tally.app.ui.groups.GroupListRoute
+import com.tally.app.ui.groups.GroupListViewModelFactory
+import com.tally.app.ui.joingroup.JoinGroupRoute
+import com.tally.app.ui.joingroup.JoinGroupViewModelFactory
+import com.tally.app.ui.notifications.NotificationsRoute
+import com.tally.app.ui.notifications.NotificationsViewModelFactory
+import com.tally.app.ui.settledebts.SettleDebtsRoute
+import com.tally.app.ui.settledebts.SettleDebtsViewModelFactory
+import com.tally.app.ui.theme.TallyTheme
+import java.util.UUID
+
+/**
+ * The app's entry point (RF40 — opens straight into "Your groups", no login). Only sets up the
+ * theme and delegates to [GroupListRoute]; no UI logic lives here.
+ *
+ * [pendingInviteCode] (T22.1) is the only platform logic that needs to live in the Activity
+ * instead of a ViewModel: extracting the invite code from an [Intent] (deep link
+ * `tally://join/{code}`, `AndroidManifest.xml`) requires `Intent`/`Uri`, which don't make sense
+ * leaking into `:domain`/ViewModels. `android:launchMode="singleTop"` guarantees that reopening the
+ * link while the app is already in memory reaches [onNewIntent] instead of recreating the Activity.
+ */
+class MainActivity : ComponentActivity() {
+
+    private var pendingInviteCode by mutableStateOf<String?>(null)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        pendingInviteCode = intent.extractInviteCode()
+
+        val container = (application as TallyApplication).container
+        setContent {
+            TallyApp(
+                container = container,
+                pendingInviteCode = pendingInviteCode,
+                onPendingInviteCodeConsumed = { pendingInviteCode = null },
+            )
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingInviteCode = intent.extractInviteCode()
+    }
+}
+
+/**
+ * `tally://join/{code}` — the fixed scheme and host of T22.1's deep link, the invite code in the
+ * first path segment. `null` for any intent that isn't this link (a normal launcher open, other
+ * actions). `internal` (instead of `private`) just to be directly testable — the same convention
+ * as [com.tally.app.ui.creategroup.FieldLabel].
+ */
+internal fun Intent?.extractInviteCode(): String? {
+    val uri = this?.data ?: return null
+    if (action != Intent.ACTION_VIEW) return null
+    if (uri.scheme != DEEP_LINK_SCHEME || uri.host != DEEP_LINK_HOST) return null
+    return uri.pathSegments.firstOrNull()?.takeIf { it.isNotBlank() }
+}
+
+private const val DEEP_LINK_SCHEME = "tally"
+private const val DEEP_LINK_HOST = "join"
+
+/**
+ * Navigable destinations from the root. No NavHost yet (T9, a real bottom nav, doesn't exist) —
+ * this is a minimal state machine between the screens that already exist.
+ *
+ * [GroupDetail] (T42.2/T42.4, RF42) is the real destination for tapping a
+ * [com.tally.app.ui.groups.GroupCard] — until T42.4 that went straight to [CreateExpense] or
+ * triggered "Sync" on the card itself, temporary shortcuts documented by T19/T24 because this
+ * screen didn't exist yet. [CreateExpense] and [SettleDebts] still exist, just now reached from
+ * [GroupDetail], not directly from the list.
+ *
+ * [Login.pendingInviteCode] (T22.1) carries the intent to join a group when the deep link arrives
+ * with the user signed out — `null` on normal access (the profile icon). [JoinGroup] is the
+ * confirmation screen's destination (T22.2), reached directly from the deep link (user signed in)
+ * or resumed after [Login] (user signed in first).
+ *
+ * [Notifications] (T41.1, RF35/RF36) is the destination of the bottom nav's "Notifications" tab —
+ * `TallyBottomBar` is present on every screen reachable from the root (the same pattern as the
+ * prototype: `group.html`/`new-expense.html`/`settle.html`/`create-group.html`/`login.html` always
+ * have `.bottombar`, with "Groups" marked active on screens that are a sub-flow of the group list
+ * and "Profile" active in [Login]), not just in [GroupList]/[Notifications].
+ *
+ * [CreateExpense.expenseId] (T29) is `null` for "New expense" (reached from [GroupDetail]'s FAB)
+ * and the id of the expense being edited when it comes from [GroupDetail]'s `onEditExpenseClick`
+ * (tapping an [com.tally.app.ui.groupdetail.ExpenseRow]) — the same destination for both flows,
+ * only the parameter changes (T29, "editing is state, not a new screen").
+ *
+ * [CreateGroup.instanceId]/[CreateExpense.instanceId]: with no `NavHost`, every destination shares
+ * the same `ViewModelStoreOwner` (the Activity itself) — `viewModel(factory=...)` with no explicit
+ * `key` caches by class, not by navigation, so reopening "New group"/"New expense" returned the
+ * previous visit's `ViewModel`, with the whole form (and `isSaving`) still in its last submission's
+ * state. `instanceId` generates a new value on every `TallyDestination.CreateGroup()`/
+ * `CreateExpense()` built (defaulting to `UUID.randomUUID()`), becomes that `viewModel()`'s `key`
+ * (see `TallyApp`) and guarantees a fresh form on every visit. [GroupDetail]/[SettleDebts] don't
+ * need this — their `ViewModel` is just a mirror of Room `Flow`s (no "isSaving" or form field to go
+ * stale), so their `key` is just the `groupId`: revisiting the SAME group reuses the instance
+ * (cheap, harmless), visiting a DIFFERENT group already forces a new one (which was the real bug
+ * there — without this, the second group opened would show the first one's data).
+ */
+private sealed interface TallyDestination {
+    data object GroupList : TallyDestination
+    data class CreateGroup(val instanceId: String = UUID.randomUUID().toString()) : TallyDestination
+    data class GroupDetail(val groupId: String) : TallyDestination
+    data class CreateExpense(
+        val groupId: String,
+        val expenseId: String? = null,
+        val instanceId: String = UUID.randomUUID().toString(),
+    ) : TallyDestination
+    data class SettleDebts(val groupId: String) : TallyDestination
+    data class Login(val pendingInviteCode: String? = null) : TallyDestination
+    data class JoinGroup(val inviteCode: String) : TallyDestination
+    data object Notifications : TallyDestination
+}
+
+@Composable
+private fun TallyApp(
+    container: AppContainer,
+    pendingInviteCode: String? = null,
+    onPendingInviteCodeConsumed: () -> Unit = {},
+) {
+    var destination by remember { mutableStateOf<TallyDestination>(TallyDestination.GroupList) }
+
+    // Unread badge (T41.2) hoisted here instead of injected into each ViewModel: it's the only
+    // piece of state every screen behind TallyBottomBar needs, and none of them (expense editing,
+    // create group, login, ...) has any other reason to know about NotificationRepository — adding
+    // that dependency to each one just to paint a badge would violate each ViewModel's single
+    // responsibility. GroupList/Notifications keep their own source (it already existed before this
+    // screen got `TallyBottomBar` everywhere).
+    val unreadNotificationsCount by container.notificationRepository.getUnreadCountFlow()
+        .collectAsStateWithLifecycle(initialValue = 0)
+
+    // Authenticated user's name (or `null` if signed out) hoisted for the same reason as the badge
+    // above — swaps the "Sign in"/"Profile" label and icon (generic/initials avatar) of
+    // `TallyBottomBar` on every screen, mirroring the prototype's `renderHeaderAuth`
+    // (`prototype/app.js`).
+    val authenticatedUserName by container.authRepository.getSessionFlow()
+        .map { session -> session?.user?.name }
+        .collectAsStateWithLifecycle(initialValue = null)
+
+    // Sun/moon button (the same global component as `prototype/app.js`'s `initThemeToggle`,
+    // present in the TopAppBar on every screen). `storedThemePreference` is `null` until the user
+    // taps the button for the first time — in that case the app follows the system theme, just like
+    // the prototype followed `prefers-color-scheme` before any choice was saved to `localStorage`.
+    // After the first tap, the saved value rules, on every future launch, until the user taps again.
+    val storedThemePreference by container.themeRepository.getIsDarkThemeFlow()
+        .collectAsStateWithLifecycle(initialValue = null)
+    val isDarkTheme = storedThemePreference ?: isSystemInDarkTheme()
+    val coroutineScope = rememberCoroutineScope()
+    val onToggleTheme: () -> Unit = {
+        coroutineScope.launch { container.themeRepository.setDarkTheme(!isDarkTheme) }
+    }
+
+    // T22.1 — deep link `tally://join/{code}` (extracted from the Intent in MainActivity). Routes
+    // straight to JoinGroup regardless of session: it's JoinGroupViewModel itself that checks login
+    // and exposes NeedsLogin — TallyApp only reacts to that state (below, in the JoinGroup case) by
+    // sending to Login with the stored code, without duplicating the session check here.
+    LaunchedEffect(pendingInviteCode) {
+        val code = pendingInviteCode ?: return@LaunchedEffect
+        destination = TallyDestination.JoinGroup(code)
+        onPendingInviteCodeConsumed()
+    }
+
+    val groupListViewModelFactory = GroupListViewModelFactory(
+        groupRepository = container.groupRepository,
+        participantRepository = container.participantRepository,
+        notificationRepository = container.notificationRepository,
+    )
+    val notificationsViewModelFactory = NotificationsViewModelFactory(
+        notificationRepository = container.notificationRepository,
+        authRepository = container.authRepository,
+    )
+    val createGroupViewModelFactory = CreateGroupViewModelFactory(
+        groupRepository = container.groupRepository,
+        participantRepository = container.participantRepository,
+    )
+    val authViewModelFactory = AuthViewModelFactory(
+        authRepository = container.authRepository,
+        googleIdentityClient = container.googleIdentityClient,
+    )
+
+    TallyTheme(darkTheme = isDarkTheme) {
+        when (val current = destination) {
+            TallyDestination.GroupList -> GroupListRoute(
+                factory = groupListViewModelFactory,
+                onCreateGroupClick = { destination = TallyDestination.CreateGroup() },
+                onGroupClick = { groupId -> destination = TallyDestination.GroupDetail(groupId) },
+                onProfileClick = { destination = TallyDestination.Login() },
+                onNotificationsClick = { destination = TallyDestination.Notifications },
+                authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+            )
+
+            is TallyDestination.CreateGroup -> CreateGroupRoute(
+                factory = createGroupViewModelFactory,
+                key = "CreateGroup:${current.instanceId}",
+                onGroupCreated = { destination = TallyDestination.GroupList },
+                onBackClick = { destination = TallyDestination.GroupList },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+                onGroupsClick = { destination = TallyDestination.GroupList },
+                onNotificationsClick = { destination = TallyDestination.Notifications },
+                onProfileClick = { destination = TallyDestination.Login() },
+            )
+
+            is TallyDestination.GroupDetail -> GroupDetailRoute(
+                factory = GroupDetailViewModelFactory(
+                    groupId = current.groupId,
+                    groupRepository = container.groupRepository,
+                    participantRepository = container.participantRepository,
+                    expenseRepository = container.expenseRepository,
+                    settlementRepository = container.settlementRepository,
+                    authRepository = container.authRepository,
+                    remoteGroupRepository = container.remoteGroupRepository,
+                    remoteExpenseRepository = container.remoteExpenseRepository,
+                    debtSimplificationEngine = container.debtSimplificationEngine,
+                    groupRealtimeGateway = container.groupRealtimeGateway,
+                ),
+                key = "GroupDetail:${current.groupId}",
+                onBackClick = { destination = TallyDestination.GroupList },
+                onCreateExpenseClick = { destination = TallyDestination.CreateExpense(current.groupId) },
+                onEditExpenseClick = { expenseId ->
+                    destination = TallyDestination.CreateExpense(current.groupId, expenseId)
+                },
+                onSettleDebtsClick = { destination = TallyDestination.SettleDebts(current.groupId) },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+                onGroupsClick = { destination = TallyDestination.GroupList },
+                onNotificationsClick = { destination = TallyDestination.Notifications },
+                onProfileClick = { destination = TallyDestination.Login() },
+            )
+
+            is TallyDestination.CreateExpense -> CreateExpenseRoute(
+                factory = CreateExpenseViewModelFactory(
+                    groupId = current.groupId,
+                    expenseId = current.expenseId,
+                    participantRepository = container.participantRepository,
+                    expenseRepository = container.expenseRepository,
+                    groupRepository = container.groupRepository,
+                    remoteExpenseRepository = container.remoteExpenseRepository,
+                ),
+                key = "CreateExpense:${current.instanceId}",
+                onSaved = { destination = TallyDestination.GroupDetail(current.groupId) },
+                onBackClick = { destination = TallyDestination.GroupDetail(current.groupId) },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+                onGroupsClick = { destination = TallyDestination.GroupList },
+                onNotificationsClick = { destination = TallyDestination.Notifications },
+                onProfileClick = { destination = TallyDestination.Login() },
+            )
+
+            is TallyDestination.SettleDebts -> SettleDebtsRoute(
+                factory = SettleDebtsViewModelFactory(
+                    groupId = current.groupId,
+                    groupRepository = container.groupRepository,
+                    participantRepository = container.participantRepository,
+                    expenseRepository = container.expenseRepository,
+                    settlementRepository = container.settlementRepository,
+                    debtSimplificationEngine = container.debtSimplificationEngine,
+                ),
+                key = "SettleDebts:${current.groupId}",
+                onBackClick = { destination = TallyDestination.GroupDetail(current.groupId) },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+                onGroupsClick = { destination = TallyDestination.GroupList },
+                onNotificationsClick = { destination = TallyDestination.Notifications },
+                onProfileClick = { destination = TallyDestination.Login() },
+            )
+
+            is TallyDestination.Login -> LoginRoute(
+                factory = authViewModelFactory,
+                onBackClick = { destination = TallyDestination.GroupList },
+                onContinueWithoutAccount = { destination = TallyDestination.GroupList },
+                onSignedIn = current.pendingInviteCode?.let { code ->
+                    { destination = TallyDestination.JoinGroup(code) }
+                },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+                onGroupsClick = { destination = TallyDestination.GroupList },
+                onNotificationsClick = { destination = TallyDestination.Notifications },
+            )
+
+            is TallyDestination.JoinGroup -> JoinGroupRoute(
+                factory = JoinGroupViewModelFactory(
+                    inviteCode = current.inviteCode,
+                    authRepository = container.authRepository,
+                    remoteGroupRepository = container.remoteGroupRepository,
+                ),
+                key = "JoinGroup:${current.inviteCode}",
+                onNeedsLogin = { code -> destination = TallyDestination.Login(pendingInviteCode = code) },
+                onDone = { destination = TallyDestination.GroupList },
+                unreadNotificationsCount = unreadNotificationsCount,
+                authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+                onGroupsClick = { destination = TallyDestination.GroupList },
+                onNotificationsClick = { destination = TallyDestination.Notifications },
+                onProfileClick = { destination = TallyDestination.Login() },
+            )
+
+            TallyDestination.Notifications -> NotificationsRoute(
+                factory = notificationsViewModelFactory,
+                onGroupsClick = { destination = TallyDestination.GroupList },
+                onProfileClick = { destination = TallyDestination.Login() },
+                authenticatedUserName = authenticatedUserName,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme,
+            )
+        }
+    }
+}

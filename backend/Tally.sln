@@ -5,21 +5,21 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{81C67277-7998-4D37-AAD6-46EF07B19038}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Domain", "src\Rateio.Domain\Rateio.Domain.csproj", "{C71C5D6C-DE51-4712-877D-82505111D918}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tally.Domain", "src\Tally.Domain\Tally.Domain.csproj", "{C71C5D6C-DE51-4712-877D-82505111D918}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Application", "src\Rateio.Application\Rateio.Application.csproj", "{169E1CE9-5958-4CD6-9639-A4D6D3D9AD8E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tally.Application", "src\Tally.Application\Tally.Application.csproj", "{169E1CE9-5958-4CD6-9639-A4D6D3D9AD8E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Infrastructure", "src\Rateio.Infrastructure\Rateio.Infrastructure.csproj", "{90FE92B0-B1EA-40C4-B1A1-A602A7CCD390}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tally.Infrastructure", "src\Tally.Infrastructure\Tally.Infrastructure.csproj", "{90FE92B0-B1EA-40C4-B1A1-A602A7CCD390}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Api", "src\Rateio.Api\Rateio.Api.csproj", "{0325DFD1-91BD-431D-BC31-35C42EFE4C24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tally.Api", "src\Tally.Api\Tally.Api.csproj", "{0325DFD1-91BD-431D-BC31-35C42EFE4C24}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{ACC987B5-E462-4D48-A810-D8BDB338CF82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Domain.Tests", "tests\Rateio.Domain.Tests\Rateio.Domain.Tests.csproj", "{47CC686B-EB3A-40D9-9B7A-3A8E150740D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tally.Domain.Tests", "tests\Tally.Domain.Tests\Tally.Domain.Tests.csproj", "{47CC686B-EB3A-40D9-9B7A-3A8E150740D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Application.Tests", "tests\Rateio.Application.Tests\Rateio.Application.Tests.csproj", "{C291506C-7885-49C2-8457-DBDC01B51949}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tally.Application.Tests", "tests\Tally.Application.Tests\Tally.Application.Tests.csproj", "{C291506C-7885-49C2-8457-DBDC01B51949}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rateio.Infrastructure.Tests", "tests\Rateio.Infrastructure.Tests\Rateio.Infrastructure.Tests.csproj", "{A59003F0-EC53-48BC-ADDF-C317AC126751}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tally.Infrastructure.Tests", "tests\Tally.Infrastructure.Tests\Tally.Infrastructure.Tests.csproj", "{A59003F0-EC53-48BC-ADDF-C317AC126751}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
