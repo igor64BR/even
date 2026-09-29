@@ -1,28 +1,28 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<script>document.documentElement.dataset.theme = localStorage.getItem('rateio:theme') || 'light';</script>
+<script>document.documentElement.dataset.theme = localStorage.getItem('tally:theme') || 'light';</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rateio — Novo grupo</title>
+<title>Tally — New group</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <div class="proto-bar">
-  <strong>Rateio</strong> — protótipo estático
+  <strong>Tally</strong> — static prototype
   <span class="sep">·</span>
-  <a href="index.html">grupos</a>
+  <a href="index.html">groups</a>
   <span class="sep">·</span>
-  <a href="criar-grupo.html">criar grupo</a>
+  <a href="create-group.html">create group</a>
   <span class="sep">·</span>
-  <a href="grupo.html?id=churras">grupo (local)</a>
+  <a href="group.html?id=churras">group (local)</a>
   <span class="sep">·</span>
-  <a href="grupo.html?id=praia">grupo (sincronizado)</a>
+  <a href="group.html?id=praia">group (synced)</a>
   <span class="sep">·</span>
-  <a href="login.html">login</a>
+  <a href="login.html">sign in</a>
   <span class="sep">·</span>
-  <a href="notificacoes.html">notificações</a>
+  <a href="notifications.html">notifications</a>
 </div>
 
 <div class="stage">
@@ -33,48 +33,48 @@
       <a class="back" href="index.html">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </a>
-      <h1>Novo grupo</h1>
+      <h1>New group</h1>
       <button class="icon-btn" id="theme-toggle"></button>
     </div>
 
     <div class="screen with-bottombar">
       <div class="field" id="field-nome">
-        <label for="nome">Nome do grupo</label>
-        <input type="text" id="nome" placeholder="Ex.: Churras de sábado" maxlength="40">
-        <div class="error">Dá um nome pro grupo.</div>
+        <label for="nome">Group name</label>
+        <input type="text" id="nome" placeholder="E.g., Saturday barbecue" maxlength="40">
+        <div class="error">Give the group a name.</div>
       </div>
 
       <div class="field">
-        <label>Categoria</label>
+        <label>Category</label>
         <div class="chip-row" id="categorias">
-          <div class="chip selected" data-cat="Viagem">Viagem</div>
-          <div class="chip" data-cat="República">República</div>
-          <div class="chip" data-cat="Churrasco">Churrasco</div>
-          <div class="chip" data-cat="Outro">Outro</div>
+          <div class="chip selected" data-cat="Trip">Trip</div>
+          <div class="chip" data-cat="Household">Household</div>
+          <div class="chip" data-cat="Barbecue">Barbecue</div>
+          <div class="chip" data-cat="Other">Other</div>
         </div>
       </div>
 
       <div class="field" id="field-part">
-        <label>Participantes</label>
+        <label>Participants</label>
         <div class="chip-row" id="participantes" style="margin-bottom:10px"></div>
-        <input type="text" id="novo-participante" placeholder="Nome e Enter">
-        <div class="error">Precisa de pelo menos 2 participantes.</div>
-        <div class="help">Só o nome. Ninguém aqui precisa instalar o app nem ter conta.</div>
+        <input type="text" id="novo-participante" placeholder="Name and press Enter">
+        <div class="error">You need at least 2 participants.</div>
+        <div class="help">Just the name. No one here needs to install the app or have an account.</div>
       </div>
 
-      <button class="btn btn-primary" id="criar-btn">Criar grupo</button>
+      <button class="btn btn-primary" id="criar-btn">Create group</button>
     </div>
 
     <div class="bottombar">
       <span id="bell-slot"></span>
       <a class="tab active" href="index.html">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
-        Grupos
+        Groups
       </a>
       <span id="auth-slot"></span>
     </div>
 
-    <div class="overlay" id="overlay"><div class="spinner"></div><span>Carregando…</span></div>
+    <div class="overlay" id="overlay"><div class="spinner"></div><span>Loading…</span></div>
     <div class="toast" id="toast"><span class="ok-dot"></span><span class="msg"></span></div>
   </div>
 </div>
@@ -84,8 +84,8 @@
 renderNotifBell(getState(), false);
 renderHeaderAuth(getState(), false);
 
-let categoria = 'Viagem';
-let participantes = [{ id: 'voce', nome: 'Você', isYou: true }];
+let categoria = 'Trip';
+let participantes = [{ id: 'voce', nome: 'You', isYou: true }];
 
 document.querySelectorAll('#categorias .chip').forEach(chip => {
   chip.addEventListener('click', () => {
@@ -133,7 +133,7 @@ document.getElementById('criar-btn').addEventListener('click', () => {
 
   if (!ok) return;
 
-  showOverlay('Criando grupo…');
+  showOverlay('Creating group…');
   setTimeout(() => {
     const state = getState();
     const id = 'g' + Date.now();
@@ -144,7 +144,7 @@ document.getElementById('criar-btn').addEventListener('click', () => {
     });
     saveState(state);
     hideOverlay();
-    window.location.href = `grupo.html?id=${id}&novo=1`;
+    window.location.href = `group.html?id=${id}&novo=1`;
   }, 650);
 });
 </script>

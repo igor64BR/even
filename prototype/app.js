@@ -1,15 +1,15 @@
-/* Rateio — camada de dados mockada do protótipo.
-   Tudo em localStorage; nenhuma chamada de rede. computeSettlement() é um
-   algoritmo guloso real (não é decoração), só que simplificado pra fins de
-   demonstração — a versão de produção é especificada em specs/001-mvp-expense-splitting. */
+/* Tally — mocked data layer for the prototype.
+   Everything lives in localStorage; no network calls. computeSettlement() is a
+   real greedy algorithm (not just decoration), just simplified for demo
+   purposes — the production version is specified in specs/001-mvp-expense-splitting. */
 
-const STORAGE_KEY = 'rateio:v1';
-const THEME_KEY = 'rateio:theme';
+const STORAGE_KEY = 'tally:v1';
+const THEME_KEY = 'tally:theme';
 
 /**
- * Botão de tema (sol/lua) no `.topbar` de toda tela, lado oposto ao título — componente global,
- * não uma feature de uma tela só. O ícone mostrado é sempre o do modo PRA ONDE o toque leva (sol
- * visível = "toque pra clarear", lua visível = "toque pra escurecer"), nunca o modo atual.
+ * Theme button (sun/moon) in the `.topbar` of every screen, opposite the title — a global
+ * component, not a single-screen feature. The icon shown is always the one for the mode the tap
+ * leads TO (sun visible = "tap to go light", moon visible = "tap to go dark"), never the current mode.
  */
 const THEME_ICONS = {
   sun: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
@@ -22,7 +22,7 @@ function initThemeToggle() {
   const render = () => {
     const dark = document.documentElement.dataset.theme === 'dark';
     btn.innerHTML = dark ? THEME_ICONS.sun : THEME_ICONS.moon;
-    const label = dark ? 'Mudar para tema claro' : 'Mudar para tema escuro';
+    const label = dark ? 'Switch to light theme' : 'Switch to dark theme';
     btn.setAttribute('aria-label', label);
     btn.title = label;
   };
@@ -42,35 +42,35 @@ function seed() {
     groups: [
       {
         id: 'churras',
-        nome: 'Churras de sábado',
-        categoria: 'Churrasco',
+        nome: 'Saturday barbecue',
+        categoria: 'Barbecue',
         synced: false,
         participantes: [
-          { id: 'voce', nome: 'Você', isYou: true },
+          { id: 'voce', nome: 'You', isYou: true },
           { id: 'marina', nome: 'Marina' },
           { id: 'theo', nome: 'Théo' },
           { id: 'bia', nome: 'Bia' },
         ],
         despesas: [
-          { id: 'e1', descricao: 'Carne', valor: 180, pagadorId: 'voce', data: '2026-09-13', tipo: 'igual', divisao: [ { p: 'voce', v: 45 }, { p: 'marina', v: 45 }, { p: 'theo', v: 45 }, { p: 'bia', v: 45 } ] },
-          { id: 'e2', descricao: 'Bebidas', valor: 96, pagadorId: 'marina', data: '2026-09-13', tipo: 'igual', divisao: [ { p: 'voce', v: 24 }, { p: 'marina', v: 24 }, { p: 'theo', v: 24 }, { p: 'bia', v: 24 } ] },
-          { id: 'e3', descricao: 'Carvão e gelo', valor: 40, pagadorId: 'theo', data: '2026-09-14', tipo: 'igual', divisao: [ { p: 'voce', v: 10 }, { p: 'marina', v: 10 }, { p: 'theo', v: 10 }, { p: 'bia', v: 10 } ] },
+          { id: 'e1', descricao: 'Meat', valor: 180, pagadorId: 'voce', data: '2026-09-13', tipo: 'igual', divisao: [ { p: 'voce', v: 45 }, { p: 'marina', v: 45 }, { p: 'theo', v: 45 }, { p: 'bia', v: 45 } ] },
+          { id: 'e2', descricao: 'Drinks', valor: 96, pagadorId: 'marina', data: '2026-09-13', tipo: 'igual', divisao: [ { p: 'voce', v: 24 }, { p: 'marina', v: 24 }, { p: 'theo', v: 24 }, { p: 'bia', v: 24 } ] },
+          { id: 'e3', descricao: 'Charcoal and ice', valor: 40, pagadorId: 'theo', data: '2026-09-14', tipo: 'igual', divisao: [ { p: 'voce', v: 10 }, { p: 'marina', v: 10 }, { p: 'theo', v: 10 }, { p: 'bia', v: 10 } ] },
         ],
         quitacoes: [],
       },
       {
         id: 'praia',
-        nome: 'Viagem pra praia',
-        categoria: 'Viagem',
+        nome: 'Beach trip',
+        categoria: 'Trip',
         synced: true,
         participantes: [
-          { id: 'voce', nome: 'Você', isYou: true },
+          { id: 'voce', nome: 'You', isYou: true },
           { id: 'carlos', nome: 'Carlos', autenticado: true },
           { id: 'duda', nome: 'Duda' },
         ],
         despesas: [
-          { id: 'e4', descricao: 'Hospedagem', valor: 900, pagadorId: 'voce', data: '2026-09-05', tipo: 'igual', divisao: [ { p: 'voce', v: 300 }, { p: 'carlos', v: 300 }, { p: 'duda', v: 300 } ] },
-          { id: 'e5', descricao: 'Mercado da semana', valor: 150, pagadorId: 'duda', data: '2026-09-06', tipo: 'percentual', divisao: [ { p: 'voce', v: 60 }, { p: 'carlos', v: 45 }, { p: 'duda', v: 45 } ] },
+          { id: 'e4', descricao: 'Accommodation', valor: 900, pagadorId: 'voce', data: '2026-09-05', tipo: 'igual', divisao: [ { p: 'voce', v: 300 }, { p: 'carlos', v: 300 }, { p: 'duda', v: 300 } ] },
+          { id: 'e5', descricao: 'Weekly groceries', valor: 150, pagadorId: 'duda', data: '2026-09-06', tipo: 'percentual', divisao: [ { p: 'voce', v: 60 }, { p: 'carlos', v: 45 }, { p: 'duda', v: 45 } ] },
         ],
         quitacoes: [
           { id: 'q1', deId: 'carlos', paraId: 'voce', valor: 100, data: '2026-09-10' },
@@ -78,11 +78,11 @@ function seed() {
       },
       {
         id: 'republica',
-        nome: 'República — contas de outubro',
-        categoria: 'República',
+        nome: 'Household — October bills',
+        categoria: 'Household',
         synced: false,
         participantes: [
-          { id: 'voce', nome: 'Você', isYou: true },
+          { id: 'voce', nome: 'You', isYou: true },
           { id: 'pedro', nome: 'Pedro' },
         ],
         despesas: [],
@@ -90,8 +90,8 @@ function seed() {
       },
     ],
     notificacoes: [
-      { id: 'n1', texto: 'Carlos quitou R$ 100,00 com você em "Viagem pra praia".', data: '2026-09-10T18:22:00', lida: true },
-      { id: 'n2', texto: 'Duda lançou "Mercado da semana" — R$ 150,00 — em "Viagem pra praia".', data: '2026-09-06T12:05:00', lida: true },
+      { id: 'n1', texto: 'Carlos settled R$ 100,00 with you in "Beach trip".', data: '2026-09-10T18:22:00', lida: true },
+      { id: 'n2', texto: 'Duda added "Weekly groceries" — R$ 150,00 — in "Beach trip".', data: '2026-09-06T12:05:00', lida: true },
     ],
   };
 }
@@ -121,27 +121,27 @@ function fmtMoney(v) {
 
 function fmtDate(iso) {
   const d = new Date(iso);
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
 }
 
 function fmtRelative(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const days = Math.floor(diffMs / 86400000);
-  if (days <= 0) return 'hoje';
-  if (days === 1) return 'ontem';
-  if (days < 30) return `há ${days} dias`;
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days} days ago`;
   const months = Math.floor(days / 30);
-  return `há ${months} ${months === 1 ? 'mês' : 'meses'}`;
+  return `${months} ${months === 1 ? 'month' : 'months'} ago`;
 }
 
 const FA_CLOUD_PATH = 'M0 336c0 79.5 64.5 144 144 144l368 0c70.7 0 128-57.3 128-128c0-61.9-44-113.6-102.4-125.4c4.1-10.7 6.4-22.4 6.4-34.6c0-53-43-96-96-96c-19.7 0-38.1 6-53.3 16.2C367 64.2 315.3 32 256 32C167.6 32 96 103.6 96 192c0 2.7 .1 5.4 .2 8.1C40.2 219.8 0 273.2 0 336z';
 
-// Ícones fa-cloud / fa-cloud-slash (Font Awesome Free, CC BY 4.0). A versão
-// "slash" não existe no pacote free — reconstruída em traço (outline) a
-// partir do mesmo path da nuvem, cortado por uma linha diagonal; a versão
-// sincronizada fica sólida (filled) pra diferenciar as duas de relance.
+// fa-cloud / fa-cloud-slash icons (Font Awesome Free, CC BY 4.0). The "slash"
+// version doesn't exist in the free package — rebuilt in outline (stroke) from
+// the same cloud path, cut by a diagonal line; the synced version is solid
+// (filled) so the two read apart at a glance.
 function syncIcon(synced) {
-  const title = synced ? 'Sincronizado' : 'Local — só neste aparelho';
+  const title = synced ? 'Synced' : 'Local — this device only';
   const body = synced
     ? `<path d="${FA_CLOUD_PATH}" fill="currentColor"/>`
     : `<path d="${FA_CLOUD_PATH}" fill="none" stroke="currentColor" stroke-width="44" stroke-linejoin="round"/>
@@ -167,9 +167,9 @@ function computeBalances(group) {
   return saldos;
 }
 
-// Algoritmo guloso de simplificação de dívidas: casa o maior devedor com o
-// maior credor repetidamente até zerar os saldos. Minimiza o número de
-// transações na prática, embora não seja garantidamente ótimo em todo caso.
+// Greedy debt-simplification algorithm: repeatedly matches the biggest debtor
+// with the biggest creditor until every balance is zero. Minimizes the number
+// of transactions in practice, though it isn't guaranteed optimal in every case.
 function computeSettlement(saldos) {
   const EPS = 0.01;
   const devedores = [];
@@ -207,12 +207,12 @@ function unreadCount(state) {
   return state.notificacoes.filter(n => !n.lida).length;
 }
 
-// ---- helpers de UI compartilhados entre telas ----
+// ---- UI helpers shared across screens ----
 
 function showOverlay(text) {
   const el = document.getElementById('overlay');
   if (!el) return;
-  el.querySelector('span').textContent = text || 'Carregando…';
+  el.querySelector('span').textContent = text || 'Loading…';
   el.classList.add('show');
 }
 function hideOverlay() {
@@ -234,13 +234,13 @@ function renderHeaderAuth(state, active) {
   const tabCls = 'tab' + (active ? ' active' : '');
   if (state.user) {
     slot.innerHTML = inBar
-      ? `<a class="${tabCls}" href="login.html"><span class="avatar" style="width:22px;height:22px;font-size:10px">${initials(state.user.nome)}</span>Perfil</a>`
+      ? `<a class="${tabCls}" href="login.html"><span class="avatar" style="width:22px;height:22px;font-size:10px">${initials(state.user.nome)}</span>Profile</a>`
       : `<a class="avatar" href="login.html" title="${state.user.nome}">${initials(state.user.nome)}</a>`;
   } else {
     const icon = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.4-3.8 4.4-5.6 7-5.6s5.6 1.8 7 5.6"/></svg>';
     slot.innerHTML = inBar
-      ? `<a class="${tabCls}" href="login.html">${icon}Entrar</a>`
-      : `<a class="icon-btn" href="login.html" title="Entrar">${icon}</a>`;
+      ? `<a class="${tabCls}" href="login.html">${icon}Sign in</a>`
+      : `<a class="icon-btn" href="login.html" title="Sign in">${icon}</a>`;
   }
 }
 
@@ -253,8 +253,8 @@ function renderNotifBell(state, active) {
   const icon = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9Z"/><path d="M9.5 17a2.5 2.5 0 0 0 5 0"/></svg>';
   const dot = n > 0 ? '<span class="badge-dot"></span>' : '';
   slot.innerHTML = inBar
-    ? `<a class="${tabCls}" href="notificacoes.html">${icon}${dot}Avisos</a>`
-    : `<a class="icon-btn" href="notificacoes.html" title="Notificações">${icon}${dot}</a>`;
+    ? `<a class="${tabCls}" href="notifications.html">${icon}${dot}Alerts</a>`
+    : `<a class="icon-btn" href="notifications.html" title="Notifications">${icon}${dot}</a>`;
 }
 
 function statusbarNow() {

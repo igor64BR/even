@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<script>document.documentElement.dataset.theme = localStorage.getItem('rateio:theme') || 'light';</script>
+<script>document.documentElement.dataset.theme = localStorage.getItem('tally:theme') || 'light';</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rateio — Nova despesa</title>
+<title>Tally — New expense</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <div class="proto-bar">
-  <strong>Rateio</strong> — protótipo estático
+  <strong>Tally</strong> — static prototype
   <span class="sep">·</span>
-  <a href="index.html">grupos</a>
+  <a href="index.html">groups</a>
   <span class="sep">·</span>
-  <a href="grupo.html?id=churras">grupo (local)</a>
+  <a href="group.html?id=churras">group (local)</a>
   <span class="sep">·</span>
-  <a href="nova-despesa.html?id=churras">nova despesa</a>
+  <a href="new-expense.html?id=churras">new expense</a>
   <span class="sep">·</span>
-  <a href="quitar.html?id=praia">quitar dívidas</a>
+  <a href="settle.html?id=praia">settle debts</a>
 </div>
 
 <div class="stage">
@@ -26,60 +26,60 @@
     <div class="statusbar"><span class="time">9:41</span><span>●●●</span></div>
 
     <div class="topbar">
-      <a class="back" id="back-link" href="grupo.html">
+      <a class="back" id="back-link" href="group.html">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </a>
-      <h1>Nova despesa</h1>
+      <h1>New expense</h1>
       <button class="icon-btn" id="theme-toggle"></button>
     </div>
 
     <div class="screen with-bottombar">
       <div class="field" id="field-desc">
-        <label for="descricao">Descrição</label>
-        <input type="text" id="descricao" placeholder="Ex.: Jantar de sexta" maxlength="40">
-        <div class="error">Descreve a despesa.</div>
+        <label for="descricao">Description</label>
+        <input type="text" id="descricao" placeholder="E.g., Friday dinner" maxlength="40">
+        <div class="error">Describe the expense.</div>
       </div>
 
       <div class="field" id="field-valor">
-        <label for="valor">Valor total</label>
-        <input type="number" id="valor" placeholder="0,00" step="0.01" min="0">
-        <div class="error">O valor precisa ser maior que zero.</div>
+        <label for="valor">Total amount</label>
+        <input type="number" id="valor" placeholder="0.00" step="0.01" min="0">
+        <div class="error">The amount must be greater than zero.</div>
       </div>
 
       <div class="field">
-        <label for="pagador">Quem pagou</label>
+        <label for="pagador">Who paid</label>
         <select id="pagador"></select>
       </div>
 
       <div class="field">
-        <label for="data">Data</label>
+        <label for="data">Date</label>
         <input type="date" id="data">
       </div>
 
       <div class="field">
-        <label>Como dividir</label>
+        <label>How to split</label>
         <div class="tabs" id="tabs">
-          <button class="active" data-tipo="igual">Igual</button>
-          <button data-tipo="percentual">Percentual</button>
-          <button data-tipo="fixo">Valor fixo</button>
+          <button class="active" data-tipo="igual">Equal</button>
+          <button data-tipo="percentual">Percentage</button>
+          <button data-tipo="fixo">Fixed amount</button>
         </div>
         <div id="split-area"></div>
         <div class="split-sum" id="split-sum"></div>
       </div>
 
-      <button class="btn btn-primary" id="salvar-btn">Salvar despesa</button>
+      <button class="btn btn-primary" id="salvar-btn">Save expense</button>
     </div>
 
     <div class="bottombar">
       <span id="bell-slot"></span>
       <a class="tab active" href="index.html">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
-        Grupos
+        Groups
       </a>
       <span id="auth-slot"></span>
     </div>
 
-    <div class="overlay" id="overlay"><div class="spinner"></div><span>Salvando…</span></div>
+    <div class="overlay" id="overlay"><div class="spinner"></div><span>Saving…</span></div>
     <div class="toast" id="toast"><span class="ok-dot"></span><span class="msg"></span></div>
   </div>
 </div>
@@ -92,11 +92,11 @@ const state = getState();
 const group = state.groups.find(g => g.id === groupId);
 renderNotifBell(state, false);
 renderHeaderAuth(state, false);
-document.getElementById('back-link').href = `grupo.html?id=${groupId}`;
+document.getElementById('back-link').href = `group.html?id=${groupId}`;
 document.getElementById('data').value = new Date().toISOString().slice(0, 10);
 
 const pagadorSel = document.getElementById('pagador');
-pagadorSel.innerHTML = group.participantes.map(p => `<option value="${p.id}">${p.nome}${p.isYou ? ' (você)' : ''}</option>`).join('');
+pagadorSel.innerHTML = group.participantes.map(p => `<option value="${p.id}">${p.nome}${p.isYou ? ' (you)' : ''}</option>`).join('');
 
 let tipo = 'igual';
 let incluidos = new Set(group.participantes.map(p => p.id));
@@ -113,7 +113,7 @@ function renderSplit() {
   if (tipo === 'igual') {
     area.innerHTML = group.participantes.map(p => `
       <div class="split-row">
-        <div class="who"><input type="checkbox" data-id="${p.id}" ${incluidos.has(p.id) ? 'checked' : ''}> ${p.nome}${p.isYou ? ' (você)' : ''}</div>
+        <div class="who"><input type="checkbox" data-id="${p.id}" ${incluidos.has(p.id) ? 'checked' : ''}> ${p.nome}${p.isYou ? ' (you)' : ''}</div>
         <div class="computed" id="eq-${p.id}"></div>
       </div>`).join('');
     area.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => {
@@ -133,7 +133,7 @@ function renderSplit() {
   if (tipo === 'percentual') {
     area.innerHTML = group.participantes.map(p => `
       <div class="split-row">
-        <div class="who">${p.nome}${p.isYou ? ' (você)' : ''}</div>
+        <div class="who">${p.nome}${p.isYou ? ' (you)' : ''}</div>
         <div class="amount-input"><input type="number" min="0" max="100" data-id="${p.id}" value="${percentuais[p.id]}">%</div>
       </div>`).join('');
     area.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
@@ -147,8 +147,8 @@ function renderSplit() {
   if (tipo === 'fixo') {
     area.innerHTML = group.participantes.map(p => `
       <div class="split-row">
-        <div class="who">${p.nome}${p.isYou ? ' (você)' : ''}</div>
-        <div class="amount-input"><input type="number" min="0" step="0.01" data-id="${p.id}" value="${fixos[p.id] || ''}" placeholder="0,00"></div>
+        <div class="who">${p.nome}${p.isYou ? ' (you)' : ''}</div>
+        <div class="amount-input"><input type="number" min="0" step="0.01" data-id="${p.id}" value="${fixos[p.id] || ''}" placeholder="0.00"></div>
       </div>`).join('');
     area.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
       fixos[inp.dataset.id] = parseFloat(inp.value) || 0;
@@ -164,11 +164,11 @@ function updateSplitSum() {
   const sumEl = document.getElementById('split-sum');
   if (tipo === 'percentual') {
     const soma = Object.values(percentuais).reduce((a, b) => a + b, 0);
-    sumEl.textContent = `soma: ${soma}%`;
+    sumEl.textContent = `sum: ${soma}%`;
     sumEl.className = 'split-sum ' + (Math.abs(soma - 100) < 0.5 ? 'ok' : 'bad');
   } else if (tipo === 'fixo') {
     const soma = Object.values(fixos).reduce((a, b) => a + b, 0);
-    sumEl.textContent = `soma: ${fmtMoney(soma)} de ${fmtMoney(total)}`;
+    sumEl.textContent = `sum: ${fmtMoney(soma)} of ${fmtMoney(total)}`;
     sumEl.className = 'split-sum ' + (Math.abs(soma - total) < 0.01 ? 'ok' : 'bad');
   }
 }
@@ -218,7 +218,7 @@ document.getElementById('salvar-btn').addEventListener('click', () => {
     divisao = group.participantes.filter(p => fixos[p.id] > 0).map(p => ({ p: p.id, v: fixos[p.id] }));
   }
 
-  showOverlay('Salvando despesa…');
+  showOverlay('Saving expense…');
   setTimeout(() => {
     const s = getState();
     const g = s.groups.find(g => g.id === groupId);
@@ -232,11 +232,11 @@ document.getElementById('salvar-btn').addEventListener('click', () => {
       divisao,
     });
     if (g.synced) {
-      notify(s, `${participantName(g, pagadorSel.value)} lançou "${descEl.value.trim()}" — ${fmtMoney(total)} — em "${g.nome}".`);
+      notify(s, `${participantName(g, pagadorSel.value)} added "${descEl.value.trim()}" — ${fmtMoney(total)} — in "${g.nome}".`);
     }
     saveState(s);
     hideOverlay();
-    window.location.href = `grupo.html?id=${groupId}&despesa=1`;
+    window.location.href = `group.html?id=${groupId}&despesa=1`;
   }, 700);
 });
 </script>

@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<script>document.documentElement.dataset.theme = localStorage.getItem('rateio:theme') || 'light';</script>
+<script>document.documentElement.dataset.theme = localStorage.getItem('tally:theme') || 'light';</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rateio — Entrar</title>
+<title>Tally — Sign in</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <div class="proto-bar">
-  <strong>Rateio</strong> — protótipo estático
+  <strong>Tally</strong> — static prototype
   <span class="sep">·</span>
-  <a href="index.html">grupos</a>
+  <a href="index.html">groups</a>
   <span class="sep">·</span>
-  <a href="login.html">login (deslogado)</a>
+  <a href="login.html">sign in (logged out)</a>
 </div>
 
 <div class="stage">
@@ -25,7 +25,7 @@
       <a class="back" href="index.html">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </a>
-      <h1 id="titulo">Entrar</h1>
+      <h1 id="titulo">Sign in</h1>
       <button class="icon-btn" id="theme-toggle"></button>
     </div>
 
@@ -35,12 +35,12 @@
       <span id="bell-slot"></span>
       <a class="tab" href="index.html">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg>
-        Grupos
+        Groups
       </a>
       <span id="auth-slot"></span>
     </div>
 
-    <div class="overlay" id="overlay"><div class="spinner"></div><span>Conectando ao Google…</span></div>
+    <div class="overlay" id="overlay"><div class="spinner"></div><span>Connecting to Google…</span></div>
     <div class="toast" id="toast"><span class="ok-dot"></span><span class="msg"></span></div>
   </div>
 </div>
@@ -57,7 +57,7 @@ function render() {
   const screen = document.getElementById('screen');
 
   if (state.user) {
-    document.getElementById('titulo').textContent = 'Sua conta';
+    document.getElementById('titulo').textContent = 'Your account';
     screen.innerHTML = `
       <div class="card" style="margin-top:20px;text-align:center">
         <div class="avatar" style="width:56px;height:56px;font-size:20px;margin:0 auto 12px">${initials(state.user.nome)}</div>
@@ -65,49 +65,49 @@ function render() {
         <p>${state.user.email}</p>
       </div>
       <p style="font-size:13px;color:var(--ink-soft);padding:0 4px">
-        Grupos sincronizados ficam disponíveis em qualquer aparelho com essa conta,
-        e você recebe aviso em tempo real quando alguém lança despesa ou quita dívida.
+        Synced groups are available on any device signed into this account, and you get a
+        real-time alert whenever someone adds an expense or settles a debt.
       </p>
-      <button class="btn btn-secondary" style="margin-top:16px" id="logout-btn">Sair</button>
+      <button class="btn btn-secondary" style="margin-top:16px" id="logout-btn">Sign out</button>
     `;
     document.getElementById('logout-btn').addEventListener('click', () => {
       const s = getState();
       s.user = null;
       saveState(s);
-      showToast('Você saiu. Seus grupos locais continuam no aparelho.');
+      showToast('You signed out. Your local groups stay on this device.');
       render();
     });
     return;
   }
 
-  document.getElementById('titulo').textContent = 'Entrar';
+  document.getElementById('titulo').textContent = 'Sign in';
   screen.innerHTML = `
     <div class="card" style="margin-top:18px">
-      <p>Usar o Rateio não exige conta. Entrar com Google é só pra:</p>
-      <p>· manter um grupo disponível em mais de um aparelho</p>
-      <p>· avisar em tempo real quando alguém no grupo lança despesa ou quita dívida</p>
-      <p>· guardar o histórico de grupos anteriores</p>
+      <p>Using Tally doesn't require an account. Signing in with Google is just for:</p>
+      <p>· keeping a group available on more than one device</p>
+      <p>· real-time alerts when someone in the group adds an expense or settles a debt</p>
+      <p>· keeping a history of past groups</p>
     </div>
 
     <button class="btn btn-google" id="google-btn">
       <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.87 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.9v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.16.28-1.7V4.97H.9A9 9 0 0 0 0 9c0 1.45.35 2.83.9 4.03l3.05-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.42 0 9 0A9 9 0 0 0 .9 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
-      Entrar com Google
+      Sign in with Google
     </button>
-    <a class="btn btn-ghost" href="${syncGroupId ? `grupo.html?id=${syncGroupId}` : 'index.html'}">Continuar sem conta</a>
+    <a class="btn btn-ghost" href="${syncGroupId ? `group.html?id=${syncGroupId}` : 'index.html'}">Continue without an account</a>
   `;
 
   document.getElementById('google-btn').addEventListener('click', () => {
-    showOverlay('Conectando ao Google…');
+    showOverlay('Connecting to Google…');
     setTimeout(() => {
       const s = getState();
-      s.user = { nome: 'Você', email: 'voce@gmail.com' };
+      s.user = { nome: 'You', email: 'you@gmail.com' };
       if (syncGroupId) {
         const g = s.groups.find(g => g.id === syncGroupId);
         if (g) g.synced = true;
       }
       saveState(s);
       hideOverlay();
-      window.location.href = syncGroupId ? `grupo.html?id=${syncGroupId}&sync=1` : 'index.html';
+      window.location.href = syncGroupId ? `group.html?id=${syncGroupId}&sync=1` : 'index.html';
     }, 900);
   });
 }

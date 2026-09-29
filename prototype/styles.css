@@ -1,7 +1,6 @@
-/* Rateio — sistema visual do protótipo.
-   Paleta de caderno de contas (papel + tinta + um acento âmbar), uma única
-   família tipográfica (Plex Sans) em todo o app. Nada de gradiente roxo,
-   nada de emoji como ícone. */
+/* Tally — the prototype's visual system.
+   Ledger-book palette (paper + ink + one amber accent), a single typeface
+   (Plex Sans) across the whole app. No purple gradients, no emoji as icons. */
 
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 
