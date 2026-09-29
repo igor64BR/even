@@ -1,14 +1,14 @@
 package com.rateio.domain.format
 
 /**
- * Formata centavos pra texto monetário exibível ("R$ 45,00") — abstração pra
- * `com.rateio.data.remote.realtime.GroupEventNotificationBuilder` (T40/T41) não precisar de
- * `java.text.NumberFormat`/`Locale` diretamente. Formatação é preocupação de apresentação, mesma
- * fronteira que `com.rateio.app.ui.format.MoneyFormat` já protege pro resto do app (algorithm-spec.md,
- * "Dinheiro: representação e arredondamento" — só a borda de UI formata, nunca o domínio ou a
- * camada de dados). Implementação real em `:app` (`AppMoneyFormatter`, reaproveita
- * `formatCentsAsBrl`), injetada em `:data` via `AppContainer` — o mesmo padrão de Dependency
- * Inversion que [com.rateio.domain.realtime.GroupRealtimeGateway] usa pro cliente SignalR.
+ * Formats cents into displayable money text ("R$ 45,00") — an abstraction so
+ * `com.rateio.data.remote.realtime.GroupEventNotificationBuilder` (T40/T41) doesn't need
+ * `java.text.NumberFormat`/`Locale` directly. Formatting is a presentation concern, the same
+ * boundary `com.rateio.app.ui.format.MoneyFormat` already protects for the rest of the app
+ * (algorithm-spec.md, "Money: representation and rounding" — only the UI edge formats, never the
+ * domain or the data layer). Real implementation in `:app` (`AppMoneyFormatter`, reuses
+ * `formatCentsAsBrl`), injected into `:data` via `AppContainer` — the same Dependency Inversion
+ * pattern [com.rateio.domain.realtime.GroupRealtimeGateway] uses for the SignalR client.
  */
 fun interface MoneyFormatter {
     fun format(amountCents: Long): String

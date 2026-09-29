@@ -1,12 +1,12 @@
 package com.rateio.domain.model
 
 /**
- * Participante de um grupo. O caso padrão é o convidado sem conta — [name] é o único dado
- * obrigatório, em linha com o princípio local-first da constitution: nenhum campo de
- * autenticação é exigido para alguém existir como participante.
+ * A group participant. The default case is a guest with no account — [name] is the only required
+ * piece of data, in line with the constitution's local-first principle: no authentication field
+ * is required for someone to exist as a participant.
  *
- * [isYou] marca qual participante corresponde ao dono deste dispositivo, para a UI destacar
- * "Você" nas listas — mesma convenção do protótipo (ver `prototype/app.js`, campo `isYou`).
+ * [isYou] marks which participant corresponds to this device's owner, so the UI can highlight
+ * "You" in lists — same convention as the prototype (see `prototype/app.js`, the `isYou` field).
  */
 data class Participant(
     val id: String,

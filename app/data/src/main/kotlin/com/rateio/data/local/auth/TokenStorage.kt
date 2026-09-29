@@ -3,10 +3,10 @@ package com.rateio.data.local.auth
 import com.rateio.domain.model.AuthSession
 
 /**
- * Persistência local da [AuthSession] (T12.2). Interface separada de
- * [com.rateio.data.repository.RemoteAuthRepository] por responsabilidade única: o repositório
- * orquestra rede + estado, o armazenamento em si (e a decisão de como cifrar) é só desta peça —
- * ver [EncryptedTokenStorage].
+ * Local persistence of the [AuthSession] (T12.2). A separate interface from
+ * [com.rateio.data.repository.RemoteAuthRepository] for single responsibility: the repository
+ * orchestrates network + state, the actual storage (and the decision of how to encrypt it) belongs
+ * only to this piece — see [EncryptedTokenStorage].
  */
 interface TokenStorage {
     fun read(): AuthSession?

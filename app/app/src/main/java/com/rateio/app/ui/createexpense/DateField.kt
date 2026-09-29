@@ -28,7 +28,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-/** `#data` do protótipo: campo de data (default hoje), abre o seletor ao tocar no ícone. */
+/** The prototype's `#data`: a date field (defaults to today), opens the picker when the icon is tapped. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateField(date: LocalDate, onDateSelected: (LocalDate) -> Unit, modifier: Modifier = Modifier) {
@@ -40,10 +40,10 @@ fun DateField(date: LocalDate, onDateSelected: (LocalDate) -> Unit, modifier: Mo
         onValueChange = {},
         readOnly = true,
         modifier = modifier.fillMaxWidth(),
-        label = { Text(text = "Data") },
+        label = { Text(text = "Date") },
         trailingIcon = {
             IconButton(onClick = { isPickerOpen = true }) {
-                Icon(imageVector = Icons.Filled.DateRange, contentDescription = "Escolher data")
+                Icon(imageVector = Icons.Filled.DateRange, contentDescription = "Pick a date")
             }
         },
         shape = RoundedCornerShape(10.dp),
@@ -79,7 +79,7 @@ private fun DatePickerHost(initialDate: LocalDate, onConfirm: (LocalDate) -> Uni
                 Text(text = "OK")
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(text = "Cancelar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(text = "Cancel") } },
     ) {
         DatePicker(state = pickerState)
     }

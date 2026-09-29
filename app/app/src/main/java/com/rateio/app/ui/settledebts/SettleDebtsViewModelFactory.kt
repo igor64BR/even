@@ -10,8 +10,8 @@ import com.rateio.domain.repository.ParticipantRepository
 import com.rateio.domain.repository.SettlementRepository
 
 /**
- * Sem framework de DI no projeto ainda — fábrica manual que injeta os repositórios de
- * [com.rateio.app.di.AppContainer] no [SettleDebtsViewModel]. Mesmo padrão de
+ * No DI framework in the project yet — manual factory that injects the repositories from
+ * [com.rateio.app.di.AppContainer] into [SettleDebtsViewModel]. Same pattern as
  * [com.rateio.app.ui.groupdetail.GroupDetailViewModelFactory].
  */
 class SettleDebtsViewModelFactory(
@@ -26,7 +26,7 @@ class SettleDebtsViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         require(modelClass.isAssignableFrom(SettleDebtsViewModel::class.java)) {
-            "SettleDebtsViewModelFactory só sabe criar SettleDebtsViewModel, pediram $modelClass"
+            "SettleDebtsViewModelFactory only knows how to create SettleDebtsViewModel, got $modelClass"
         }
         return SettleDebtsViewModel(
             groupId = groupId,

@@ -21,11 +21,11 @@ import androidx.compose.ui.unit.sp
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `#split-area` do protótipo na aba Percentual: uma linha por participante com input de `%` (sem
- * checkbox — todo participante entra na divisão percentual, igual ao protótipo) + `#split-sum`
- * sempre visível com a soma corrente, verde quando fecha 100%, vermelho quando não fecha (T26.1).
- * Nenhum cálculo mora aqui — [sumPercentages]/[isPercentageSplitComplete] são as mesmas funções
- * puras usadas pra montar `ExpenseSplit.Weight` ao salvar ([CreateExpenseViewModel]).
+ * The prototype's `#split-area` in the Percentage tab: one row per participant with a `%` input
+ * (no checkbox — every participant takes part in the percentage split, same as the prototype) + an
+ * always-visible `#split-sum` with the running sum, green when it adds up to 100%, red when it
+ * doesn't (T26.1). No calculation lives here — [sumPercentages]/[isPercentageSplitComplete] are the
+ * same pure functions used to build `ExpenseSplit.Weight` on save ([CreateExpenseViewModel]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,7 +45,7 @@ fun PercentageSplitList(
         val sum = sumPercentages(rows)
         val isComplete = isPercentageSplitComplete(rows)
         Text(
-            text = "soma: $sum%",
+            text = "sum: $sum%",
             color = if (isComplete) colors.credit else colors.danger,
             fontSize = 12.sp,
             modifier = Modifier.padding(top = 4.dp),
@@ -68,7 +68,7 @@ private fun PercentageSplitRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = if (row.isYou) "${row.name} (você)" else row.name)
+        Text(text = if (row.isYou) "${row.name} (you)" else row.name)
         OutlinedTextField(
             value = row.percentageInput,
             onValueChange = onPercentageChanged,

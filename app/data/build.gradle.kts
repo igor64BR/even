@@ -1,6 +1,6 @@
-// Módulo :data — implementa as interfaces de repositório declaradas em :domain usando Room
-// (persistência local, T7) e um client SignalR/HTTP (sincronização, tasks futuras). Depende de
-// :domain, nunca o contrário.
+// :data module — implements the repository interfaces declared in :domain using Room
+// (local persistence, T7) and a SignalR/HTTP client (sync, future tasks). Depends on
+// :domain, never the other way around.
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -27,9 +27,9 @@ android {
         jvmTarget = "17"
     }
 
-    // Módulo de biblioteca: "targetSdk" no defaultConfig está deprecado a partir do AGP 8.7
-    // (será removido na v9) — o SDK alvo é decisão do :app, que consome esta lib. Isso afeta só
-    // lint/testes deste módulo.
+    // Library module: "targetSdk" in defaultConfig is deprecated as of AGP 8.7
+    // (will be removed in v9) — the target SDK is a decision for :app, which consumes this lib.
+    // This only affects this module's lint/tests.
     lint {
         targetSdk = 34
     }
@@ -47,29 +47,29 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-    // T12 — client HTTP mínimo pra POST /auth/google (T11) e armazenamento seguro da sessão.
-    // Só o necessário pro endpoint de auth; outros endpoints (grupos sincronizados, SignalR)
-    // ficam para as tasks que os introduzem (T19+).
+    // T12 — minimal HTTP client for POST /auth/google (T11) and secure session storage.
+    // Only what's needed for the auth endpoint; other endpoints (synced groups, SignalR)
+    // are left for the tasks that introduce them (T19+).
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.kotlinx.serialization)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.security.crypto)
 
-    // T40 — cliente SignalR (biblioteca oficial) pro Hub de notificações em tempo real (T38,
-    // constitution.md princípio 3: sistema próprio, sem push de terceiros). rxjava3/gson são
-    // dependências de tempo de execução do artefato `signalr` em si (confirmado no POM publicado:
-    // io.reactivex.rxjava3:rxjava + com.google.code.gson:gson, não RxJava2/Jackson) — declaradas
-    // explicitamente porque `SignalRGroupRealtimeGateway` referencia `io.reactivex.rxjava3.core.Single`
-    // diretamente na API de `withAccessTokenProvider`.
+    // T40 — SignalR client (official library) for the real-time notification Hub (T38,
+    // constitution.md principle 3: our own system, no third-party push). rxjava3/gson are
+    // runtime dependencies of the `signalr` artifact itself (confirmed in its published POM:
+    // io.reactivex.rxjava3:rxjava + com.google.code.gson:gson, not RxJava2/Jackson) — declared
+    // explicitly because `SignalRGroupRealtimeGateway` references `io.reactivex.rxjava3.core.Single`
+    // directly in the `withAccessTokenProvider` API.
     implementation(libs.signalr)
     implementation(libs.rxjava3)
     implementation(libs.gson)
 
     testImplementation(libs.junit4)
-    // Room em memória não roda em teste unitário puro (precisa de um Context Android) — Robolectric
-    // fornece isso na JVM, sem exigir emulador/dispositivo conectado (nenhum estava disponível neste
-    // ambiente). Cobre o entregável de T7.2 ("teste instrumentado ou unitário simples").
+    // In-memory Room doesn't run in a plain unit test (it needs an Android Context) — Robolectric
+    // provides that on the JVM, without requiring an emulator/connected device (none was available
+    // in this environment). Covers the T7.2 deliverable ("instrumented test or simple unit test").
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)

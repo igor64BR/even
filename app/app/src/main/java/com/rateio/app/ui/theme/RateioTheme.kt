@@ -8,11 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 
 /**
- * Tema do app — deriva um `ColorScheme` do Material3 da mesma paleta que alimenta
- * [LocalRateioColors], para telas usarem tanto os slots padrão do Material (superfícies, botões)
- * quanto os tons semânticos específicos do domínio (saldo a receber/a dever). Réplica dos dois
- * temas do protótipo (`data-theme="light"`/`"dark"` em `styles.css`); `darkTheme` segue o tema do
- * sistema por padrão, como o protótipo segue a preferência salva do usuário.
+ * App theme — derives a Material3 `ColorScheme` from the same palette that feeds
+ * [LocalRateioColors], so screens can use both the standard Material slots (surfaces, buttons)
+ * and the domain-specific semantic tones (balance owed to you/you owe). Mirrors the prototype's
+ * two themes (`data-theme="light"`/`"dark"` in `styles.css`); `darkTheme` follows the system
+ * theme by default, just like the prototype follows the user's saved preference.
  */
 @Composable
 fun RateioTheme(

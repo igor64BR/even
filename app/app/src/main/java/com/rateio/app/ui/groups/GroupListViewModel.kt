@@ -17,25 +17,25 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * Estado da tela "Seus grupos" (RF40/RF41). Fonte de dados é [GroupRepository] +
- * [ParticipantRepository] — as duas portas de `:domain` que `:data` já implementa sobre Room
- * (T7); zero chamada de rede pra montar a lista, como pede T8.
+ * State for the "Your groups" screen (RF40/RF41). The data source is [GroupRepository] +
+ * [ParticipantRepository] — the two `:domain` ports that `:data` already implements over Room
+ * (T7); zero network calls to build the list, as required by T8.
  *
- * Lacuna conhecida por T8 (que reportou em vez de inventar dado, já que estava restrita a
- * `app/app/`): faltava sinalizador de sincronização em `Group` e divisão por participante em
- * `Expense`. T7B (`:domain`/`:data`) resolveu a primeira metade — [Group.isSynced] agora é campo
- * real, e [toUiModel] usa o valor de verdade em vez do `false` fixo que T8 tinha colocado como
- * placeholder. [GroupListItemUiModel.balance] continua [GroupBalance.Settled] fixo: calcular saldo
- * de verdade depende do motor de simplificação em Kotlin (RF25-RF28, T33), que já existe e já é
- * usado por [com.rateio.app.ui.groupdetail.GroupDetailViewModel] — trazer esse cálculo pra cá,
- * na lista, é uma extensão futura fora do escopo de T42 (que só pede a tela de detalhe/quitação),
- * não uma correção desta task.
+ * Gap known since T8 (which reported it instead of making up data, since it was scoped to
+ * `app/app/`): `Group` was missing a sync flag and `Expense` a per-participant split. T7B
+ * (`:domain`/`:data`) fixed the first half — [Group.isSynced] is now a real field, and
+ * [toUiModel] uses the real value instead of the fixed `false` T8 had put in as a placeholder.
+ * [GroupListItemUiModel.balance] still defaults to [GroupBalance.Settled]: computing a real
+ * balance depends on the debt-simplification engine in Kotlin (RF25-RF28, T33), which already
+ * exists and is already used by [com.rateio.app.ui.groupdetail.GroupDetailViewModel] — bringing
+ * that calculation over here, to the list, is a future extension outside the scope of T42 (which
+ * only calls for the detail/settlement screen), not a fix for this task.
  *
- * T19 tinha colocado a ação "Sincronizar este grupo" aqui, como atalho temporário porque não
- * existia tela de detalhe de grupo (RF42). T42.4 remove essa dependência de
+ * T19 had put the "Sync this group" action here, as a temporary shortcut because a group detail
+ * screen (RF42) didn't exist yet. T42.4 removes this dependency on
  * [com.rateio.domain.repository.AuthRepository]/[com.rateio.domain.repository.RemoteGroupRepository]
- * — a ação agora mora em [com.rateio.app.ui.groupdetail.GroupDetailViewModel], junto do resto do
- * que um grupo específico pode fazer.
+ * — the action now lives in [com.rateio.app.ui.groupdetail.GroupDetailViewModel], alongside
+ * everything else a specific group can do.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupListViewModel(
@@ -52,7 +52,7 @@ class GroupListViewModel(
             initialValue = GroupListUiState.Loading,
         )
 
-    /** Badge da aba "Avisos" (T41.2) — mesma fonte que `NotificationsViewModel` usa. */
+    /** Badge for the "Notifications" tab (T41.2) — same source `NotificationsViewModel` uses. */
     val unreadNotificationsCount: StateFlow<Int> = notificationRepository.getUnreadCountFlow()
         .stateIn(
             scope = viewModelScope,
@@ -85,9 +85,9 @@ private fun Group.toUiModel(participantCount: Int) = GroupListItemUiModel(
 )
 
 /**
- * Sigla de duas letras para o `group-tag` do card — mesma heurística de `index.html`: primeira
- * palavra "significativa" (mais de 2 letras ou iniciando maiúscula), com fallback pro nome
- * inteiro.
+ * Two-letter initials for the card's `group-tag` — same heuristic as `index.html`: first
+ * "significant" word (more than 2 letters or starting with an uppercase letter), falling back to
+ * the full name.
  */
 private fun tagFor(name: String): String {
     val significantWord = name.split(" ")

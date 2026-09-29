@@ -6,13 +6,13 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * Cobre a mesma convenção de dinheiro que `algorithm-spec.md` exige das duas portas do motor
- * (C#/`Dinheiro.cs`, Kotlin/`Money`): tudo em centavos inteiros, sem `Float`/`Double`.
+ * Covers the same money convention `algorithm-spec.md` requires of both ports of the engine
+ * (C#/`Money.cs`, Kotlin/`Money`): everything in integer cents, no `Float`/`Double`.
  */
 class MoneyTest {
 
     @Test
-    fun `ZERO tem zero centavos e eh zero`() {
+    fun `ZERO has zero cents and is zero`() {
         assertEquals(0L, Money.ZERO.cents)
         assertTrue(Money.ZERO.isZero)
         assertFalse(Money.ZERO.isPositive)
@@ -20,7 +20,7 @@ class MoneyTest {
     }
 
     @Test
-    fun `ofCents guarda o valor exato em centavos`() {
+    fun `ofCents stores the exact amount in cents`() {
         val tenReais = Money.ofCents(1000)
 
         assertEquals(1000L, tenReais.cents)
@@ -28,7 +28,7 @@ class MoneyTest {
     }
 
     @Test
-    fun `ofCents aceita negativo e marca isNegative`() {
+    fun `ofCents accepts a negative value and marks isNegative`() {
         val debt = Money.ofCents(-333)
 
         assertTrue(debt.isNegative)
@@ -36,7 +36,7 @@ class MoneyTest {
     }
 
     @Test
-    fun `soma e subtracao operam em centavos`() {
+    fun `addition and subtraction operate on cents`() {
         val total = Money.ofCents(1000)
         val part = Money.ofCents(334)
 
@@ -45,14 +45,14 @@ class MoneyTest {
     }
 
     @Test
-    fun `unario negativo inverte o sinal`() {
+    fun `unary minus flips the sign`() {
         val owed = Money.ofCents(500)
 
         assertEquals(Money.ofCents(-500), -owed)
     }
 
     @Test
-    fun `compareTo ordena por centavos`() {
+    fun `compareTo orders by cents`() {
         val small = Money.ofCents(100)
         val big = Money.ofCents(200)
 

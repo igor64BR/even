@@ -40,12 +40,12 @@ import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.app.ui.theme.ThemeToggleButton
 
 /**
- * Tela "Notificações" (T41.1, RF35/RF36), fiel a `prototype/notificacoes.html`. `factory` injeta o
- * [NotificationsViewModel] pela composição manual de [com.rateio.app.di.AppContainer] — mesmo
- * padrão das demais telas.
+ * "Notifications" screen (T41.1, RF35/RF36), faithful to `prototype/notifications.html`.
+ * `factory` injects the [NotificationsViewModel] via manual composition from
+ * [com.rateio.app.di.AppContainer] — same pattern as the other screens.
  *
- * [DisposableEffect] chama [NotificationsViewModel.onScreenClosed] só ao sair da tela (ver KDoc do
- * método pro porquê de não marcar como lido já na entrada).
+ * [DisposableEffect] calls [NotificationsViewModel.onScreenClosed] only when leaving the screen
+ * (see that method's KDoc for why it doesn't mark as read right on entry).
  */
 @Composable
 fun NotificationsRoute(
@@ -105,14 +105,14 @@ fun NotificationsScreen(
         },
         bottomBar = {
             RateioBottomBar(
-                selectedTab = RateioBottomTab.AVISOS,
+                selectedTab = RateioBottomTab.NOTIFICATIONS,
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
                     when (tab) {
-                        RateioBottomTab.AVISOS -> Unit
-                        RateioBottomTab.GRUPOS -> onGroupsClick()
-                        RateioBottomTab.PERFIL -> onProfileClick()
+                        RateioBottomTab.NOTIFICATIONS -> Unit
+                        RateioBottomTab.GROUPS -> onGroupsClick()
+                        RateioBottomTab.PROFILE -> onProfileClick()
                     }
                 },
             )
@@ -129,10 +129,10 @@ fun NotificationsScreen(
 private fun NotificationsTopBar(onBackClick: () -> Unit, isDarkTheme: Boolean, onToggleTheme: () -> Unit) {
     val colors = LocalRateioColors.current
     TopAppBar(
-        title = { Text(text = "Notificações", fontWeight = FontWeight.Bold) },
+        title = { Text(text = "Notifications", fontWeight = FontWeight.Bold) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         },
         actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },
@@ -154,7 +154,7 @@ private fun NotificationsBody(uiState: NotificationsUiState, onSignInClick: () -
     }
 }
 
-/** "Notificação exige conta" — grupos locais não têm pra quem avisar, mesmo texto do protótipo. */
+/** "Notifications require an account" — local groups have no one to notify, same copy as the prototype. */
 @Composable
 private fun RequiresAccountState(onSignInClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
@@ -165,10 +165,10 @@ private fun RequiresAccountState(onSignInClick: () -> Unit, modifier: Modifier =
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(text = "Notificação exige conta", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colors.ink)
+        Text(text = "Notifications require an account", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colors.ink)
         Text(
-            text = "Grupos locais não têm pra quem avisar. Entre com Google e sincronize um grupo " +
-                "pra começar a receber avisos em tempo real.",
+            text = "Local groups have no one to notify. Sign in with Google and sync a group " +
+                "to start getting real-time alerts.",
             fontSize = 13.5.sp,
             color = colors.inkSoft,
             textAlign = TextAlign.Center,
@@ -179,12 +179,12 @@ private fun RequiresAccountState(onSignInClick: () -> Unit, modifier: Modifier =
             colors = ButtonDefaults.buttonColors(containerColor = colors.brandInk, contentColor = colors.onBrand),
             modifier = Modifier.padding(top = 12.dp),
         ) {
-            Text(text = "Entrar com Google", fontWeight = FontWeight.SemiBold)
+            Text(text = "Sign in with Google", fontWeight = FontWeight.SemiBold)
         }
     }
 }
 
-/** "Tudo quieto por aqui" — mesmo texto do protótipo pra grupo sincronizado sem eventos ainda. */
+/** "All quiet here" — same copy as the prototype, for a synced group with no events yet. */
 @Composable
 private fun EmptyNotificationsState(modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
@@ -195,10 +195,10 @@ private fun EmptyNotificationsState(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(text = "Tudo quieto por aqui", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colors.ink)
+        Text(text = "All quiet here", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colors.ink)
         Text(
-            text = "Quando alguém lançar uma despesa ou quitar uma dívida num grupo sincronizado, " +
-                "aparece nessa lista na hora.",
+            text = "When someone adds an expense or settles a debt in a synced group, " +
+                "it'll show up here instantly.",
             fontSize = 13.5.sp,
             color = colors.inkSoft,
             textAlign = TextAlign.Center,
@@ -214,7 +214,7 @@ private fun NotificationsList(notifications: List<NotificationRowUiModel>) {
     }
 }
 
-/** `.notif-row` do protótipo: ponto (`--brand` se não lida, transparente se lida), texto, horário relativo. */
+/** Prototype's `.notif-row`: dot (`--brand` if unread, transparent if read), text, relative time. */
 @Composable
 private fun NotificationRow(notification: NotificationRowUiModel) {
     val colors = LocalRateioColors.current

@@ -1,11 +1,11 @@
 package com.rateio.domain.model
 
 /**
- * Sessão autenticada de sincronização: par de tokens do JWT próprio do backend (T11 —
- * `accessToken` de vida curta, `refreshToken` revogável) mais o [user] que eles representam.
- * Login é opcional (constitution.md, princípio 1) — a ausência de [AuthSession] é o estado normal
- * do app, não um erro; [com.rateio.domain.repository.AuthRepository.getSessionFlow] modela isso
- * como `AuthSession?`, nunca lança exceção por "não estar logado".
+ * Authenticated sync session: a pair of tokens from the backend's own JWT (T11 — a short-lived
+ * `accessToken`, a revocable `refreshToken`) plus the [user] they represent. Login is optional
+ * (constitution.md, principle 1) — the absence of an [AuthSession] is the app's normal state, not
+ * an error; [com.rateio.domain.repository.AuthRepository.getSessionFlow] models this as
+ * `AuthSession?`, never throwing an exception for "not signed in".
  */
 data class AuthSession(
     val accessToken: String,

@@ -6,9 +6,9 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Mapeamento de persistência de um participante. Schema não exige nenhum campo de
- * autenticação/conta (constitution.md, princípio 1) — [name] é o único dado obrigatório além do
- * vínculo com o grupo.
+ * Persistence mapping for a participant. The schema requires no authentication/account field
+ * (constitution.md, principle 1) — [name] is the only required piece of data besides the link to
+ * the group.
  */
 @Entity(
     tableName = "participants",

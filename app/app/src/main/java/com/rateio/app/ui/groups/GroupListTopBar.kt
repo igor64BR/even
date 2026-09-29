@@ -10,17 +10,18 @@ import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.app.ui.theme.ThemeToggleButton
 
 /**
- * `.topbar h1` do protótipo — título alinhado à esquerda (o CSS não centraliza, `h1 { flex: 1 }`
- * com um único filho), sem botão de voltar (é a tela raiz da árvore de navegação). O botão de tema
- * ([ThemeToggleButton]) é a `actions` do `TopAppBar`, que o Material3 já empurra pro lado oposto
- * do título — mesmo efeito de `h1 { flex: 1 }` no protótipo, sem precisar de layout manual.
+ * The prototype's `.topbar h1` — title aligned to the left (the CSS doesn't center it, `h1 { flex:
+ * 1 }` with a single child), no back button (it's the root screen of the navigation tree). The
+ * theme button ([ThemeToggleButton]) is the `TopAppBar`'s `actions`, which Material3 already
+ * pushes to the opposite side of the title — same effect as `h1 { flex: 1 }` in the prototype,
+ * without needing manual layout.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupListTopBar(isDarkTheme: Boolean, onToggleTheme: () -> Unit) {
     val colors = LocalRateioColors.current
     TopAppBar(
-        title = { Text(text = "Seus grupos", fontWeight = FontWeight.Bold) },
+        title = { Text(text = "Your groups", fontWeight = FontWeight.Bold) },
         actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = colors.paper,

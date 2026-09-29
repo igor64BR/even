@@ -1,10 +1,10 @@
 package com.rateio.app.ui.settledebts
 
 /**
- * Estado da tela "Quitar dívidas" (T42.3, RF44). [SettledUp] é o estado "grupo quitado" do
- * protótipo (`quitar.html`, lista de transações vazia) — visualmente e semanticamente diferente de
- * [Loading] (ainda não sabemos), então são dois estados distintos, não um `Content` com lista
- * vazia disfarçado.
+ * State for the "Settle debts" screen (T42.3, RF44). [SettledUp] is the prototype's "group
+ * settled" state (`settle.html`, empty transaction list) — visually and semantically different
+ * from [Loading] (we still don't know), so they're two distinct states, not a `Content` with an
+ * empty list in disguise.
  */
 sealed interface SettleDebtsUiState {
     data object Loading : SettleDebtsUiState
@@ -13,10 +13,10 @@ sealed interface SettleDebtsUiState {
 }
 
 /**
- * Uma transação sugerida pelo motor de simplificação (`DebtSimplificationEngine.computeSettlement`,
- * T33), já com os nomes resolvidos pra exibição (`.settle-row` do protótipo: "A → B: R$X"). Sem
- * `id` próprio — mesma razão de [com.rateio.domain.model.SettlementSuggestion]: é derivada do
- * saldo atual, recalculada do zero a cada mudança, não uma entidade persistente.
+ * A transaction suggested by the simplification engine (`DebtSimplificationEngine.computeSettlement`,
+ * T33), with the names already resolved for display (the prototype's `.settle-row`: "A → B: $X").
+ * No `id` of its own — same reason as [com.rateio.domain.model.SettlementSuggestion]: it's derived
+ * from the current balance, recomputed from scratch on every change, not a persistent entity.
  */
 data class SettlementSuggestionRowUiModel(
     val fromParticipantId: String,

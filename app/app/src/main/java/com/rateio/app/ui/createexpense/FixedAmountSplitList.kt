@@ -23,12 +23,12 @@ import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.domain.model.Money
 
 /**
- * `#split-area` do protótipo na aba Valor fixo: uma linha por participante com input de R$ (sem
- * checkbox — quem fica com valor 0/vazio simplesmente não participa da despesa, ver
- * [buildSplits]) + `#split-sum` sempre visível com "soma: X de Y", verde quando fecha o total,
- * vermelho quando não fecha (T26.2). Nenhum cálculo mora aqui — [sumFixedAmounts]/
- * [isFixedAmountSplitComplete] são as mesmas funções puras usadas pra montar
- * `ExpenseSplit.FixedAmount` ao salvar ([CreateExpenseViewModel]).
+ * The prototype's `#split-area` in the Fixed amount tab: one row per participant with an R$ input
+ * (no checkbox — whoever is left at 0/empty simply doesn't take part in the expense, see
+ * [buildSplits]) + an always-visible `#split-sum` showing "sum: X of Y", green when it matches the
+ * total, red when it doesn't (T26.2). No calculation lives here — [sumFixedAmounts]/
+ * [isFixedAmountSplitComplete] are the same pure functions used to build `ExpenseSplit.FixedAmount`
+ * on save ([CreateExpenseViewModel]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +49,7 @@ fun FixedAmountSplitList(
         val sum = sumFixedAmounts(rows)
         val isComplete = isFixedAmountSplitComplete(rows, total)
         Text(
-            text = "soma: ${formatCentsAsBrl(sum.cents)} de ${formatCentsAsBrl(total.cents)}",
+            text = "sum: ${formatCentsAsBrl(sum.cents)} of ${formatCentsAsBrl(total.cents)}",
             color = if (isComplete) colors.credit else colors.danger,
             fontSize = 12.sp,
             modifier = Modifier.padding(top = 4.dp),
@@ -72,7 +72,7 @@ private fun FixedAmountSplitRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = if (row.isYou) "${row.name} (você)" else row.name)
+        Text(text = if (row.isYou) "${row.name} (you)" else row.name)
         OutlinedTextField(
             value = row.fixedAmountInput,
             onValueChange = onFixedAmountChanged,

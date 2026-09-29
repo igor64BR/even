@@ -15,11 +15,11 @@ interface GroupDao {
     suspend fun getGroupById(groupId: String): GroupEntity?
 
     /**
-     * `@Upsert` (SQLite `INSERT ... ON CONFLICT DO UPDATE`) em vez de `@Insert(REPLACE)`: REPLACE
-     * faz DELETE+INSERT sob o capô, o que disparava `ON DELETE CASCADE` das FKs de
-     * participantes/despesas ao re-inserir um grupo já existente (ex.: marcar `isSynced=true`),
-     * apagando esses dados. `@Upsert` faz UPDATE de verdade, sem DELETE, então a cascata nunca
-     * dispara.
+     * `@Upsert` (SQLite `INSERT ... ON CONFLICT DO UPDATE`) instead of `@Insert(REPLACE)`: REPLACE
+     * does a DELETE+INSERT under the hood, which triggered the `ON DELETE CASCADE` of the
+     * participant/expense FKs when re-inserting an already-existing group (e.g. marking
+     * `isSynced=true`), wiping that data out. `@Upsert` does a real UPDATE, no DELETE, so the
+     * cascade never fires.
      */
     @Upsert
     suspend fun insert(group: GroupEntity)

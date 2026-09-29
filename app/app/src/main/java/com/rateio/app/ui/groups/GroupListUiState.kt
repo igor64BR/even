@@ -1,6 +1,6 @@
 package com.rateio.app.ui.groups
 
-/** Estado da tela "Seus grupos" (RF40/RF41) — carregando, sem grupos, ou lista carregada. */
+/** State for the "Your groups" screen (RF40/RF41) — loading, no groups, or a loaded list. */
 sealed interface GroupListUiState {
     data object Loading : GroupListUiState
     data object Empty : GroupListUiState
@@ -8,13 +8,13 @@ sealed interface GroupListUiState {
 }
 
 /**
- * Um card da lista. Réplica do que `index.html` monta por grupo: sigla do grupo (`group-tag`),
- * nome, contagem de participantes + ícone de sincronização, e saldo colorido.
+ * A card in the list. Replica of what `index.html` builds per group: group initials
+ * (`group-tag`), name, participant count + sync icon, and a colored balance.
  *
- * Até T19 a ação "Sincronizar este grupo" morava neste model/card, como atalho temporário porque
- * não existia tela de detalhe de grupo (RF42). T42.4 fecha essa lacuna: a ação de sincronizar
- * agora vive em [com.rateio.app.ui.groupdetail.GroupDetailUiState] — o card volta a ser só
- * apresentação, sem estado transiente de rede.
+ * Up until T19 the "Sync this group" action lived in this model/card, as a temporary shortcut
+ * because a group detail screen (RF42) didn't exist yet. T42.4 closes that gap: the sync action
+ * now lives in [com.rateio.app.ui.groupdetail.GroupDetailUiState] — the card goes back to being
+ * pure presentation, with no transient network state.
  */
 data class GroupListItemUiModel(
     val id: String,
@@ -26,9 +26,9 @@ data class GroupListItemUiModel(
 )
 
 /**
- * Saldo do usuário no grupo, já na semântica de exibição do protótipo
- * (`balanceInfo()` em `index.html`): "te devem" (verde/credit), "você deve" (terracota/owed) ou
- * "quitado" (neutro).
+ * The user's balance in the group, already in the prototype's display semantics
+ * (`balanceInfo()` in `index.html`): "you are owed" (green/credit), "you owe" (terracotta/owed) or
+ * "settled" (neutral).
  */
 sealed interface GroupBalance {
     data object Settled : GroupBalance

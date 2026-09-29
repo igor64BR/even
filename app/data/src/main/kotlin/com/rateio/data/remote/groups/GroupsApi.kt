@@ -9,55 +9,55 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 /**
- * Espelha `POST /groups/sync` (backend: `GruposController.Sync`,
- * `backend/src/Rateio.Api/Controllers/GruposController.cs`, T18) — primeira sincronização de um
- * grupo local pro backend (RF09). Mesmo padrão Retrofit de
- * [com.rateio.data.remote.auth.AuthApi] (T12): interface fina, corpo/resposta em DTOs
- * `@Serializable` que espelham os records C# campo a campo (System.Text.Json/ASP.NET Core serializa
- * em camelCase por padrão, sem conversor de enum registrado — por isso `categoria`/`tipoDivisao`
- * vão como `Int`, o valor ordinal do enum C#, não como string).
+ * Mirrors `POST /groups/sync` (backend: `GroupsController.Sync`,
+ * `backend/src/Rateio.Api/Controllers/GroupsController.cs`, T18) — the first sync of a local
+ * group to the backend (RF09). Same Retrofit pattern as
+ * [com.rateio.data.remote.auth.AuthApi] (T12): a thin interface, request/response bodies as
+ * `@Serializable` DTOs that mirror the C# records field for field (System.Text.Json/ASP.NET Core
+ * serializes in camelCase by default, with no enum converter registered — that's why
+ * `category`/`splitType` travel as `Int`, the C# enum's ordinal value, not as a string).
  *
- * O endpoint exige JWT válido (`[Authorize]` no controller) — o `Authorization` vai por parâmetro
- * explícito (não por interceptor OkHttp global) porque hoje só este endpoint precisa dele; ver
- * decisão registrada em [com.rateio.data.remote.RateioHttpClientFactory].
+ * The endpoint requires a valid JWT (`[Authorize]` on the controller) — `Authorization` is passed
+ * as an explicit parameter (not via a global OkHttp interceptor) because today only this endpoint
+ * needs it; see the decision recorded in [com.rateio.data.remote.RateioHttpClientFactory].
  */
 interface GroupsApi {
     @POST("groups/sync")
     suspend fun sync(
         @Header("Authorization") bearerToken: String,
-        @Body request: SincronizarGrupoRequestDto,
-    ): SincronizarGrupoResponseDto
+        @Body request: SyncGroupRequestDto,
+    ): SyncGroupResponseDto
 
     /**
-     * Espelha `POST /groups/join/{codigo}` (backend: `GruposController.EntrarComCodigo`, T21.2) —
-     * entra num grupo existente via código de convite (RF07). Resposta no mesmo formato de [sync]
-     * (`SincronizarGrupoResponse(GrupoId)`), reaproveitado aqui em vez de um DTO próprio porque o
-     * corpo é idêntico.
+     * Mirrors `POST /groups/join/{code}` (backend: `GroupsController.JoinByCode`, T21.2) — joins
+     * an existing group via invite code (RF07). Response uses the same shape as [sync]
+     * (`SyncGroupResponse(GroupId)`), reused here instead of a dedicated DTO because the body is
+     * identical.
      */
-    @POST("groups/join/{codigo}")
+    @POST("groups/join/{code}")
     suspend fun join(
         @Header("Authorization") bearerToken: String,
-        @Path("codigo") codigo: String,
-    ): SincronizarGrupoResponseDto
+        @Path("code") code: String,
+    ): SyncGroupResponseDto
 
     /**
-     * T29 (app: editar despesa) contra T28 (backend, `PUT /groups/{id}/expenses/{expenseId}`,
-     * rodando em paralelo — ver KDoc de [com.rateio.domain.repository.RemoteExpenseRepository]
-     * pra a pendência documentada). Corpo idêntico ao de `POST /groups/{id}/expenses`
-     * (`CriarDespesa`, T23.1, mesmo [DespesaSincronizadaDto]) — só troca o verbo HTTP, já que é
-     * sempre a despesa inteira substituindo a anterior, nunca um patch parcial.
+     * T29 (app: edit expense) against T28 (backend, `PUT /groups/{id}/expenses/{expenseId}`,
+     * running in parallel — see the KDoc of [com.rateio.domain.repository.RemoteExpenseRepository]
+     * for the documented pending item). Same body as `POST /groups/{id}/expenses`
+     * (`CreateExpense`, T23.1, same [SyncedExpenseDto]) — only the HTTP verb changes, since it's
+     * always the whole expense replacing the previous one, never a partial patch.
      */
     @PUT("groups/{id}/expenses/{expenseId}")
     suspend fun updateExpense(
         @Header("Authorization") bearerToken: String,
         @Path("id") id: String,
         @Path("expenseId") expenseId: String,
-        @Body request: DespesaSincronizadaDto,
+        @Body request: SyncedExpenseDto,
     )
 
     /**
-     * T29 (app: excluir despesa) contra T28 (backend, `DELETE /groups/{id}/expenses/{expenseId}`)
-     * — mesma pendência documentada em [updateExpense].
+     * T29 (app: delete expense) against T28 (backend, `DELETE /groups/{id}/expenses/{expenseId}`)
+     * — same documented pending item as [updateExpense].
      */
     @DELETE("groups/{id}/expenses/{expenseId}")
     suspend fun deleteExpense(
@@ -67,50 +67,49 @@ interface GroupsApi {
     )
 }
 
-/** Corpo de `POST /groups/sync` — espelha `SincronizarGrupoRequest` do backend. */
+/** Body of `POST /groups/sync` — mirrors the backend's `SyncGroupRequest`. */
 @Serializable
-data class SincronizarGrupoRequestDto(
-    val nome: String,
-    val categoria: Int,
-    val participantes: List<ParticipanteSincronizadoDto>,
-    val despesas: List<DespesaSincronizadaDto>,
+data class SyncGroupRequestDto(
+    val name: String,
+    val category: Int,
+    val participants: List<SyncedParticipantDto>,
+    val expenses: List<SyncedExpenseDto>,
 )
 
-/** Espelha `ParticipanteSincronizadoRequest(Id, Nome, EhConvidado)`. */
+/** Mirrors `SyncedParticipantRequest(Id, Name, IsGuest)`. */
 @Serializable
-data class ParticipanteSincronizadoDto(
+data class SyncedParticipantDto(
     val id: String,
-    val nome: String,
-    val ehConvidado: Boolean,
+    val name: String,
+    val isGuest: Boolean,
 )
 
 /**
- * Espelha `DespesaSincronizadaRequest`. [data] é `yyyy-MM-dd` (o formato padrão que
- * `System.Text.Json` usa pra `DateOnly`).
+ * Mirrors `SyncedExpenseRequest`. [date] is `yyyy-MM-dd` (the default format
+ * `System.Text.Json` uses for `DateOnly`).
  */
 @Serializable
-data class DespesaSincronizadaDto(
+data class SyncedExpenseDto(
     val id: String,
-    val descricao: String,
-    val valorTotalCentavos: Long,
-    val pagadorId: String,
-    val data: String,
-    val tipoDivisao: Int,
-    val participacoes: List<ParticipacaoSincronizadaDto>,
+    val description: String,
+    val totalAmountCents: Long,
+    val payerId: String,
+    val date: String,
+    val splitType: Int,
+    val splits: List<SyncedExpenseSplitDto>,
 )
 
 /**
- * Espelha `ParticipacaoSincronizadaRequest`. [peso] só é preenchido para divisão por peso,
- * [valorCentavos] só para divisão por valor fixo — mutuamente exclusivos, igual ao contrato do
- * backend.
+ * Mirrors `SyncedExpenseSplitRequest`. [weight] is only populated for a weighted split,
+ * [amountCents] only for a fixed-amount split — mutually exclusive, same as the backend contract.
  */
 @Serializable
-data class ParticipacaoSincronizadaDto(
-    val participanteId: String,
-    val peso: Long? = null,
-    val valorCentavos: Long? = null,
+data class SyncedExpenseSplitDto(
+    val participantId: String,
+    val weight: Long? = null,
+    val amountCents: Long? = null,
 )
 
-/** Resposta de sucesso — espelha `SincronizarGrupoResponse(GrupoId)`. */
+/** Success response — mirrors the backend's `SyncGroupResponse(GroupId)`. */
 @Serializable
-data class SincronizarGrupoResponseDto(val grupoId: String)
+data class SyncGroupResponseDto(val groupId: String)

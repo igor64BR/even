@@ -29,10 +29,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Cobre T42.3: `computeSettlement` (T33) sobre os saldos atuais vira a lista de sugestões;
- * "Marcar como pago" grava um `Settlement` (T42.1) e a lista recalcula sozinha (é derivada do
- * Flow de quitações, não um estado cacheado); grupo com saldos zerados entra direto em
- * [SettleDebtsUiState.SettledUp]. Mesmo padrão Robolectric das demais telas.
+ * Covers T42.3: `computeSettlement` (T33) over the current balances becomes the suggestion list;
+ * "Mark as paid" writes a `Settlement` (T42.1) and the list recalculates on its own (it's derived
+ * from the settlements Flow, not a cached state); a group with zeroed-out balances goes straight
+ * into [SettleDebtsUiState.SettledUp]. Same Robolectric pattern as the other screens.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -58,8 +58,8 @@ class SettleDebtsViewModelTest {
         expenseRepository = RoomExpenseRepository(database.expenseDao())
         settlementRepository = RoomSettlementRepository(database.settlementDao())
 
-        groupId = "churras"
-        groupRepository.insertGroup(Group(id = groupId, name = "Churras de sábado", createdAt = Instant.now()))
+        groupId = "bbq"
+        groupRepository.insertGroup(Group(id = groupId, name = "Saturday BBQ", createdAt = Instant.now()))
     }
 
     @After
@@ -77,7 +77,7 @@ class SettleDebtsViewModelTest {
         debtSimplificationEngine = GreedyDebtSimplificationEngine(),
     )
 
-    /** A: -1000 (deve) · B: +1000 (recebe) — `case-01-simples` de algorithm-spec.md. */
+    /** A: -1000 (owes) · B: +1000 (is owed) — `case-01-simples` from algorithm-spec.md. */
     private suspend fun seedSimpleDebt() {
         participantRepository.insertParticipant(Participant(id = "a", groupId = groupId, name = "Ana"))
         participantRepository.insertParticipant(Participant(id = "b", groupId = groupId, name = "Bruno"))
@@ -85,7 +85,7 @@ class SettleDebtsViewModelTest {
             Expense(
                 id = "e1",
                 groupId = groupId,
-                description = "Cerveja",
+                description = "Beer",
                 amountCents = 2000,
                 paidByParticipantId = "b",
                 createdAt = Instant.EPOCH,
@@ -95,18 +95,18 @@ class SettleDebtsViewModelTest {
     }
 
     @Test
-    fun `grupo com saldos zerados mostra estado quitado`() = runTest(testDispatcher) {
+    fun `group with zeroed-out balances shows settled state`() = runTest(testDispatcher) {
         participantRepository.insertParticipant(Participant(id = "a", groupId = groupId, name = "Ana"))
         val viewModel = buildViewModel()
 
         val state = viewModel.uiState.first { it !is SettleDebtsUiState.Loading }
 
         assertTrue(state is SettleDebtsUiState.SettledUp)
-        assertEquals("Churras de sábado", (state as SettleDebtsUiState.SettledUp).groupName)
+        assertEquals("Saturday BBQ", (state as SettleDebtsUiState.SettledUp).groupName)
     }
 
     @Test
-    fun `sugestao de quitacao usa computeSettlement sobre os saldos atuais`() = runTest(testDispatcher) {
+    fun `settlement suggestion uses computeSettlement over the current balances`() = runTest(testDispatcher) {
         seedSimpleDebt()
         val viewModel = buildViewModel()
 
@@ -121,7 +121,7 @@ class SettleDebtsViewModelTest {
     }
 
     @Test
-    fun `marcar transacao como paga grava Settlement e a lista de sugestoes esvazia`() = runTest(testDispatcher) {
+    fun `marking a transaction as paid writes a Settlement and the suggestion list empties out`() = runTest(testDispatcher) {
         seedSimpleDebt()
         val viewModel = buildViewModel()
         val state = viewModel.uiState.first { it is SettleDebtsUiState.Content } as SettleDebtsUiState.Content
@@ -129,8 +129,8 @@ class SettleDebtsViewModelTest {
 
         viewModel.onMarkAsPaidClick(suggestion)
 
-        val stateAposQuitar = viewModel.uiState.first { it is SettleDebtsUiState.SettledUp }
-        assertTrue(stateAposQuitar is SettleDebtsUiState.SettledUp)
+        val stateAfterSettling = viewModel.uiState.first { it is SettleDebtsUiState.SettledUp }
+        assertTrue(stateAfterSettling is SettleDebtsUiState.SettledUp)
 
         val settlements = settlementRepository.getSettlementsFlow(groupId).first()
         val settlement = settlements.single()

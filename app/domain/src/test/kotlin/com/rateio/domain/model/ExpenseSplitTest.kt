@@ -5,22 +5,22 @@ import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 
 /**
- * Um caso por subtipo de [ExpenseSplit] (Igual/Peso/ValorFixo — RF17-RF19), espelhando os campos
- * de `ParticipacaoDespesa.cs`. A distribuição de centavos em si (quem recebe o resto,
- * `case-05-arredondamento` de `algorithm-spec.md`) é o motor de simplificação — T33, fora do
- * escopo de T7B; aqui só se garante que o tipo carrega o dado certo por subtipo.
+ * One case per [ExpenseSplit] subtype (Equal/Weight/FixedAmount — RF17-RF19), mirroring the
+ * fields of `ExpenseSplit.cs`. The actual cent distribution (who gets the remainder,
+ * `case-05-rounding` in `algorithm-spec.md`) is the simplification engine's job — T33, out of
+ * scope for T7B; here we only guarantee the type carries the right data per subtype.
  */
 class ExpenseSplitTest {
 
     @Test
-    fun `Equal guarda so o participantId`() {
+    fun `Equal only stores participantId`() {
         val split = ExpenseSplit.Equal(participantId = "p1")
 
         assertEquals("p1", split.participantId)
     }
 
     @Test
-    fun `Weight guarda participantId e peso`() {
+    fun `Weight stores participantId and weight`() {
         val split = ExpenseSplit.Weight(participantId = "p2", weight = 2)
 
         assertEquals("p2", split.participantId)
@@ -28,7 +28,7 @@ class ExpenseSplitTest {
     }
 
     @Test
-    fun `FixedAmount guarda participantId e um Money`() {
+    fun `FixedAmount stores participantId and a Money`() {
         val split = ExpenseSplit.FixedAmount(participantId = "p3", amount = Money.ofCents(1500))
 
         assertEquals("p3", split.participantId)
@@ -36,10 +36,10 @@ class ExpenseSplitTest {
     }
 
     @Test
-    fun `subtipos diferentes com mesmo participantId nao sao iguais`() {
-        // ExpenseSplit nao carrega um enum de tipo solto (ver KDoc da classe) -- a igualdade tem
-        // que vir do subtipo concreto do sealed class, senao um Equal("p1") e um
-        // Weight("p1", 0) poderiam ser confundidos.
+    fun `different subtypes with the same participantId are not equal`() {
+        // ExpenseSplit doesn't carry a loose type enum (see the class KDoc) -- equality has to
+        // come from the sealed class's concrete subtype, otherwise an Equal("p1") and a
+        // Weight("p1", 0) could be confused.
         val equal: ExpenseSplit = ExpenseSplit.Equal(participantId = "p1")
         val weight: ExpenseSplit = ExpenseSplit.Weight(participantId = "p1", weight = 0)
 
@@ -47,10 +47,10 @@ class ExpenseSplitTest {
     }
 
     @Test
-    fun `divisao igual entre 3 participantes espelha o shape de case-05-arredondamento`() {
-        // Mesmo cenario de algorithm-spec.md (despesa de 1000 centavos entre P1,P2,P3): aqui so
-        // se modela a lista de participacoes que o motor (T33) vai consumir, sem calcular quem
-        // recebe o centavo extra -- isso e computeBalances/dividirIgualmente, nao este tipo.
+    fun `equal split among 3 participants mirrors the shape of case-05-rounding`() {
+        // Same scenario as algorithm-spec.md (a 1000-cent expense among P1,P2,P3): here we only
+        // model the list of splits the engine (T33) will consume, without computing who gets the
+        // extra cent -- that's computeBalances/splitEqually, not this type.
         val splits = listOf(
             ExpenseSplit.Equal(participantId = "P1"),
             ExpenseSplit.Equal(participantId = "P2"),

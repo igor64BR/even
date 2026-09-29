@@ -4,9 +4,9 @@ import androidx.room.Embedded
 import androidx.room.Relation
 
 /**
- * Junta uma [ExpenseEntity] com suas [ExpenseSplitEntity] (uma despesa : N partes) pra Room
- * resolver a relação com `@Relation` em vez de duas queries soltas montadas manualmente — ver uso
- * em `com.rateio.data.persistence.dao.ExpenseDao.getExpensesWithSplitsFlow`.
+ * Joins an [ExpenseEntity] with its [ExpenseSplitEntity]s (one expense : N splits) so Room can
+ * resolve the relation with `@Relation` instead of two loose queries assembled by hand — see the
+ * usage in `com.rateio.data.persistence.dao.ExpenseDao.getExpensesWithSplitsFlow`.
  */
 data class ExpenseWithSplitsEntity(
     @Embedded val expense: ExpenseEntity,

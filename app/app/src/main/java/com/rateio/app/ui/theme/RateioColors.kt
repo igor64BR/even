@@ -4,11 +4,11 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Paleta "caderno de contas" do protótipo (`prototype/styles.css`, `:root` e
- * `:root[data-theme="dark"]`) — papel/tinta/acento âmbar, réplica em hex exata das custom
- * properties CSS. Material3 [androidx.compose.material3.ColorScheme] não tem slots nomeados para
- * "a receber"/"a dever"/"quitado", então esses tons semânticos vivem aqui e são expostos via
- * [LocalRateioColors] além de alimentar o [androidx.compose.material3.ColorScheme] derivado em
+ * The prototype's "expense notebook" palette (`prototype/styles.css`, `:root` and
+ * `:root[data-theme="dark"]`) — paper/ink/amber accent, an exact hex replica of the CSS custom
+ * properties. Material3's [androidx.compose.material3.ColorScheme] has no named slots for
+ * "to receive"/"to owe"/"settled", so these semantic tones live here and are exposed via
+ * [LocalRateioColors] as well as feeding the [androidx.compose.material3.ColorScheme] derived in
  * `Theme.kt`.
  */
 data class RateioColors(
@@ -29,7 +29,7 @@ data class RateioColors(
     val danger: Color,
 )
 
-/** `:root` — tema claro (styles.css linhas 8-31). */
+/** `:root` — light theme (styles.css lines 8-31). */
 val LightRateioColors = RateioColors(
     paper = Color(0xFFF5F2EA),
     paperAlt = Color(0xFFECE6D8),
@@ -48,7 +48,7 @@ val LightRateioColors = RateioColors(
     danger = Color(0xFFA3352B),
 )
 
-/** `:root[data-theme="dark"]` — tema escuro (styles.css linhas 33-55). */
+/** `:root[data-theme="dark"]` — dark theme (styles.css lines 33-55). */
 val DarkRateioColors = RateioColors(
     paper = Color(0xFF1E1B17),
     paperAlt = Color(0xFF2A251E),

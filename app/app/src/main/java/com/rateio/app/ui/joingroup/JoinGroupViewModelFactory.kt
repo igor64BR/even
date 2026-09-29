@@ -7,10 +7,10 @@ import com.rateio.domain.repository.AuthRepository
 import com.rateio.domain.repository.RemoteGroupRepository
 
 /**
- * Sem framework de DI no projeto ainda — fábrica manual que injeta os repositórios de
- * [com.rateio.app.di.AppContainer] no [JoinGroupViewModel]. Mesmo padrão de
- * [com.rateio.app.ui.auth.AuthViewModelFactory] (T12), com [inviteCode] porque a tela sempre
- * pertence a um convite específico (código extraído do deep link, T22.1).
+ * No DI framework in the project yet — manual factory that injects the repositories from
+ * [com.rateio.app.di.AppContainer] into [JoinGroupViewModel]. Same pattern as
+ * [com.rateio.app.ui.auth.AuthViewModelFactory] (T12), with [inviteCode] because the screen always
+ * belongs to a specific invite (code extracted from the deep link, T22.1).
  */
 class JoinGroupViewModelFactory(
     private val inviteCode: String,
@@ -21,7 +21,7 @@ class JoinGroupViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         require(modelClass.isAssignableFrom(JoinGroupViewModel::class.java)) {
-            "JoinGroupViewModelFactory só sabe criar JoinGroupViewModel, pediram $modelClass"
+            "JoinGroupViewModelFactory only knows how to create JoinGroupViewModel, got $modelClass"
         }
         return JoinGroupViewModel(inviteCode, authRepository, remoteGroupRepository) as T
     }

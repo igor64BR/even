@@ -4,11 +4,12 @@ import com.rateio.domain.model.Settlement
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Contrato de persistência de quitações (RF31/RF33) de um grupo. `:domain` declara, `:data`
- * implementa com Room (Dependency Inversion) — mesmo padrão de [ExpenseRepository]/
- * [GroupRepository]. Consumido pela tela "Quitar dívidas" (T42.3): cada "Marcar como pago" grava
- * um [Settlement] novo; [getSettlementsFlow] realimenta `DebtSimplificationEngine.computeBalances`
- * (T33), que recalcula os saldos e, por consequência, a lista de sugestões.
+ * Contract for persisting a group's settlements (RF31/RF33). `:domain` declares it, `:data`
+ * implements it with Room (Dependency Inversion) — same pattern as [ExpenseRepository]/
+ * [GroupRepository]. Consumed by the "Settle debts" screen (T42.3): every "Mark as paid" records a
+ * new [Settlement]; [getSettlementsFlow] feeds back into
+ * `DebtSimplificationEngine.computeBalances` (T33), which recomputes the balances and, as a
+ * result, the suggestion list.
  */
 interface SettlementRepository {
     fun getSettlementsFlow(groupId: String): Flow<List<Settlement>>

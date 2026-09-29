@@ -4,30 +4,30 @@ import com.rateio.domain.model.AuthSession
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Contrato de autenticação opcional (constitution.md, princípio 1 e 2). `:domain` só enxerga "um
- * ID token do Google entra, uma [AuthSession] sai" — Credential Manager, Retrofit e
- * EncryptedSharedPreferences são detalhe de implementação de `:data`/`:app` (Dependency
- * Inversion), nenhum desses tipos vaza para esta interface.
+ * Contract for optional authentication (constitution.md, principles 1 and 2). `:domain` only sees
+ * "a Google ID token goes in, an [AuthSession] comes out" — Credential Manager, Retrofit and
+ * EncryptedSharedPreferences are implementation details of `:data`/`:app` (Dependency Inversion),
+ * none of those types leak into this interface.
  */
 interface AuthRepository {
 
-    /** `null` enquanto ninguém autenticou neste aparelho — estado normal, não um erro. */
+    /** `null` while no one has authenticated on this device yet — the normal state, not an error. */
     fun getSessionFlow(): Flow<AuthSession?>
 
     /**
-     * Troca um ID token do Google (já obtido via Credential Manager) pelo JWT próprio do backend
-     * (`POST /auth/google`, T11) e persiste a sessão resultante.
+     * Exchanges a Google ID token (already obtained via Credential Manager) for the backend's own
+     * JWT (`POST /auth/google`, T11) and persists the resulting session.
      *
-     * @throws AuthenticationFailedException se o backend rejeitar o ID token ou a chamada falhar.
+     * @throws AuthenticationFailedException if the backend rejects the ID token or the call fails.
      */
     suspend fun signInWithGoogle(googleIdToken: String): AuthSession
 
-    /** Derruba a sessão local. Grupos locais não são afetados (local-first, princípio 1). */
+    /** Tears down the local session. Local groups aren't affected (local-first, principle 1). */
     suspend fun signOut()
 }
 
 /**
- * Falha de autenticação já traduzida para uma mensagem apresentável — [AuthRepository] nunca deixa
- * uma exceção de rede (Retrofit/OkHttp) ou de parsing vazar para quem chama.
+ * An authentication failure already translated into a presentable message — [AuthRepository]
+ * never lets a network (Retrofit/OkHttp) or parsing exception leak out to the caller.
  */
 class AuthenticationFailedException(message: String, cause: Throwable? = null) : Exception(message, cause)

@@ -37,9 +37,9 @@ import com.rateio.domain.repository.SettlementRepository
 import com.rateio.domain.repository.ThemeRepository
 
 /**
- * Raiz de composição manual do módulo `:app` — não há framework de DI no projeto ainda. Monta o
- * Room de `:data` uma única vez por processo e expõe só os contratos de `:domain` que as telas
- * consomem (Dependency Inversion: telas dependem de interface, não de `RoomGroupRepository`).
+ * Manual composition root for the `:app` module — there's no DI framework in the project yet.
+ * Builds `:data`'s Room once per process and exposes only the `:domain` contracts the screens
+ * consume (Dependency Inversion: screens depend on the interface, not on `RoomGroupRepository`).
  */
 class AppContainer(context: Context) {
 
@@ -49,60 +49,60 @@ class AppContainer(context: Context) {
         DATABASE_NAME,
     ).build()
 
-    // Preferência de tema claro/escuro (botão sol/lua no TopAppBar de toda tela) — não é dado do
-    // domínio de negócio como o resto abaixo, só está aqui em cima por ser a única dependência que
-    // MainActivity precisa resolver antes mesmo de montar `RateioTheme`.
+    // Light/dark theme preference (the sun/moon button in the TopAppBar on every screen) — not
+    // business-domain data like the rest below, it's only up here because it's the only dependency
+    // MainActivity needs to resolve before even setting up `RateioTheme`.
     val themeRepository: ThemeRepository by lazy { SharedPreferencesThemeRepository(context.applicationContext) }
 
     val groupRepository: GroupRepository by lazy { RoomGroupRepository(database.groupDao()) }
     val participantRepository: ParticipantRepository by lazy { RoomParticipantRepository(database.participantDao()) }
     val expenseRepository: ExpenseRepository by lazy { RoomExpenseRepository(database.expenseDao()) }
 
-    // T42.1 — persistência de quitações (RF31/RF33), consumida pela tela "Quitar dívidas" (T42.3).
+    // T42.1 — settlement persistence (RF31/RF33), consumed by the "Settle debts" screen (T42.3).
     val settlementRepository: SettlementRepository by lazy { RoomSettlementRepository(database.settlementDao()) }
 
-    // T33 — motor de simplificação de dívidas (algorithm-spec.md). Interface de :domain, única
-    // implementação também vive em :domain (GreedyDebtSimplificationEngine) — não é um contrato de
-    // persistência como os `Room*Repository` acima, mas segue a mesma composição manual: quem
-    // consome (T42.2/T42.3) depende da interface, não da classe concreta.
+    // T33 — the debt-simplification engine (algorithm-spec.md). A :domain interface, its only
+    // implementation also lives in :domain (GreedyDebtSimplificationEngine) — not a persistence
+    // contract like the `Room*Repository`s above, but follows the same manual composition: the
+    // consumer (T42.2/T42.3) depends on the interface, not the concrete class.
     val debtSimplificationEngine: DebtSimplificationEngine by lazy { GreedyDebtSimplificationEngine() }
 
-    // T12 — autenticação opcional via Google (constitution.md, princípios 1 e 2). `authApi`
-    // usa BuildConfig.API_BASE_URL (placeholder documentado em `app/app/build.gradle.kts`);
-    // `tokenStorage` cifra a sessão no aparelho (EncryptedSharedPreferences, T12.2).
+    // T12 — optional authentication via Google (constitution.md, principles 1 and 2). `authApi`
+    // uses BuildConfig.API_BASE_URL (placeholder documented in `app/app/build.gradle.kts`);
+    // `tokenStorage` encrypts the session on the device (EncryptedSharedPreferences, T12.2).
     private val tokenStorage: TokenStorage by lazy { EncryptedTokenStorage(context.applicationContext) }
     private val authApi: AuthApi by lazy { RateioHttpClientFactory.createAuthApi(BuildConfig.API_BASE_URL) }
     val authRepository: AuthRepository by lazy { RemoteAuthRepository(authApi, tokenStorage) }
     val googleIdentityClient: GoogleIdentityClient by lazy { GoogleIdentityClient(context.applicationContext) }
 
-    // T19 — ação "Sincronizar este grupo" (POST /groups/sync, T18). Reaproveita o mesmo
-    // `tokenStorage` de T12 pra ler o access token na hora de montar o header Authorization.
+    // T19 — the "Sync this group" action (POST /groups/sync, T18). Reuses the same `tokenStorage`
+    // from T12 to read the access token when building the Authorization header.
     private val groupsApi: GroupsApi by lazy { RateioHttpClientFactory.createGroupsApi(BuildConfig.API_BASE_URL) }
     val remoteGroupRepository: RemoteGroupRepository by lazy { RemoteGroupSyncRepository(groupsApi, tokenStorage) }
 
-    // T29 — propagação de edição/exclusão de despesa pro backend quando o grupo está sincronizado
-    // (`PUT`/`DELETE /groups/{id}/expenses/{expenseId}`, T28). Mesmo `groupsApi`/`tokenStorage` de
-    // remoteGroupRepository, interface própria por responsabilidade única (ver KDoc de
+    // T29 — propagating an expense edit/delete to the backend when the group is synced
+    // (`PUT`/`DELETE /groups/{id}/expenses/{expenseId}`, T28). Same `groupsApi`/`tokenStorage` as
+    // remoteGroupRepository, its own interface for single responsibility (see the KDoc of
     // RemoteExpenseRepository).
     val remoteExpenseRepository: RemoteExpenseRepository by lazy { RemoteExpenseSyncRepository(groupsApi, tokenStorage) }
 
-    // T40/T41 — notificações locais (Room) + cliente SignalR (T38's Hub) + fallback de pull (T39).
+    // T40/T41 — local notifications (Room) + SignalR client (T38's Hub) + pull fallback (T39).
     val notificationRepository: NotificationRepository by lazy { RoomNotificationRepository(database.notificationDao()) }
 
-    // GroupEventsApi.getEvents é o pull de T39; RateioHttpClientFactory reaproveita o mesmo
-    // Retrofit.Builder de authApi/groupsApi (ver KDoc da fábrica).
+    // GroupEventsApi.getEvents is T39's pull; RateioHttpClientFactory reuses the same
+    // Retrofit.Builder as authApi/groupsApi (see the factory's KDoc).
     private val groupEventsApi: GroupEventsApi by lazy {
         RateioHttpClientFactory.createGroupEventsApi(BuildConfig.API_BASE_URL)
     }
 
-    // com.rateio.domain.format.MoneyFormatter é uma abstração de :domain que :data precisa pra
-    // montar o texto da notificação sem depender de java.text.NumberFormat/Locale diretamente —
-    // ver KDoc de MoneyFormatter. AppMoneyFormatter é o único lugar do app que faz essa ponte.
+    // com.rateio.domain.format.MoneyFormatter is a :domain abstraction :data needs to build the
+    // notification text without depending on java.text.NumberFormat/Locale directly — see
+    // MoneyFormatter's KDoc. AppMoneyFormatter is the app's only bridge for this.
     private val moneyFormatter: MoneyFormatter by lazy { AppMoneyFormatter() }
 
-    // hubUrl reaproveita o mesmo host/porta de API_BASE_URL (BuildConfig.API_BASE_URL já termina
-    // em "/", ver comentário do placeholder em app/app/build.gradle.kts) — RotaDoHubDeNotificacoes
-    // no backend mapeia o Hub em "/hubs/rateio" sobre o mesmo servidor da API REST.
+    // hubUrl reuses the same host/port as API_BASE_URL (BuildConfig.API_BASE_URL already ends in
+    // "/", see the placeholder comment in app/app/build.gradle.kts) — NotificationHubRoute on the
+    // backend maps the Hub to "/hubs/rateio" on the same server as the REST API.
     val groupRealtimeGateway: GroupRealtimeGateway by lazy {
         SignalRGroupRealtimeGateway(
             hubUrl = BuildConfig.API_BASE_URL.trimEnd('/') + "/hubs/rateio",

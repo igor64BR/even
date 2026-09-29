@@ -1,8 +1,8 @@
 package com.rateio.data.remote.realtime
 
 import com.rateio.data.local.auth.TokenStorage
+import com.rateio.data.remote.groups.GroupEventDto
 import com.rateio.data.remote.groups.GroupEventsApi
-import com.rateio.data.remote.groups.GrupoEventoDto
 import com.rateio.domain.model.AuthSession
 import com.rateio.domain.model.AuthenticatedUser
 import com.rateio.domain.model.Group
@@ -26,22 +26,22 @@ import retrofit2.HttpException
 import retrofit2.Response
 
 /**
- * Cobre T40.2: "reconexão busca eventos perdidos via T39" — no nível do colaborador que de fato
- * chama o endpoint, [MissedGroupEventsSynchronizer], sem `HubConnection` nenhum. [GroupEventsApi] é
- * um dublê simples (mesmo padrão de `RemoteGroupSyncRepositoryTest`); nunca foi exercitado contra
- * um `GET /groups/{id}/events` real (T39 ainda não existia no backend — lacuna documentada em
- * `GroupEventsApi`).
+ * Covers T40.2: "reconnection fetches missed events via T39" — at the level of the collaborator
+ * that actually calls the endpoint, [MissedGroupEventsSynchronizer], with no `HubConnection` at
+ * all. [GroupEventsApi] is a simple test double (same pattern as `RemoteGroupSyncRepositoryTest`);
+ * it was never exercised against a real `GET /groups/{id}/events` (T39 didn't exist on the backend
+ * yet — gap documented in `GroupEventsApi`).
  */
 class MissedGroupEventsSynchronizerTest {
 
     private val session = AuthSession(
-        accessToken = "access-token-valido",
+        accessToken = "valid-access-token",
         refreshToken = "refresh-token",
         user = AuthenticatedUser(name = "Igor Baiocco", email = "igor@example.com"),
     )
-    private val group = Group(id = "g1", name = "Viagem pra praia", createdAt = Instant.EPOCH)
+    private val group = Group(id = "g1", name = "Beach trip", createdAt = Instant.EPOCH)
     private val participants = listOf(
-        Participant(id = "p1", groupId = "g1", name = "Você", isYou = true),
+        Participant(id = "p1", groupId = "g1", name = "You", isYou = true),
         Participant(id = "p2", groupId = "g1", name = "Duda"),
     )
 
@@ -62,21 +62,21 @@ class MissedGroupEventsSynchronizerTest {
     )
 
     @Test
-    fun `sync busca desde o ultimo timestamp conhecido e grava os eventos retornados`() = runTest {
+    fun `sync fetches since the last known timestamp and records the returned events`() = runTest {
         val notificationRepository = FakeNotificationRepository(
             existing = mutableListOf(
-                GroupNotification(id = "n0", groupId = "g1", message = "antiga", occurredAt = Instant.ofEpochMilli(5_000)),
+                GroupNotification(id = "n0", groupId = "g1", message = "old", occurredAt = Instant.ofEpochMilli(5_000)),
             ),
         )
         val api = FakeGroupEventsApi(
             events = listOf(
-                GrupoEventoDto(
-                    tipo = 0,
-                    grupoId = "remote-g1",
-                    despesaId = "e1",
-                    descricao = "Mercado",
-                    valorTotalCentavos = 3_000,
-                    pagadorId = "p2",
+                GroupEventDto(
+                    type = 0,
+                    groupId = "remote-g1",
+                    expenseId = "e1",
+                    description = "Groceries",
+                    totalAmountCents = 3_000,
+                    payerId = "p2",
                 ),
             ),
         )
@@ -84,16 +84,16 @@ class MissedGroupEventsSynchronizerTest {
 
         synchronizer.sync(localGroupId = "g1", remoteGroupId = "remote-g1")
 
-        assertEquals("Bearer access-token-valido", api.lastBearerToken)
+        assertEquals("Bearer valid-access-token", api.lastBearerToken)
         assertEquals("remote-g1", api.lastGroupId)
         assertEquals("1970-01-01T00:00:05Z", api.lastSince)
         val inserted = notificationRepository.inserted.single()
-        assertEquals("despesa:e1", inserted.id)
-        assertTrue(inserted.message.contains("Duda lançou \"Mercado\""))
+        assertEquals("expense:e1", inserted.id)
+        assertTrue(inserted.message.contains("Duda logged \"Groceries\""))
     }
 
     @Test
-    fun `sync sem nenhuma notificacao anterior manda desde Instant EPOCH (backend exige o parametro sempre)`() = runTest {
+    fun `sync with no prior notification sends since Instant EPOCH (backend always requires the parameter)`() = runTest {
         val api = FakeGroupEventsApi(events = emptyList())
         val synchronizer = buildSynchronizer(api, FakeTokenStorage(session))
 
@@ -103,19 +103,19 @@ class MissedGroupEventsSynchronizerTest {
     }
 
     @Test
-    fun `sync sem sessao nao chama a API`() = runTest {
+    fun `sync without a session does not call the API`() = runTest {
         val api = FakeGroupEventsApi(events = emptyList())
         val synchronizer = buildSynchronizer(api, FakeTokenStorage(initialSession = null))
 
         synchronizer.sync(localGroupId = "g1", remoteGroupId = "remote-g1")
 
-        assertNull("sem sessao, a chamada nem deveria acontecer", api.lastGroupId)
+        assertNull("without a session, the call shouldn't even happen", api.lastGroupId)
     }
 
     @Test
-    fun `sync ignora evento de tipo desconhecido sem quebrar`() = runTest {
+    fun `sync ignores an event of unknown type without breaking`() = runTest {
         val notificationRepository = FakeNotificationRepository()
-        val api = FakeGroupEventsApi(events = listOf(GrupoEventoDto(tipo = 99, grupoId = "remote-g1")))
+        val api = FakeGroupEventsApi(events = listOf(GroupEventDto(type = 99, groupId = "remote-g1")))
         val synchronizer = buildSynchronizer(api, FakeTokenStorage(session), notificationRepository)
 
         synchronizer.sync(localGroupId = "g1", remoteGroupId = "remote-g1")
@@ -124,24 +124,24 @@ class MissedGroupEventsSynchronizerTest {
     }
 
     @Test
-    fun `sync engole falha de rede sem propagar`() = runTest {
-        val api = FakeGroupEventsApi(failure = { IOException("sem conexão") })
+    fun `sync swallows a network failure without propagating it`() = runTest {
+        val api = FakeGroupEventsApi(failure = { IOException("no connection") })
         val synchronizer = buildSynchronizer(api, FakeTokenStorage(session))
 
-        synchronizer.sync(localGroupId = "g1", remoteGroupId = "remote-g1") // não deve lançar
+        synchronizer.sync(localGroupId = "g1", remoteGroupId = "remote-g1") // should not throw
     }
 
     @Test
-    fun `sync engole erro HTTP (403 RNF07 ou 404 grupo removido) sem propagar`() = runTest {
-        val corpoDeErro = "".toResponseBody("application/json".toMediaType())
-        val api = FakeGroupEventsApi(failure = { HttpException(Response.error<Unit>(404, corpoDeErro)) })
+    fun `sync swallows an HTTP error (403 RNF07 or 404 group removed) without propagating it`() = runTest {
+        val errorBody = "".toResponseBody("application/json".toMediaType())
+        val api = FakeGroupEventsApi(failure = { HttpException(Response.error<Unit>(404, errorBody)) })
         val synchronizer = buildSynchronizer(api, FakeTokenStorage(session))
 
-        synchronizer.sync(localGroupId = "g1", remoteGroupId = "remote-g1") // não deve lançar
+        synchronizer.sync(localGroupId = "g1", remoteGroupId = "remote-g1") // should not throw
     }
 
     private class FakeGroupEventsApi(
-        private val events: List<GrupoEventoDto> = emptyList(),
+        private val events: List<GroupEventDto> = emptyList(),
         private val failure: (() -> Throwable)? = null,
     ) : GroupEventsApi {
         var lastBearerToken: String? = null
@@ -151,7 +151,7 @@ class MissedGroupEventsSynchronizerTest {
         var lastSince: String? = null
             private set
 
-        override suspend fun getEvents(bearerToken: String, groupId: String, since: String): List<GrupoEventoDto> {
+        override suspend fun getEvents(bearerToken: String, groupId: String, since: String): List<GroupEventDto> {
             lastBearerToken = bearerToken
             lastGroupId = groupId
             lastSince = since
@@ -173,19 +173,19 @@ class MissedGroupEventsSynchronizerTest {
     }
 
     private class FakeGroupRepository(private val group: Group?) : GroupRepository {
-        override fun getGroupsFlow(): Flow<List<Group>> = throw UnsupportedOperationException("não usado neste teste")
+        override fun getGroupsFlow(): Flow<List<Group>> = throw UnsupportedOperationException("not used in this test")
         override suspend fun getGroupById(groupId: String): Group? = group
-        override suspend fun insertGroup(group: Group) = throw UnsupportedOperationException("não usado neste teste")
-        override suspend fun deleteGroup(groupId: String) = throw UnsupportedOperationException("não usado neste teste")
+        override suspend fun insertGroup(group: Group) = throw UnsupportedOperationException("not used in this test")
+        override suspend fun deleteGroup(groupId: String) = throw UnsupportedOperationException("not used in this test")
     }
 
     private class FakeParticipantRepository(private val participants: List<Participant>) : ParticipantRepository {
         override fun getParticipantsFlow(groupId: String): Flow<List<Participant>> = MutableStateFlow(participants)
         override suspend fun insertParticipant(participant: Participant) =
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
 
         override suspend fun deleteParticipant(participantId: String) =
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
     }
 
     private class FakeNotificationRepository(
@@ -201,7 +201,7 @@ class MissedGroupEventsSynchronizerTest {
             all += notification
         }
 
-        override suspend fun markAllAsRead() = throw UnsupportedOperationException("não usado neste teste")
+        override suspend fun markAllAsRead() = throw UnsupportedOperationException("not used in this test")
         override suspend fun getLastEventTimestamp(): Instant? = all.maxOfOrNull { it.occurredAt }
     }
 }

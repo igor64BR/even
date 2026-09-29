@@ -1,7 +1,7 @@
 package com.rateio.data
 
-// Módulo :data — implementações concretas das interfaces de repositório de :domain: Room
-// (persistência local, fonte da verdade offline) e client SignalR/HTTP (sincronização).
+// :data module — concrete implementations of :domain's repository interfaces: Room
+// (local persistence, the offline source of truth) and a SignalR/HTTP client (sync).
 //
-// Ainda vazio nesta task (T6 — só estrutura do módulo). Room entra na T7, client de
-// sincronização em tasks futuras.
+// Still empty in this task (T6 — module structure only). Room arrives in T7, the sync
+// client in future tasks.

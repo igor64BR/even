@@ -20,9 +20,9 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Confirma que insert+query funcionam contra um Room de verdade (não mock) — entregável de
- * T7.2. Roda via Robolectric (JVM) porque este ambiente não tem emulador/dispositivo conectado
- * para um teste instrumentado (`androidTest`); banco em memória, sem tocar disco.
+ * Confirms that insert+query work against a real Room (not a mock) — a deliverable of
+ * T7.2. Runs via Robolectric (JVM) because this environment has no connected emulator/device for
+ * an instrumented test (`androidTest`); an in-memory database, no disk access.
  */
 @RunWith(RobolectricTestRunner::class)
 class RateioDatabaseTest {
@@ -43,8 +43,8 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `insere grupo e le de volta pelo GroupDao`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+    fun `inserts a group and reads it back through GroupDao`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
 
         database.groupDao().insert(group)
 
@@ -53,19 +53,20 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `reinserir grupo existente (ex- marcar isSynced) nao apaga participantes e despesas`() = runTest {
-        // Regressão: GroupDao.insert usava @Insert(REPLACE), que no SQLite é DELETE+INSERT e
-        // disparava ON DELETE CASCADE das FKs de participante/despesa/quitação/notificação toda
-        // vez que o grupo já existente era re-inserido (ex.: GroupDetailViewModel.syncGroup()
-        // gravando isSynced=true) — achado durante T29. @Upsert faz UPDATE de verdade.
-        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+    fun `re-inserting an existing group (e-g- marking isSynced) does not delete its participants and expenses`() = runTest {
+        // Regression: GroupDao.insert used @Insert(REPLACE), which in SQLite is a DELETE+INSERT
+        // and triggered ON DELETE CASCADE of the participant/expense/settlement/notification FKs
+        // every time the already-existing group was re-inserted (e.g.
+        // GroupDetailViewModel.syncGroup() writing isSynced=true) — found during T29. @Upsert does
+        // a real UPDATE.
+        val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
         val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
         database.groupDao().insert(group)
         database.participantDao().insert(payer)
         val expense = ExpenseEntity(
             id = "e1",
             groupId = "g1",
-            description = "Churrasco",
+            description = "Barbecue",
             amountCents = 1000,
             paidByParticipantId = "p1",
             createdAtEpochMillis = 3_000L,
@@ -83,9 +84,9 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `insere participante vinculado ao grupo e le de volta pelo ParticipantDao`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
-        val participant = ParticipantEntity(id = "p1", groupId = "g1", name = "Você", isYou = true)
+    fun `inserts a participant linked to the group and reads it back through ParticipantDao`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
+        val participant = ParticipantEntity(id = "p1", groupId = "g1", name = "You", isYou = true)
 
         database.groupDao().insert(group)
         database.participantDao().insert(participant)
@@ -94,9 +95,9 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `remove grupo em cascata remove participantes do grupo`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
-        val participant = ParticipantEntity(id = "p1", groupId = "g1", name = "Você", isYou = true)
+    fun `deleting a group cascades and removes its participants`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
+        val participant = ParticipantEntity(id = "p1", groupId = "g1", name = "You", isYou = true)
         database.groupDao().insert(group)
         database.participantDao().insert(participant)
 
@@ -106,8 +107,8 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `GroupEntity guarda isSynced (T7B) e le de volta pelo GroupDao`() = runTest {
-        val synced = GroupEntity(id = "g2", name = "Viagem", createdAtEpochMillis = 2_000L, isSynced = true)
+    fun `GroupEntity stores isSynced (T7B) and reads it back through GroupDao`() = runTest {
+        val synced = GroupEntity(id = "g2", name = "Trip", createdAtEpochMillis = 2_000L, isSynced = true)
 
         database.groupDao().insert(synced)
 
@@ -115,8 +116,8 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `insertWithSplits grava despesa e partes, getExpensesWithSplitsFlow le as duas juntas`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+    fun `insertWithSplits stores the expense and its splits, getExpensesWithSplitsFlow reads both together`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
         val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
         val other = ParticipantEntity(id = "p2", groupId = "g1", name = "P2")
         database.groupDao().insert(group)
@@ -126,7 +127,7 @@ class RateioDatabaseTest {
         val expense = ExpenseEntity(
             id = "e1",
             groupId = "g1",
-            description = "Churrasco",
+            description = "Barbecue",
             amountCents = 1000,
             paidByParticipantId = "p1",
             createdAtEpochMillis = 3_000L,
@@ -145,8 +146,8 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `insertWithSplits substitui as partes antigas em vez de acumular`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+    fun `insertWithSplits replaces the old splits instead of accumulating them`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
         val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
         database.groupDao().insert(group)
         database.participantDao().insert(payer)
@@ -154,7 +155,7 @@ class RateioDatabaseTest {
         val expense = ExpenseEntity(
             id = "e1",
             groupId = "g1",
-            description = "Churrasco",
+            description = "Barbecue",
             amountCents = 1000,
             paidByParticipantId = "p1",
             createdAtEpochMillis = 3_000L,
@@ -164,8 +165,8 @@ class RateioDatabaseTest {
             listOf(ExpenseSplitEntity(expenseId = "e1", participantId = "p1", type = SplitTypeEntity.WEIGHT, weight = 1)),
         )
 
-        // Edição da mesma despesa (mesmo id) com uma divisão diferente — as partes antigas não
-        // podem sobrar como lixo órfão (ver comentário em ExpenseDao.insertWithSplits).
+        // Editing the same expense (same id) with a different split — the old splits must not be
+        // left behind as orphaned junk (see the comment in ExpenseDao.insertWithSplits).
         database.expenseDao().insertWithSplits(
             expense,
             listOf(ExpenseSplitEntity(expenseId = "e1", participantId = "p1", type = SplitTypeEntity.EQUAL)),
@@ -177,8 +178,8 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `remove despesa em cascata remove suas partes`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+    fun `deleting an expense cascades and removes its splits`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
         val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
         database.groupDao().insert(group)
         database.participantDao().insert(payer)
@@ -186,7 +187,7 @@ class RateioDatabaseTest {
         val expense = ExpenseEntity(
             id = "e1",
             groupId = "g1",
-            description = "Churrasco",
+            description = "Barbecue",
             amountCents = 1000,
             paidByParticipantId = "p1",
             createdAtEpochMillis = 3_000L,
@@ -202,8 +203,8 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `insere quitacao vinculada ao grupo e le de volta pelo SettlementDao (T42-1)`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+    fun `inserts a settlement linked to the group and reads it back through SettlementDao (T42-1)`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
         val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
         val receiver = ParticipantEntity(id = "p2", groupId = "g1", name = "P2")
         database.groupDao().insert(group)
@@ -217,8 +218,8 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `remove grupo em cascata remove quitacoes do grupo`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Churras de sábado", createdAtEpochMillis = 1_000L)
+    fun `deleting a group cascades and removes the group's settlements`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
         val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
         val receiver = ParticipantEntity(id = "p2", groupId = "g1", name = "P2")
         database.groupDao().insert(group)
@@ -234,14 +235,14 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `insere notificacao vinculada ao grupo e le de volta pelo NotificationDao (T40-1)`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+    fun `inserts a notification linked to the group and reads it back through NotificationDao (T40-1)`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Beach trip", createdAtEpochMillis = 1_000L)
         database.groupDao().insert(group)
 
         val notification = NotificationEntity(
-            id = "despesa:e1",
+            id = "expense:e1",
             groupId = "g1",
-            message = "Duda lançou \"Mercado\" — R$ 30,00 — em \"Viagem pra praia\".",
+            message = "Duda logged \"Groceries\" — R$ 30,00 — in \"Beach trip\".",
             occurredAtEpochMillis = 5_000L,
             isRead = false,
         )
@@ -251,57 +252,57 @@ class RateioDatabaseTest {
     }
 
     @Test
-    fun `insert com id repetido e OnConflictStrategy IGNORE nao sobrescreve isRead ja marcado`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+    fun `insert with a repeated id and OnConflictStrategy IGNORE does not overwrite an already-marked isRead`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Beach trip", createdAtEpochMillis = 1_000L)
         database.groupDao().insert(group)
         database.notificationDao().insert(
-            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "original", occurredAtEpochMillis = 5_000L, isRead = false),
+            NotificationEntity(id = "expense:e1", groupId = "g1", message = "original", occurredAtEpochMillis = 5_000L, isRead = false),
         )
         database.notificationDao().markAllAsRead()
 
-        // Mesmo evento chegando de novo (tempo real + pull de reconexão, T40.2) — não pode
-        // reverter isRead=true de volta pra false.
+        // The same event arriving again (live + reconnect pull, T40.2) — must not revert
+        // isRead=true back to false.
         database.notificationDao().insert(
-            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "original", occurredAtEpochMillis = 5_000L, isRead = false),
+            NotificationEntity(id = "expense:e1", groupId = "g1", message = "original", occurredAtEpochMillis = 5_000L, isRead = false),
         )
 
         assertTrue(database.notificationDao().getNotificationsFlow().first().single().isRead)
     }
 
     @Test
-    fun `getUnreadCountFlow conta so as nao lidas`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+    fun `getUnreadCountFlow only counts the unread ones`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Beach trip", createdAtEpochMillis = 1_000L)
         database.groupDao().insert(group)
         database.notificationDao().insert(
-            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
+            NotificationEntity(id = "expense:e1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
         )
         database.notificationDao().insert(
-            NotificationEntity(id = "quitacao:s1", groupId = "g1", message = "b", occurredAtEpochMillis = 2_000L, isRead = true),
+            NotificationEntity(id = "settlement:s1", groupId = "g1", message = "b", occurredAtEpochMillis = 2_000L, isRead = true),
         )
 
         assertEquals(1, database.notificationDao().getUnreadCountFlow().first())
     }
 
     @Test
-    fun `getLastEventEpochMillis devolve o maior timestamp entre as notificacoes gravadas`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+    fun `getLastEventEpochMillis returns the largest timestamp among the recorded notifications`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Beach trip", createdAtEpochMillis = 1_000L)
         database.groupDao().insert(group)
         database.notificationDao().insert(
-            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
+            NotificationEntity(id = "expense:e1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
         )
         database.notificationDao().insert(
-            NotificationEntity(id = "quitacao:s1", groupId = "g1", message = "b", occurredAtEpochMillis = 9_000L, isRead = false),
+            NotificationEntity(id = "settlement:s1", groupId = "g1", message = "b", occurredAtEpochMillis = 9_000L, isRead = false),
         )
 
         assertEquals(9_000L, database.notificationDao().getLastEventEpochMillis())
     }
 
     @Test
-    fun `remove grupo em cascata remove notificacoes do grupo`() = runTest {
-        val group = GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 1_000L)
+    fun `deleting a group cascades and removes the group's notifications`() = runTest {
+        val group = GroupEntity(id = "g1", name = "Beach trip", createdAtEpochMillis = 1_000L)
         database.groupDao().insert(group)
         database.notificationDao().insert(
-            NotificationEntity(id = "despesa:e1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
+            NotificationEntity(id = "expense:e1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
         )
 
         database.groupDao().deleteById("g1")

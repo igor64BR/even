@@ -4,16 +4,15 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Mapeamento de persistência de um grupo. Objeto de mapeamento puro, sem lógica de negócio;
- * conversão para/de `com.rateio.domain.model.Group` mora nos mappers de `:data`, não aqui (ver
+ * Persistence mapping for a group. A pure mapping object, no business logic; conversion to/from
+ * `com.rateio.domain.model.Group` lives in `:data`'s mappers, not here (see
  * `com.rateio.data.repository.RoomGroupRepository`).
  *
- * [isSynced] espelha `Group.isSynced` (`:domain`, T7B.1) / `Sincronizado` de `Grupo.cs`.
- * `false` por padrão: todo grupo persistido localmente antes de existir sincronização nasce não
- * sincronizado.
+ * [isSynced] mirrors `Group.isSynced` (`:domain`, T7B.1) / `Synced` from `Group.cs`. `false` by
+ * default: every group persisted locally before any sync exists starts out unsynced.
  *
- * [remoteId] espelha `Group.remoteId` (`:domain`, T19.2) — `null` até a primeira sincronização
- * bem-sucedida, coluna nova na v3 do schema (ver `RateioDatabase`).
+ * [remoteId] mirrors `Group.remoteId` (`:domain`, T19.2) — `null` until the first successful sync,
+ * a new column in schema v3 (see `RateioDatabase`).
  */
 @Entity(tableName = "groups")
 data class GroupEntity(

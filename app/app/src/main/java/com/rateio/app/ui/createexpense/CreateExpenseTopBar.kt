@@ -14,9 +14,9 @@ import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.app.ui.theme.ThemeToggleButton
 
 /**
- * `.topbar` de `nova-despesa.html` — volta pro grupo sem salvar. [isEditMode] (T29) troca só o
- * título pra "Editar despesa"; o resto do formulário é idêntico ao modo criação (T29, "edição é
- * estado, não tela nova").
+ * `new-expense.html`'s `.topbar` — goes back to the group without saving. [isEditMode] (T29) only
+ * swaps the title to "Edit expense"; the rest of the form is identical to create mode (T29,
+ * "editing is state, not a new screen").
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,10 +28,10 @@ fun CreateExpenseTopBar(
 ) {
     val colors = LocalRateioColors.current
     TopAppBar(
-        title = { Text(text = if (isEditMode) "Editar despesa" else "Nova despesa", fontWeight = FontWeight.Bold) },
+        title = { Text(text = if (isEditMode) "Edit expense" else "New expense", fontWeight = FontWeight.Bold) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         },
         actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },

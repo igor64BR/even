@@ -15,24 +15,23 @@ import com.rateio.data.persistence.entity.ParticipantEntity
 import com.rateio.data.persistence.entity.SettlementEntity
 
 /**
- * Banco Room local — fonte da verdade para grupos não sincronizados (constitution.md,
- * princípio 1), funciona 100% sem rede.
+ * Local Room database — source of truth for unsynced groups (constitution.md, principle 1), works
+ * 100% offline.
  *
- * Versão 2 (T7B): adiciona `GroupEntity.isSynced` e a tabela `expense_splits`
- * (`ExpenseSplitEntity`). Versão 3 (T19.2): adiciona `GroupEntity.remoteId`, pra guardar o id do
- * grupo no servidor depois de sincronizado. Versão 4 (T42.1): adiciona a tabela `settlements`
- * (`SettlementEntity`) — motor de simplificação (T33) já existia, mas não havia onde persistir uma
- * quitação registrada pela tela "Quitar dívidas". Versão 5 (T40.1): adiciona a tabela
- * `notifications` (`NotificationEntity`) — persistência local dos eventos de grupo recebidos via
- * SignalR (T40) ou recuperados pelo fallback de pull (T39). Versão 6 (T37): adiciona
- * `SettlementEntity.createdAtEpochMillis`, necessário pra ordenar a tela "Histórico de
- * quitações" (RF31/RF33) por data. Sem migration explícita e sem
- * `fallbackToDestructiveMigration` em nenhuma delas — ainda não existe build distribuído
- * (nenhum usuário real a preservar), então recriar o schema do zero é seguro; uma migration real
- * entra assim que houver uma versão publicada para migrar a partir dela.
+ * Version 2 (T7B): adds `GroupEntity.isSynced` and the `expense_splits` table
+ * (`ExpenseSplitEntity`). Version 3 (T19.2): adds `GroupEntity.remoteId`, to store the group's id
+ * on the server once synced. Version 4 (T42.1): adds the `settlements` table
+ * (`SettlementEntity`) — the simplification engine (T33) already existed, but there was nowhere to
+ * persist a settlement recorded from the "Settle debts" screen. Version 5 (T40.1): adds the
+ * `notifications` table (`NotificationEntity`) — local persistence of group events received via
+ * SignalR (T40) or recovered by the pull fallback (T39). Version 6 (T37): adds
+ * `SettlementEntity.createdAtEpochMillis`, needed to order the "Settlement history" screen
+ * (RF31/RF33) by date. No explicit migration and no `fallbackToDestructiveMigration` on any of
+ * these — there's still no distributed build (no real user to preserve), so recreating the schema
+ * from scratch is safe; a real migration arrives once there's a published version to migrate from.
  *
- * `exportSchema = false`: histórico de schema para teste de migration é escopo de quando a
- * primeira migration real existir, não deste esqueleto inicial.
+ * `exportSchema = false`: a schema history for migration testing is the scope of once the first
+ * real migration exists, not this initial skeleton.
  */
 @Database(
     entities = [

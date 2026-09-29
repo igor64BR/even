@@ -7,8 +7,8 @@ import com.rateio.domain.repository.GroupRepository
 import com.rateio.domain.repository.ParticipantRepository
 
 /**
- * Sem framework de DI no projeto ainda — fábrica manual que injeta os repositórios de
- * [com.rateio.app.di.AppContainer] no [CreateGroupViewModel]. Mesmo padrão de
+ * No DI framework in the project yet — a manual factory that injects
+ * [com.rateio.app.di.AppContainer]'s repositories into the [CreateGroupViewModel]. Same pattern as
  * [com.rateio.app.ui.groups.GroupListViewModelFactory] (T8).
  */
 class CreateGroupViewModelFactory(
@@ -19,7 +19,7 @@ class CreateGroupViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         require(modelClass.isAssignableFrom(CreateGroupViewModel::class.java)) {
-            "CreateGroupViewModelFactory só sabe criar CreateGroupViewModel, pediram $modelClass"
+            "CreateGroupViewModelFactory only knows how to create CreateGroupViewModel, got $modelClass"
         }
         return CreateGroupViewModel(groupRepository, participantRepository) as T
     }

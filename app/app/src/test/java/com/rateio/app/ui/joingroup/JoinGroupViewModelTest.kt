@@ -24,12 +24,13 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Cobre T22.1/T22.2 (deep link `rateio://join/{codigo}` + tela de confirmação): a decisão de
- * "logado entra direto" vs. "deslogado precisa de login primeiro" vem inteira de
- * [AuthRepository.getSessionFlow] (mesma fonte de verdade de [com.rateio.app.ui.auth.AuthViewModel],
- * T12, e [com.rateio.app.ui.groupdetail.GroupDetailViewModel], T19/T42.4) — o ViewModel nunca
- * navega sozinho, só expõe [JoinGroupUiState.NeedsLogin] pra quem observa decidir. Dublês simples
- * de [AuthRepository]/[RemoteGroupRepository], mesmo padrão de `GroupDetailViewModelTest`.
+ * Covers T22.1/T22.2 (deep link `rateio://join/{code}` + confirmation screen): the decision
+ * between "signed in goes straight through" vs. "signed out needs to log in first" comes entirely
+ * from [AuthRepository.getSessionFlow] (same source of truth as [com.rateio.app.ui.auth.AuthViewModel],
+ * T12, and [com.rateio.app.ui.groupdetail.GroupDetailViewModel], T19/T42.4) — the ViewModel never
+ * navigates on its own, it only exposes [JoinGroupUiState.NeedsLogin] for whoever observes it to
+ * decide. Simple fakes for [AuthRepository]/[RemoteGroupRepository], same pattern as
+ * `GroupDetailViewModelTest`.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class JoinGroupViewModelTest {
@@ -52,7 +53,7 @@ class JoinGroupViewModelTest {
     }
 
     @Test
-    fun `link com usuario logado mostra confirmacao direto, sem passar por login`() = runTest(testDispatcher) {
+    fun `link with a signed-in user shows confirmation directly, without going through login`() = runTest(testDispatcher) {
         val viewModel = JoinGroupViewModel(
             inviteCode = "ABC123",
             authRepository = FakeAuthRepository(initialSession = session),
@@ -65,8 +66,8 @@ class JoinGroupViewModelTest {
     }
 
     @Test
-    fun `confirmar com usuario logado chama joinByCode e expoe sucesso com o id remoto`() = runTest(testDispatcher) {
-        val remoteGroupRepository = FakeRemoteGroupRepository(remoteGroupId = "grupo-remoto-9")
+    fun `confirming with a signed-in user calls joinByCode and exposes success with the remote id`() = runTest(testDispatcher) {
+        val remoteGroupRepository = FakeRemoteGroupRepository(remoteGroupId = "remote-group-9")
         val viewModel = JoinGroupViewModel(
             inviteCode = "ABC123",
             authRepository = FakeAuthRepository(initialSession = session),
@@ -77,12 +78,12 @@ class JoinGroupViewModelTest {
         viewModel.confirm()
 
         val state = viewModel.uiState.first { it is JoinGroupUiState.Success }
-        assertEquals(JoinGroupUiState.Success("grupo-remoto-9"), state)
+        assertEquals(JoinGroupUiState.Success("remote-group-9"), state)
         assertEquals("ABC123", remoteGroupRepository.lastInviteCode)
     }
 
     @Test
-    fun `link com usuario deslogado expoe NeedsLogin com o codigo do convite, sem chamar o backend`() = runTest(testDispatcher) {
+    fun `link with a signed-out user exposes NeedsLogin with the invite code, without calling the backend`() = runTest(testDispatcher) {
         val remoteGroupRepository = FakeRemoteGroupRepository()
         val viewModel = JoinGroupViewModel(
             inviteCode = "ABC123",
@@ -93,11 +94,11 @@ class JoinGroupViewModelTest {
         val state = viewModel.uiState.first { it !is JoinGroupUiState.CheckingSession }
 
         assertEquals(JoinGroupUiState.NeedsLogin("ABC123"), state)
-        assertTrue("NeedsLogin nao pode ter chamado joinByCode", remoteGroupRepository.lastInviteCode == null)
+        assertTrue("NeedsLogin must not have called joinByCode", remoteGroupRepository.lastInviteCode == null)
     }
 
     @Test
-    fun `login apos NeedsLogin retoma o fluxo e mostra confirmacao com o mesmo codigo`() = runTest(testDispatcher) {
+    fun `logging in after NeedsLogin resumes the flow and shows confirmation with the same code`() = runTest(testDispatcher) {
         val authRepository = FakeAuthRepository(initialSession = null)
         val viewModel = JoinGroupViewModel(
             inviteCode = "ABC123",
@@ -113,12 +114,12 @@ class JoinGroupViewModelTest {
     }
 
     @Test
-    fun `falha ao entrar traduz GroupSyncException para Error com o codigo do convite`() = runTest(testDispatcher) {
+    fun `failure to join translates GroupSyncException into Error with the invite code`() = runTest(testDispatcher) {
         val viewModel = JoinGroupViewModel(
             inviteCode = "ABC123",
             authRepository = FakeAuthRepository(initialSession = session),
             remoteGroupRepository = FakeRemoteGroupRepository(
-                failure = { GroupSyncException("Não foi possível entrar nesse grupo — verifique o código.") },
+                failure = { GroupSyncException("Could not join this group — check the code.") },
             ),
         )
         viewModel.uiState.first { it is JoinGroupUiState.Confirming }
@@ -127,7 +128,7 @@ class JoinGroupViewModelTest {
 
         val state = viewModel.uiState.first { it is JoinGroupUiState.Error } as JoinGroupUiState.Error
         assertEquals("ABC123", state.inviteCode)
-        assertEquals("Não foi possível entrar nesse grupo — verifique o código.", state.message)
+        assertEquals("Could not join this group — check the code.", state.message)
     }
 
     private class FakeAuthRepository(initialSession: AuthSession?) : AuthRepository {
@@ -140,7 +141,7 @@ class JoinGroupViewModelTest {
         override fun getSessionFlow(): Flow<AuthSession?> = session
 
         override suspend fun signInWithGoogle(googleIdToken: String): AuthSession =
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
 
         override suspend fun signOut() {
             session.value = null
@@ -148,7 +149,7 @@ class JoinGroupViewModelTest {
     }
 
     private class FakeRemoteGroupRepository(
-        private val remoteGroupId: String = "remote-grupo-id",
+        private val remoteGroupId: String = "remote-group-id",
         private val failure: (() -> Throwable)? = null,
     ) : RemoteGroupRepository {
         var lastInviteCode: String? = null
@@ -158,7 +159,7 @@ class JoinGroupViewModelTest {
             group: Group,
             participants: List<Participant>,
             expenses: List<Expense>,
-        ): String = throw UnsupportedOperationException("não usado neste teste")
+        ): String = throw UnsupportedOperationException("not used in this test")
 
         override suspend fun joinByCode(inviteCode: String): String {
             lastInviteCode = inviteCode

@@ -1,15 +1,15 @@
 package com.rateio.app.ui.createexpense
 
 /**
- * Aba ativa em "Como dividir" (`#tabs` do protótipo: Igual/Percentual/Valor fixo) — puramente um
- * detalhe de UI de formulário, não confundir com a hierarquia de domínio [ExpenseSplit][com
- * .rateio.domain.model.ExpenseSplit]. Lá, deliberadamente, não existe um enum solto (ver o
- * comentário de `ExpenseSplit.kt`: o subtipo concreto já carrega a regra de divisão, um enum ao
- * lado poderia divergir do subtipo real de cada participação). Aqui é diferente: antes de salvar,
- * a tela só tem *um* conjunto de participantes com inputs por modo (checkbox / % / R$) — precisa
- * de algo pra saber qual conjunto de campos renderizar e validar, e isso nunca persiste — é
- * traduzido para o subtipo [com.rateio.domain.model.ExpenseSplit] certo só no momento de salvar
- * (ver `CreateExpenseViewModel.buildSplits`).
+ * The active tab in "How to split" (the prototype's `#tabs`: Equal/Percentage/Fixed amount) —
+ * purely a form UI detail, not to be confused with the domain hierarchy
+ * [ExpenseSplit][com.rateio.domain.model.ExpenseSplit]. There, deliberately, there's no separate
+ * enum (see the comment in `ExpenseSplit.kt`: the concrete subtype already carries the split rule,
+ * a separate enum could diverge from each split's real subtype). Here it's different: before
+ * saving, the screen only has *one* set of participants with inputs per mode (checkbox / % / R$) —
+ * something is needed to know which set of fields to render and validate, and this never
+ * persists — it's translated into the right [com.rateio.domain.model.ExpenseSplit] subtype only at
+ * save time (see `CreateExpenseViewModel.buildSplits`).
  */
 enum class SplitMode {
     EQUAL,

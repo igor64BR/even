@@ -33,16 +33,16 @@ import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.app.ui.theme.ThemeToggleButton
 
 /**
- * Ponto de entrada do fluxo "entrar no grupo por link" (T22.2). `factory` injeta o
- * [JoinGroupViewModel] pela composição manual de [com.rateio.app.di.AppContainer] — mesma
- * convenção de [com.rateio.app.ui.auth.LoginRoute] (T12).
+ * Entry point of the "join group via link" flow (T22.2). `factory` injects the
+ * [JoinGroupViewModel] through the manual composition of [com.rateio.app.di.AppContainer] — same
+ * convention as [com.rateio.app.ui.auth.LoginRoute] (T12).
  *
- * [onNeedsLogin] é chamado (via [LaunchedEffect]) quando [JoinGroupUiState.NeedsLogin] aparece —
- * quem monta a navegação (`MainActivity`) decide o que fazer (mandar pra tela de login guardando
- * o código pra retomar depois). Esta Composable não navega sozinha.
+ * [onNeedsLogin] is called (via [LaunchedEffect]) when [JoinGroupUiState.NeedsLogin] shows up —
+ * whoever assembles navigation (`MainActivity`) decides what to do (send to the login screen,
+ * keeping the code to resume afterwards). This Composable never navigates on its own.
  *
- * [key] = `"JoinGroup:$inviteCode"` (ver `RateioApp` em `MainActivity`) — sem ela, abrir um
- * segundo link de convite reaproveitaria o `ViewModel` do primeiro.
+ * [key] = `"JoinGroup:$inviteCode"` (see `RateioApp` in `MainActivity`) — without it, opening a
+ * second invite link would reuse the first one's `ViewModel`.
  */
 @Composable
 fun JoinGroupRoute(
@@ -85,11 +85,11 @@ fun JoinGroupRoute(
 }
 
 /**
- * Composable fina: escolhe o conteúdo a partir do [uiState]. [JoinGroupUiState.NeedsLogin] e
- * [JoinGroupUiState.CheckingSession] renderizam só um carregando — [JoinGroupRoute] já navega pra
- * fora assim que [JoinGroupUiState.NeedsLogin] aparece, então esses dois estados só aparecem por
- * um instante (mesmo comportamento tolerado em [com.rateio.app.ui.auth.AuthViewModel] antes da
- * primeira emissão de sessão).
+ * Thin composable: picks the content based on [uiState]. [JoinGroupUiState.NeedsLogin] and
+ * [JoinGroupUiState.CheckingSession] just render a loading indicator — [JoinGroupRoute] already
+ * navigates away as soon as [JoinGroupUiState.NeedsLogin] shows up, so these two states only ever
+ * appear for an instant (same behavior tolerated in [com.rateio.app.ui.auth.AuthViewModel] before
+ * the first session emission).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +115,7 @@ fun JoinGroupScreen(
         containerColor = colors.paper,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Entrar no grupo", fontWeight = FontWeight.Bold) },
+                title = { Text(text = "Join group", fontWeight = FontWeight.Bold) },
                 actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = colors.paper,
@@ -126,14 +126,14 @@ fun JoinGroupScreen(
         },
         bottomBar = {
             RateioBottomBar(
-                selectedTab = RateioBottomTab.GRUPOS,
+                selectedTab = RateioBottomTab.GROUPS,
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
                     when (tab) {
-                        RateioBottomTab.GRUPOS -> onGroupsClick()
-                        RateioBottomTab.AVISOS -> onNotificationsClick()
-                        RateioBottomTab.PERFIL -> onProfileClick()
+                        RateioBottomTab.GROUPS -> onGroupsClick()
+                        RateioBottomTab.NOTIFICATIONS -> onNotificationsClick()
+                        RateioBottomTab.PROFILE -> onProfileClick()
                     }
                 },
             )
@@ -145,8 +145,8 @@ fun JoinGroupScreen(
                 is JoinGroupUiState.Confirming -> ConfirmContent(onConfirmClick = onConfirmClick, onCancelClick = onCancelClick)
                 JoinGroupUiState.Joining -> LoadingContent()
                 is JoinGroupUiState.Success -> ResultContent(
-                    message = "Você entrou no grupo. Sincronize novamente o app pra ver os detalhes " +
-                        "completos assim que essa parte do backend existir.",
+                    message = "You joined the group. Sync the app again to see the full details " +
+                        "once that part of the backend exists.",
                     onDoneClick = onDoneClick,
                 )
                 is JoinGroupUiState.Error -> ErrorContent(
@@ -166,9 +166,9 @@ private fun LoadingContent(modifier: Modifier = Modifier) {
 }
 
 /**
- * "Você foi convidado a entrar em um grupo" — texto genérico de propósito: T21 não tem endpoint
- * de preview do grupo pelo código, então não há nome pra mostrar aqui (ver
- * `T22-app-entrar-via-link.md`, "não invente").
+ * "You've been invited to join a group" — deliberately generic text: T21 has no endpoint to
+ * preview the group by its code, so there's no name to show here (see
+ * `T22-app-entrar-via-link.md`, "don't make one up").
  */
 @Composable
 private fun ConfirmContent(onConfirmClick: () -> Unit, onCancelClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -184,7 +184,7 @@ private fun ConfirmContent(onConfirmClick: () -> Unit, onCancelClick: () -> Unit
         ) {
             Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Você foi convidado a entrar em um grupo",
+                    text = "You've been invited to join a group",
                     color = colors.ink,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp,
@@ -193,10 +193,10 @@ private fun ConfirmContent(onConfirmClick: () -> Unit, onCancelClick: () -> Unit
         }
         Column(Modifier.padding(top = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Button(onClick = onConfirmClick, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Entrar no grupo")
+                Text(text = "Join group")
             }
             TextButton(onClick = onCancelClick, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Cancelar", color = colors.inkSoft)
+                Text(text = "Cancel", color = colors.inkSoft)
             }
         }
     }
@@ -239,10 +239,10 @@ private fun ErrorContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Button(onClick = onRetryClick, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Tentar de novo")
+                Text(text = "Try again")
             }
             TextButton(onClick = onCancelClick, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Cancelar", color = colors.inkSoft)
+                Text(text = "Cancel", color = colors.inkSoft)
             }
         }
     }

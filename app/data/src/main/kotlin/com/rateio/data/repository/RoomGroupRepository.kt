@@ -8,7 +8,7 @@ import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/** Implementação de [GroupRepository] sobre [GroupDao] (Room). */
+/** Implementation of [GroupRepository] on top of [GroupDao] (Room). */
 class RoomGroupRepository(private val groupDao: GroupDao) : GroupRepository {
 
     override fun getGroupsFlow(): Flow<List<Group>> =

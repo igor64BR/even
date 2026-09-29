@@ -7,64 +7,63 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Espelha `GET /groups/{id}/events?desde=` (T39.1 — fallback de pull, RF35/RF36; constitution.md
- * princípio 3: sem push de terceiros, essa é a forma real de recuperar o que a conexão em tempo
- * real perdeu). T39 rodou em paralelo com T40/T41; este cliente foi escrito contra o contrato
- * documentado na task dele antes do endpoint existir de verdade, e depois conferido linha a linha
- * contra `GruposController.ObterEventos`/`ObterEventosDeGrupoUseCase` (T39.1, já mergeado em
- * `master`, commit "feat(api): endpoint de fallback de pull de eventos (T39.1)") — sem precisar de
- * ajuste: o backend devolve `IReadOnlyList<object>.Cast<object>()` a partir de
- * `EventoDespesaCriada`/`EventoDividaQuitada` concretos (não a interface `IEventoDeGrupo`,
- * justamente pra `System.Text.Json` serializar os campos de cada tipo, não só os da interface) —
- * cada item da lista já sai com exatamente os campos do respectivo evento (`tipo` inclusive, o
- * `TipoEventoDeGrupo` computado da interface).
+ * Mirrors `GET /groups/{id}/events?since=` (T39.1 — pull fallback, RF35/RF36; constitution.md
+ * principle 3: no third-party push, this is the real way to recover what the realtime connection
+ * missed). T39 ran in parallel with T40/T41; this client was written against the contract
+ * documented in its task before the endpoint actually existed, then checked line by line against
+ * `GroupsController.GetEvents`/`GetGroupEventsUseCase` (T39.1, already merged into `master`,
+ * commit "feat(api): pull fallback endpoint for events (T39.1)") — no adjustment needed: the
+ * backend returns `IReadOnlyList<object>.Cast<object>()` built from concrete
+ * `ExpenseCreatedEvent`/`DebtSettledEvent` instances (not the `IGroupEvent` interface, precisely so
+ * `System.Text.Json` serializes each type's own fields, not just the interface's) — each list item
+ * already comes out with exactly the fields of its respective event (including `type`, the
+ * computed `GroupEventType` from the interface).
  *
- * [GrupoEventoDto] modela essa lista heterogênea como um DTO único "largo" (todos os campos das
- * duas variantes concretas, `null` pro que não se aplica a cada item), discriminado por
- * [GrupoEventoDto.tipo] — kotlinx.serialization com campos default cobre um item que só tem o
- * subconjunto de campos do seu tipo sem precisar de um `sealed`/polimorfismo à parte no client.
- * `tipo` serializa como `Int` (mesma convenção de enum sem `JsonStringEnumConverter` já documentada
- * em `RemoteGroupSyncRepository`).
+ * [GroupEventDto] models this heterogeneous list as a single "wide" DTO (all fields from both
+ * concrete variants, `null` for whatever doesn't apply to a given item), discriminated by
+ * [GroupEventDto.type] — kotlinx.serialization with default field values covers an item that only
+ * carries the subset of fields for its own type, without needing a separate `sealed`/polymorphism
+ * setup in the client. `type` serializes as `Int` (same enum convention already documented in
+ * `RemoteGroupSyncRepository`, since there's no `JsonStringEnumConverter`).
  *
- * **Lacuna real, confirmada no código do backend** (não mais suposição): nem `EventoDespesaCriada`
- * nem `EventoDividaQuitada` carregam timestamp — `ObterEventosDeGrupoUseCase` usa `CriadoEm` só
- * pra ordenar/filtrar no servidor e descarta o campo antes de montar o evento de resposta
- * (`.Select(item => item.Evento)`). `com.rateio.data.remote.realtime.MissedGroupEventsSynchronizer`
- * usa o horário local do aparelho no momento em que processa cada evento como
- * `GroupNotification.occurredAt`, tanto pra este endpoint quanto pros eventos em tempo real (mesma
- * limitação nos dois casos: nenhum envelope carrega o instante em que o evento realmente ocorreu
- * no servidor).
+ * **Real gap, confirmed in the backend code** (no longer just a guess): neither
+ * `ExpenseCreatedEvent` nor `DebtSettledEvent` carries a timestamp — `GetGroupEventsUseCase` uses
+ * `CreatedAt` only to sort/filter server-side and discards the field before building the response
+ * event (`.Select(item => item.Event)`). `com.rateio.data.remote.realtime.MissedGroupEventsSynchronizer`
+ * uses the device's local time at the moment it processes each event as
+ * `GroupNotification.occurredAt`, both for this endpoint and for realtime events (same limitation
+ * in both cases: no envelope carries the instant the event actually occurred on the server).
  *
- * `desde` (`[FromQuery] DateTimeOffset desde`, sem valor default no backend) é sempre obrigatório
- * — por isso [getEvents] recebe `since: String` não-nulo; `MissedGroupEventsSynchronizer` manda
- * `Instant.EPOCH` quando ainda não há nenhuma notificação local conhecida, nunca omite o parâmetro.
+ * `since` (`[FromQuery] DateTimeOffset since`, no default value on the backend) is always required
+ * — that's why [getEvents] takes `since: String` as non-null; `MissedGroupEventsSynchronizer` sends
+ * `Instant.EPOCH` when there's no local notification known yet, never omitting the parameter.
  */
 interface GroupEventsApi {
     @GET("groups/{id}/events")
     suspend fun getEvents(
         @Header("Authorization") bearerToken: String,
         @Path("id") groupId: String,
-        @Query("desde") since: String,
-    ): List<GrupoEventoDto>
+        @Query("since") since: String,
+    ): List<GroupEventDto>
 }
 
-/** Ver [GroupEventsApi] — DTO único cobrindo `EventoDespesaCriada`/`EventoDividaQuitada`, discriminado por [tipo]. */
+/** See [GroupEventsApi] — single DTO covering `ExpenseCreatedEvent`/`DebtSettledEvent`, discriminated by [type]. */
 @Serializable
-data class GrupoEventoDto(
-    val tipo: Int,
-    val grupoId: String,
-    val despesaId: String? = null,
-    val quitacaoId: String? = null,
-    val descricao: String? = null,
-    val valorTotalCentavos: Long? = null,
-    val pagadorId: String? = null,
-    val deParticipanteId: String? = null,
-    val paraParticipanteId: String? = null,
-    val valorCentavos: Long? = null,
+data class GroupEventDto(
+    val type: Int,
+    val groupId: String,
+    val expenseId: String? = null,
+    val settlementId: String? = null,
+    val description: String? = null,
+    val totalAmountCents: Long? = null,
+    val payerId: String? = null,
+    val fromParticipantId: String? = null,
+    val toParticipantId: String? = null,
+    val amountCents: Long? = null,
 )
 
-/** Espelha `TipoEventoDeGrupo.DespesaCriada` (valor ordinal 0) do backend. */
-const val TIPO_EVENTO_DESPESA_CRIADA = 0
+/** Mirrors `GroupEventType.ExpenseCreated` (ordinal value 0) from the backend. */
+const val EVENT_TYPE_EXPENSE_CREATED = 0
 
-/** Espelha `TipoEventoDeGrupo.DividaQuitada` (valor ordinal 1) do backend. */
-const val TIPO_EVENTO_DIVIDA_QUITADA = 1
+/** Mirrors `GroupEventType.DebtSettled` (ordinal value 1) from the backend. */
+const val EVENT_TYPE_DEBT_SETTLED = 1

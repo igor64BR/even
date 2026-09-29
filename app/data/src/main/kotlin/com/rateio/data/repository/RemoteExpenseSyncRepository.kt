@@ -9,12 +9,12 @@ import java.io.IOException
 import retrofit2.HttpException
 
 /**
- * Implementação de [RemoteExpenseRepository] sobre [GroupsApi] (`PUT`/`DELETE
- * /groups/{id}/expenses/{expenseId}`, T28/T29) + [TokenStorage] (T12.2, leitura do access token) —
- * mesmo padrão de [RemoteGroupSyncRepository] (T19.1): nenhum tipo de rede vaza pra `:domain`,
- * toda falha de sessão/rede/HTTP vira [GroupSyncException] com mensagem pronta pra tela.
- * [Expense.toSyncDto] (`ExpenseSyncMapper.kt`) é a mesma tradução que [RemoteGroupSyncRepository]
- * usa no bulk de `POST /groups/sync`.
+ * Implementation of [RemoteExpenseRepository] on top of [GroupsApi] (`PUT`/`DELETE
+ * /groups/{id}/expenses/{expenseId}`, T28/T29) + [TokenStorage] (T12.2, reading the access token) —
+ * same pattern as [RemoteGroupSyncRepository] (T19.1): no network type leaks into `:domain`, every
+ * session/network/HTTP failure becomes a [GroupSyncException] with a message ready for the screen.
+ * [Expense.toSyncDto] (`ExpenseSyncMapper.kt`) is the same translation [RemoteGroupSyncRepository]
+ * uses in the bulk `POST /groups/sync`.
  */
 class RemoteExpenseSyncRepository(
     private val groupsApi: GroupsApi,
@@ -22,7 +22,7 @@ class RemoteExpenseSyncRepository(
 ) : RemoteExpenseRepository {
 
     override suspend fun updateExpense(remoteGroupId: String, expense: Expense) {
-        val accessToken = requireAccessToken(acao = "editar")
+        val accessToken = requireAccessToken(action = "edit")
 
         try {
             groupsApi.updateExpense(
@@ -32,25 +32,25 @@ class RemoteExpenseSyncRepository(
                 request = expense.toSyncDto(),
             )
         } catch (error: HttpException) {
-            throw GroupSyncException("O servidor do Rateio recusou a edição da despesa.", error)
+            throw GroupSyncException("The Rateio server rejected the expense edit.", error)
         } catch (error: IOException) {
-            throw GroupSyncException("Sem conexão com o servidor do Rateio.", error)
+            throw GroupSyncException("No connection to the Rateio server.", error)
         }
     }
 
     override suspend fun deleteExpense(remoteGroupId: String, expenseId: String) {
-        val accessToken = requireAccessToken(acao = "excluir")
+        val accessToken = requireAccessToken(action = "delete")
 
         try {
             groupsApi.deleteExpense(bearerToken = "Bearer $accessToken", id = remoteGroupId, expenseId = expenseId)
         } catch (error: HttpException) {
-            throw GroupSyncException("O servidor do Rateio recusou a exclusão da despesa.", error)
+            throw GroupSyncException("The Rateio server rejected the expense deletion.", error)
         } catch (error: IOException) {
-            throw GroupSyncException("Sem conexão com o servidor do Rateio.", error)
+            throw GroupSyncException("No connection to the Rateio server.", error)
         }
     }
 
-    private fun requireAccessToken(acao: String): String =
+    private fun requireAccessToken(action: String): String =
         tokenStorage.read()?.accessToken
-            ?: throw GroupSyncException("É preciso estar autenticado para $acao uma despesa sincronizada.")
+            ?: throw GroupSyncException("You need to be signed in to $action a synced expense.")
 }

@@ -6,9 +6,8 @@ import java.text.NumberFormat
 import java.util.Locale
 
 /**
- * "R$ 45,00" — mesma formatação de `fmtMoney()` em `prototype/app.js` (pt-BR, duas casas
- * decimais), a partir do valor em centavos (convenção de dinheiro do domínio, ver
- * `Expense.amountCents`).
+ * "R$ 45,00" — the same formatting as `fmtMoney()` in `prototype/app.js` (pt-BR, two decimal
+ * places), from the amount in cents (the domain's money convention, see `Expense.amountCents`).
  */
 fun formatCentsAsBrl(amountCents: Long): String {
     val reais = amountCents / 100.0
@@ -17,16 +16,16 @@ fun formatCentsAsBrl(amountCents: Long): String {
 }
 
 /**
- * Parseia o texto digitado no campo "Valor total" (`#valor` do protótipo) pra centavos. Aceita
- * vírgula ou ponto como separador decimal (o teclado numérico do Android não força um só). `null`
- * pra entrada vazia ou inválida — quem chama trata como "sem valor ainda" (T24.2/T24.4), não como
- * zero.
+ * Parses the text typed into the "Total amount" field (the prototype's `#valor`) into cents.
+ * Accepts comma or dot as the decimal separator (Android's numeric keyboard doesn't force just
+ * one). `null` for an empty or invalid input — the caller treats that as "no amount yet"
+ * (T24.2/T24.4), not as zero.
  *
- * `BigDecimal` aqui é a borda de entrada do usuário, não o motor — exatamente a exceção que
- * `algorithm-spec.md` (seção "Dinheiro: representação e arredondamento") documenta: parsing de
- * entrada e formatação de saída podem usar `BigDecimal`/`double`, só o algoritmo em si não pode.
- * Resultado sempre em centavos (`Long`), a única representação monetária que atravessa a borda
- * pra dentro do domínio.
+ * `BigDecimal` here is the user input boundary, not the engine — exactly the exception
+ * `algorithm-spec.md` (the "Money: representation and rounding" section) documents: input parsing
+ * and output formatting can use `BigDecimal`/`double`, only the algorithm itself can't. The result
+ * is always in cents (`Long`), the only monetary representation that crosses the boundary into the
+ * domain.
  */
 fun parseAmountInputToCents(input: String): Long? {
     val normalized = input.trim().replace(',', '.')
@@ -39,11 +38,11 @@ fun parseAmountInputToCents(input: String): Long? {
 }
 
 /**
- * Inverso de [parseAmountInputToCents]: centavos -> texto editável ("1000" -> "10,00"), sem
- * prefixo de moeda (diferente de [formatCentsAsBrl], que é só apresentação — os campos de valor
- * já têm o próprio prefixo "R$", ver [com.rateio.app.ui.createexpense.AmountField]). Usado só pra
- * pré-preencher campos de valor em modo de edição (T29): nasce simétrico ao parse de propósito,
- * pra um round-trip exato (carregar -> editar sem tocar -> salvar preserva os mesmos centavos).
+ * The inverse of [parseAmountInputToCents]: cents -> editable text ("1000" -> "10,00"), with no
+ * currency prefix (unlike [formatCentsAsBrl], which is presentation-only — the amount fields
+ * already have their own "R$" prefix, see [com.rateio.app.ui.createexpense.AmountField]). Used
+ * only to pre-fill amount fields in edit mode (T29): built symmetric to the parser on purpose, for
+ * an exact round-trip (load -> edit without touching -> save preserves the same cents).
  */
 fun formatCentsAsAmountInput(amountCents: Long): String =
     BigDecimal(amountCents).movePointLeft(2).setScale(2, RoundingMode.HALF_UP).toPlainString().replace('.', ',')

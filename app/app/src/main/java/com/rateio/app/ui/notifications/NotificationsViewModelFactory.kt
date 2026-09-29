@@ -7,8 +7,9 @@ import com.rateio.domain.repository.AuthRepository
 import com.rateio.domain.repository.NotificationRepository
 
 /**
- * Sem framework de DI no projeto ainda — fábrica manual que injeta os repositórios de
- * [com.rateio.app.di.AppContainer] no [NotificationsViewModel]. Mesmo padrão das demais telas.
+ * No DI framework in the project yet — manual factory that injects the repositories from
+ * [com.rateio.app.di.AppContainer] into [NotificationsViewModel]. Same pattern as the other
+ * screens.
  */
 class NotificationsViewModelFactory(
     private val notificationRepository: NotificationRepository,
@@ -18,7 +19,7 @@ class NotificationsViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         require(modelClass.isAssignableFrom(NotificationsViewModel::class.java)) {
-            "NotificationsViewModelFactory só sabe criar NotificationsViewModel, pediram $modelClass"
+            "NotificationsViewModelFactory only knows how to create NotificationsViewModel, got $modelClass"
         }
         return NotificationsViewModel(
             notificationRepository = notificationRepository,

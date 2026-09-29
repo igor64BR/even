@@ -9,13 +9,13 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 /**
- * Fábrica do client HTTP do app. T12 criou isto só com o suficiente pra montar [AuthApi]; T19
- * acrescenta [GroupsApi] (`POST /groups/sync`) reaproveitando o mesmo `Retrofit.Builder`. T40.2
- * acrescenta [GroupEventsApi] (`GET /groups/{id}/events`, fallback de pull T39). Ainda sem
- * interceptor de `Authorization`/refresh automático: cada endpoint resolve o próprio token
- * explicitamente (login não precisa de nenhum; os demais passam o `Authorization` por parâmetro,
- * ver [GroupsApi.sync]) — um interceptor genérico fica pra quando houver refresh automático de
- * token a justificar essa infraestrutura, não antes.
+ * Factory for the app's HTTP client. T12 created this with just enough to build [AuthApi]; T19
+ * adds [GroupsApi] (`POST /groups/sync`), reusing the same `Retrofit.Builder`. T40.2 adds
+ * [GroupEventsApi] (`GET /groups/{id}/events`, the T39 pull fallback). Still no
+ * `Authorization`/automatic-refresh interceptor: each endpoint resolves its own token explicitly
+ * (login needs none; the others pass `Authorization` as a parameter, see [GroupsApi.sync]) — a
+ * generic interceptor is left for when automatic token refresh justifies that infrastructure, not
+ * before.
  */
 object RateioHttpClientFactory {
 

@@ -1,10 +1,10 @@
 package com.rateio.domain
 
-// Módulo :domain — Kotlin puro, sem dependência de Android.
+// :domain module — pure Kotlin, no Android dependency.
 //
-// Casa do motor de simplificação de dívidas (grafo de saldos -> algoritmo de minimização de
-// transações, RF25-RF28) e das interfaces de repositório que :data implementa (Dependency
-// Inversion: :domain declara o contrato, :data conhece Room/rede).
+// Home of the debt-simplification engine (balance graph -> transaction-minimization algorithm,
+// RF25-RF28) and the repository interfaces :data implements (Dependency Inversion: :domain
+// declares the contract, :data knows about Room/network).
 //
-// Ainda vazio nesta task (T6 — só estrutura do módulo). Lógica de negócio entra em tasks
-// futuras (T33 e correlatas).
+// Still empty in this task (T6 — module structure only). Business logic arrives in future
+// tasks (T33 and related).

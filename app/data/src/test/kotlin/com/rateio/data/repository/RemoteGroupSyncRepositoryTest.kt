@@ -1,10 +1,10 @@
 package com.rateio.data.repository
 
 import com.rateio.data.local.auth.TokenStorage
-import com.rateio.data.remote.groups.DespesaSincronizadaDto
 import com.rateio.data.remote.groups.GroupsApi
-import com.rateio.data.remote.groups.SincronizarGrupoRequestDto
-import com.rateio.data.remote.groups.SincronizarGrupoResponseDto
+import com.rateio.data.remote.groups.SyncGroupRequestDto
+import com.rateio.data.remote.groups.SyncGroupResponseDto
+import com.rateio.data.remote.groups.SyncedExpenseDto
 import com.rateio.domain.model.AuthSession
 import com.rateio.domain.model.AuthenticatedUser
 import com.rateio.domain.model.Expense
@@ -26,28 +26,28 @@ import retrofit2.HttpException
 import retrofit2.Response
 
 /**
- * Cobre T19.1: [RemoteGroupSyncRepository] espelha `POST /groups/sync` (T18) com o
- * `Authorization: Bearer` lido de [TokenStorage] e traduz falha de rede/HTTP (ou sessão ausente)
- * para [GroupSyncException] — nunca deixa `HttpException`/`IOException` vazar. Mesmo padrão de
- * `RemoteAuthRepositoryTest`: dublês simples de [GroupsApi]/[TokenStorage] em vez de framework de
- * mock (nenhum está nas dependências de teste de `:data`).
+ * Covers T19.1: [RemoteGroupSyncRepository] mirrors `POST /groups/sync` (T18) with the
+ * `Authorization: Bearer` read from [TokenStorage] and translates network/HTTP failure (or a
+ * missing session) into [GroupSyncException] — never lets `HttpException`/`IOException` leak out.
+ * Same pattern as `RemoteAuthRepositoryTest`: simple test doubles for [GroupsApi]/[TokenStorage]
+ * instead of a mocking framework (none is in `:data`'s test dependencies).
  */
 class RemoteGroupSyncRepositoryTest {
 
     private val group = Group(
         id = "g1",
-        name = "Churras de sábado",
+        name = "Saturday barbecue",
         createdAt = Instant.parse("2026-01-10T12:00:00Z"),
     )
     private val participants = listOf(
-        Participant(id = "p1", groupId = "g1", name = "Você", isYou = true),
+        Participant(id = "p1", groupId = "g1", name = "You", isYou = true),
         Participant(id = "p2", groupId = "g1", name = "Marina"),
     )
     private val expenses = listOf(
         Expense(
             id = "e1",
             groupId = "g1",
-            description = "Churrasco",
+            description = "Barbecue",
             amountCents = 10_000,
             paidByParticipantId = "p1",
             createdAt = Instant.parse("2026-01-11T12:00:00Z"),
@@ -58,126 +58,126 @@ class RemoteGroupSyncRepositoryTest {
         ),
     )
     private val session = AuthSession(
-        accessToken = "access-token-valido",
+        accessToken = "valid-access-token",
         refreshToken = "refresh-token",
         user = AuthenticatedUser(name = "Igor Baiocco", email = "igor@example.com"),
     )
 
     @Test
-    fun `syncGroup envia Authorization Bearer com o access token da sessao`() = runTest {
+    fun `syncGroup sends Authorization Bearer with the session access token`() = runTest {
         val groupsApi = FakeGroupsApi()
         val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
 
         repository.syncGroup(group, participants, expenses)
 
-        assertEquals("Bearer access-token-valido", groupsApi.lastBearerToken)
+        assertEquals("Bearer valid-access-token", groupsApi.lastBearerToken)
     }
 
     @Test
-    fun `syncGroup mapeia grupo, participantes e despesas pro payload do backend`() = runTest {
+    fun `syncGroup maps group, participants and expenses to the backend payload`() = runTest {
         val groupsApi = FakeGroupsApi()
         val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
 
         val remoteId = repository.syncGroup(group, participants, expenses)
 
-        assertEquals("remote-grupo-id", remoteId)
+        assertEquals("remote-group-id", remoteId)
         val request = requireNotNull(groupsApi.lastRequest)
-        assertEquals("Churras de sábado", request.nome)
-        assertEquals(listOf("p1", "p2"), request.participantes.map { it.id })
-        assertTrue("todo participante local sincroniza como convidado", request.participantes.all { it.ehConvidado })
-        assertEquals(1, request.despesas.size)
-        val despesa = request.despesas.single()
-        assertEquals("2026-01-11", despesa.data)
-        assertEquals(2, despesa.participacoes.size)
+        assertEquals("Saturday barbecue", request.name)
+        assertEquals(listOf("p1", "p2"), request.participants.map { it.id })
+        assertTrue("every local participant syncs as a guest", request.participants.all { it.isGuest })
+        assertEquals(1, request.expenses.size)
+        val expense = request.expenses.single()
+        assertEquals("2026-01-11", expense.date)
+        assertEquals(2, expense.splits.size)
     }
 
     @Test
-    fun `syncGroup sem sessao lanca GroupSyncException sem chamar o backend`() = runTest {
+    fun `syncGroup without a session throws GroupSyncException without calling the backend`() = runTest {
         val groupsApi = FakeGroupsApi()
         val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(initialSession = null))
 
         try {
             repository.syncGroup(group, participants, expenses)
-            fail("esperava GroupSyncException")
+            fail("expected GroupSyncException")
         } catch (error: GroupSyncException) {
-            assertNull("nao deve nem tentar chamar o backend sem sessao", groupsApi.lastRequest)
+            assertNull("should not even try to call the backend without a session", groupsApi.lastRequest)
         }
     }
 
     @Test
-    fun `syncGroup traduz falha de rede para GroupSyncException`() = runTest {
-        val groupsApi = FakeGroupsApi(failure = { IOException("sem conexão com o servidor do Rateio") })
+    fun `syncGroup translates a network failure into GroupSyncException`() = runTest {
+        val groupsApi = FakeGroupsApi(failure = { IOException("no connection to the Rateio server") })
         val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
 
         try {
             repository.syncGroup(group, participants, expenses)
-            fail("esperava GroupSyncException")
+            fail("expected GroupSyncException")
         } catch (error: GroupSyncException) {
             assertTrue(error.cause is IOException)
         }
     }
 
     @Test
-    fun `syncGroup traduz erro HTTP para GroupSyncException`() = runTest {
-        val corpoDeErro = "".toResponseBody("application/json".toMediaType())
-        val groupsApi = FakeGroupsApi(failure = { HttpException(Response.error<Unit>(400, corpoDeErro)) })
+    fun `syncGroup translates an HTTP error into GroupSyncException`() = runTest {
+        val errorBody = "".toResponseBody("application/json".toMediaType())
+        val groupsApi = FakeGroupsApi(failure = { HttpException(Response.error<Unit>(400, errorBody)) })
         val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
 
         try {
             repository.syncGroup(group, participants, expenses)
-            fail("esperava GroupSyncException")
+            fail("expected GroupSyncException")
         } catch (error: GroupSyncException) {
             assertTrue(error.cause is HttpException)
         }
     }
 
     @Test
-    fun `joinByCode envia Authorization Bearer e o codigo do convite`() = runTest {
+    fun `joinByCode sends Authorization Bearer and the invite code`() = runTest {
         val groupsApi = FakeGroupsApi()
         val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
 
         val remoteId = repository.joinByCode("ABC123")
 
-        assertEquals("Bearer access-token-valido", groupsApi.lastBearerToken)
-        assertEquals("ABC123", groupsApi.lastCodigo)
-        assertEquals("remote-grupo-id", remoteId)
+        assertEquals("Bearer valid-access-token", groupsApi.lastBearerToken)
+        assertEquals("ABC123", groupsApi.lastCode)
+        assertEquals("remote-group-id", remoteId)
     }
 
     @Test
-    fun `joinByCode sem sessao lanca GroupSyncException sem chamar o backend`() = runTest {
+    fun `joinByCode without a session throws GroupSyncException without calling the backend`() = runTest {
         val groupsApi = FakeGroupsApi()
         val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(initialSession = null))
 
         try {
             repository.joinByCode("ABC123")
-            fail("esperava GroupSyncException")
+            fail("expected GroupSyncException")
         } catch (error: GroupSyncException) {
-            assertNull("nao deve nem tentar chamar o backend sem sessao", groupsApi.lastCodigo)
+            assertNull("should not even try to call the backend without a session", groupsApi.lastCode)
         }
     }
 
     @Test
-    fun `joinByCode traduz falha de rede para GroupSyncException`() = runTest {
-        val groupsApi = FakeGroupsApi(failure = { IOException("sem conexão com o servidor do Rateio") })
+    fun `joinByCode translates a network failure into GroupSyncException`() = runTest {
+        val groupsApi = FakeGroupsApi(failure = { IOException("no connection to the Rateio server") })
         val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
 
         try {
             repository.joinByCode("ABC123")
-            fail("esperava GroupSyncException")
+            fail("expected GroupSyncException")
         } catch (error: GroupSyncException) {
             assertTrue(error.cause is IOException)
         }
     }
 
     @Test
-    fun `joinByCode traduz codigo invalido (erro HTTP) para GroupSyncException`() = runTest {
-        val corpoDeErro = "".toResponseBody("application/json".toMediaType())
-        val groupsApi = FakeGroupsApi(failure = { HttpException(Response.error<Unit>(400, corpoDeErro)) })
+    fun `joinByCode translates an invalid code (HTTP error) into GroupSyncException`() = runTest {
+        val errorBody = "".toResponseBody("application/json".toMediaType())
+        val groupsApi = FakeGroupsApi(failure = { HttpException(Response.error<Unit>(400, errorBody)) })
         val repository = RemoteGroupSyncRepository(groupsApi, FakeTokenStorage(session))
 
         try {
-            repository.joinByCode("CODIGO-INVALIDO")
-            fail("esperava GroupSyncException")
+            repository.joinByCode("INVALID-CODE")
+            fail("expected GroupSyncException")
         } catch (error: GroupSyncException) {
             assertTrue(error.cause is HttpException)
         }
@@ -186,39 +186,39 @@ class RemoteGroupSyncRepositoryTest {
     private class FakeGroupsApi(private val failure: (() -> Throwable)? = null) : GroupsApi {
         var lastBearerToken: String? = null
             private set
-        var lastRequest: SincronizarGrupoRequestDto? = null
+        var lastRequest: SyncGroupRequestDto? = null
             private set
-        var lastCodigo: String? = null
+        var lastCode: String? = null
             private set
 
         override suspend fun sync(
             bearerToken: String,
-            request: SincronizarGrupoRequestDto,
-        ): SincronizarGrupoResponseDto {
+            request: SyncGroupRequestDto,
+        ): SyncGroupResponseDto {
             lastBearerToken = bearerToken
             lastRequest = request
             failure?.invoke()?.let { throw it }
-            return SincronizarGrupoResponseDto(grupoId = "remote-grupo-id")
+            return SyncGroupResponseDto(groupId = "remote-group-id")
         }
 
-        override suspend fun join(bearerToken: String, codigo: String): SincronizarGrupoResponseDto {
+        override suspend fun join(bearerToken: String, code: String): SyncGroupResponseDto {
             lastBearerToken = bearerToken
-            lastCodigo = codigo
+            lastCode = code
             failure?.invoke()?.let { throw it }
-            return SincronizarGrupoResponseDto(grupoId = "remote-grupo-id")
+            return SyncGroupResponseDto(groupId = "remote-group-id")
         }
 
-        // Não usados por RemoteGroupSyncRepositoryTest (T29 os cobre em
-        // RemoteExpenseSyncRepositoryTest) — só aqui pra satisfazer a interface GroupsApi.
+        // Not used by RemoteGroupSyncRepositoryTest (T29 covers these in
+        // RemoteExpenseSyncRepositoryTest) — only here to satisfy the GroupsApi interface.
         override suspend fun updateExpense(
             bearerToken: String,
             id: String,
             expenseId: String,
-            request: DespesaSincronizadaDto,
-        ): Unit = throw UnsupportedOperationException("não usado neste teste")
+            request: SyncedExpenseDto,
+        ): Unit = throw UnsupportedOperationException("not used in this test")
 
         override suspend fun deleteExpense(bearerToken: String, id: String, expenseId: String): Unit =
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
     }
 
     private class FakeTokenStorage(initialSession: AuthSession?) : TokenStorage {

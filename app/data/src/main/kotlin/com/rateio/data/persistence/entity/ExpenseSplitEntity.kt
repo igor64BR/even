@@ -5,16 +5,16 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 
 /**
- * Mapeamento de persistência de uma parte de despesa (`ExpenseSplit` em `:domain`). Uma linha por
- * participante por despesa — [type] guarda qual subtipo de `ExpenseSplit` a linha representa;
- * [weight] só é preenchido para [SplitTypeEntity.WEIGHT] e [fixedAmountCents] só para
- * [SplitTypeEntity.FIXED_AMOUNT] (as demais colunas ficam `null`). Room não modela hierarquia
- * polimórfica de `sealed class` diretamente numa tabela — achatar pra um schema com colunas
- * opcionais por subtipo, reconstruindo o subtipo certo no mapper (`toDomain()` em
- * `RoomExpenseRepository`), é o approach padrão pra isso.
+ * Persistence mapping for an expense split (`ExpenseSplit` in `:domain`). One row per participant
+ * per expense — [type] holds which `ExpenseSplit` subtype the row represents; [weight] is only
+ * populated for [SplitTypeEntity.WEIGHT] and [fixedAmountCents] only for
+ * [SplitTypeEntity.FIXED_AMOUNT] (the other columns stay `null`). Room doesn't model a `sealed
+ * class`'s polymorphic hierarchy directly in a table — flattening it into a schema with optional
+ * columns per subtype, reconstructing the right subtype in the mapper (`toDomain()` in
+ * `RoomExpenseRepository`), is the standard approach for this.
  *
- * Chave primária composta (`expenseId`, `participantId`): um participante tem no máximo uma
- * participação por despesa.
+ * Composite primary key (`expenseId`, `participantId`): a participant has at most one split per
+ * expense.
  */
 @Entity(
     tableName = "expense_splits",
@@ -43,8 +43,8 @@ data class ExpenseSplitEntity(
 )
 
 /**
- * Espelha o subtipo concreto de `ExpenseSplit` (`:domain`) numa coluna. Room persiste enums pelo
- * nome (`TEXT`) nativamente, sem `TypeConverter` extra.
+ * Mirrors `ExpenseSplit`'s (`:domain`) concrete subtype in a column. Room persists enums by name
+ * (`TEXT`) natively, with no extra `TypeConverter`.
  */
 enum class SplitTypeEntity {
     EQUAL,

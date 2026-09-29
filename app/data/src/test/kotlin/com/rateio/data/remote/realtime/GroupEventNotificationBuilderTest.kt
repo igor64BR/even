@@ -6,11 +6,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Cobre T40/T41: o texto humano montado por [GroupEventNotificationBuilder] bate com
- * `prototype/notificacoes.html` ("Fulano lançou 'Descrição' — R$X — em 'Nome do grupo'."/"Fulano
- * quitou R$X com Beltrano em 'Nome do grupo'."), incluindo a substituição por "Você"/"você" pro
- * participante local, e o id de dedupe ("despesa:"/"quitacao:" + id do servidor). Pura — sem
- * Room/SignalR — [com.rateio.domain.format.MoneyFormatter] é um dublê simples.
+ * Covers T40/T41: the human-readable text built by [GroupEventNotificationBuilder] matches
+ * `prototype/notifications.html` ("Alice logged 'Description' — $X — in 'Group name'."/"Alice
+ * settled $X with Bob in 'Group name'."), including the substitution with "You"/"you" for the
+ * local participant, and the dedupe id ("expense:"/"settlement:" + the server id). Pure — no
+ * Room/SignalR — [com.rateio.domain.format.MoneyFormatter] is a simple test double.
  */
 class GroupEventNotificationBuilderTest {
 
@@ -18,49 +18,49 @@ class GroupEventNotificationBuilderTest {
     private val occurredAt: Instant = Instant.parse("2026-09-10T18:22:00Z")
 
     private val participants = listOf(
-        Participant(id = "p1", groupId = "g1", name = "Você", isYou = true),
+        Participant(id = "p1", groupId = "g1", name = "You", isYou = true),
         Participant(id = "p2", groupId = "g1", name = "Duda"),
     )
 
     @Test
-    fun `despesa criada por outro participante monta texto com nome dele`() {
+    fun `expense created by another participant builds text with their name`() {
         val event = GroupRealtimeEvent.ExpenseCreated(
             expenseId = "e1",
-            description = "Mercado da semana",
+            description = "Weekly groceries",
             amountTotalCents = 15_000,
             payerId = "p2",
         )
 
-        val notification = builder.build(event, "g1", "Viagem pra praia", participants, occurredAt)
+        val notification = builder.build(event, "g1", "Beach trip", participants, occurredAt)
 
-        assertEquals("despesa:e1", notification.id)
+        assertEquals("expense:e1", notification.id)
         assertEquals("g1", notification.groupId)
         assertEquals(
-            "Duda lançou \"Mercado da semana\" — R$ 150,00 — em \"Viagem pra praia\".",
+            "Duda logged \"Weekly groceries\" — R$ 150,00 — in \"Beach trip\".",
             notification.message,
         )
         assertEquals(occurredAt, notification.occurredAt)
     }
 
     @Test
-    fun `despesa criada pelo proprio dono do aparelho usa Você maiusculo`() {
+    fun `expense created by the device owner uses capitalized You`() {
         val event = GroupRealtimeEvent.ExpenseCreated(
             expenseId = "e2",
-            description = "Gasolina",
+            description = "Gas",
             amountTotalCents = 5_000,
             payerId = "p1",
         )
 
-        val notification = builder.build(event, "g1", "Viagem pra praia", participants, occurredAt)
+        val notification = builder.build(event, "g1", "Beach trip", participants, occurredAt)
 
         assertEquals(
-            "Você lançou \"Gasolina\" — R$ 50,00 — em \"Viagem pra praia\".",
+            "You logged \"Gas\" — R$ 50,00 — in \"Beach trip\".",
             notification.message,
         )
     }
 
     @Test
-    fun `divida quitada com voce como recebedor usa voce minusculo`() {
+    fun `debt settled with you as the payee uses lowercase you`() {
         val event = GroupRealtimeEvent.DebtSettled(
             settlementId = "s1",
             fromParticipantId = "p2",
@@ -68,28 +68,28 @@ class GroupEventNotificationBuilderTest {
             amountCents = 10_000,
         )
 
-        val notification = builder.build(event, "g1", "Viagem pra praia", participants, occurredAt)
+        val notification = builder.build(event, "g1", "Beach trip", participants, occurredAt)
 
-        assertEquals("quitacao:s1", notification.id)
+        assertEquals("settlement:s1", notification.id)
         assertEquals(
-            "Duda quitou R$ 100,00 com você em \"Viagem pra praia\".",
+            "Duda settled R$ 100,00 with you in \"Beach trip\".",
             notification.message,
         )
     }
 
     @Test
-    fun `participante desconhecido cai no fallback Alguem sem quebrar`() {
+    fun `unknown participant falls back to Someone without breaking`() {
         val event = GroupRealtimeEvent.ExpenseCreated(
             expenseId = "e3",
-            description = "Sorvete",
+            description = "Ice cream",
             amountTotalCents = 1_000,
-            payerId = "id-que-nao-existe",
+            payerId = "id-that-does-not-exist",
         )
 
-        val notification = builder.build(event, "g1", "Viagem pra praia", participants, occurredAt)
+        val notification = builder.build(event, "g1", "Beach trip", participants, occurredAt)
 
         assertEquals(
-            "Alguém lançou \"Sorvete\" — R$ 10,00 — em \"Viagem pra praia\".",
+            "Someone logged \"Ice cream\" — R$ 10,00 — in \"Beach trip\".",
             notification.message,
         )
     }

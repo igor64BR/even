@@ -21,44 +21,45 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Implementação real de [GroupRealtimeGateway] (T40.1/T40.2) sobre o client Java oficial do
- * SignalR (`com.microsoft.signalr:signalr`). Conecta a [hubUrl] (`/hubs/rateio`, ver
- * `RotaDoHubDeNotificacoes` no backend), autenticado via access token na query string
- * (`withAccessTokenProvider` — mesmo mecanismo que o `OnMessageReceived` do backend lê pra
- * conexões de Hub, já que WebSocket não manda header `Authorization` no handshake; ver KDoc de
- * `RateioHub`), entra no grupo SignalR do grupo remoto (`EntrarNoGrupoAsync`) e escuta
- * `DespesaCriada`/`DividaQuitada` — os nomes exatos que `NotificadorDeEventoDeGrupoSignalR` usa
- * pra mandar `nameof(TipoEventoDeGrupo.DespesaCriada/DividaQuitada)`.
+ * Real implementation of [GroupRealtimeGateway] (T40.1/T40.2) on top of the official Java SignalR
+ * client (`com.microsoft.signalr:signalr`). Connects to [hubUrl] (`/hubs/rateio`, see
+ * `NotificationHubRoute` on the backend), authenticated via an access token in the query string
+ * (`withAccessTokenProvider` — the same mechanism the backend's `OnMessageReceived` reads for Hub
+ * connections, since WebSocket doesn't send an `Authorization` header in the handshake; see the
+ * KDoc of `RateioHub`), joins the remote group's SignalR group (`JoinGroupAsync`) and listens for
+ * `ExpenseCreated`/`DebtSettled` — the exact names `SignalRGroupEventNotifier` uses to send
+ * `nameof(GroupEventType.ExpenseCreated/DebtSettled)`.
  *
- * **Reconexão é manual, não da biblioteca**: ao contrário dos clients JS/.NET do SignalR, o client
- * Java oficial não expõe `withAutomaticReconnect`/`onReconnected` (conferido na API pública de
- * `HubConnectionBuilder`/`HubConnection` — só existe `onClosed`; é uma lacuna conhecida do client
- * Java, não uma omissão deste código). [maintainConnection] implementa o retry manualmente: a cada
- * `onClosed`, espera um backoff (mesma progressão documentada do client JS — 0s, 2s, 10s, 30s,
- * repete 30s daí em diante) e reconecta. Toda conexão bem-sucedida — a primeira e cada reconexão —
- * dispara [MissedGroupEventsSynchronizer.sync] (T40.2), o que também cobre "app foi fechado e
- * reaberto" além de "rede caiu e voltou" (ver KDoc de [MissedGroupEventsSynchronizer]).
+ * **Reconnection is manual, not library-provided**: unlike the SignalR JS/.NET clients, the
+ * official Java client doesn't expose `withAutomaticReconnect`/`onReconnected` (checked against the
+ * public API of `HubConnectionBuilder`/`HubConnection` — only `onClosed` exists; it's a known gap
+ * of the Java client, not an omission in this code). [maintainConnection] implements the retry
+ * manually: on every `onClosed`, it waits for a backoff (same progression documented for the JS
+ * client — 0s, 2s, 10s, 30s, then repeating 30s) and reconnects. Every successful connection — the
+ * first one and every reconnection — triggers [MissedGroupEventsSynchronizer.sync] (T40.2), which
+ * also covers "app was killed and reopened" in addition to "network dropped and came back" (see
+ * the KDoc of [MissedGroupEventsSynchronizer]).
  *
- * **Sem teste de unidade real de conexão de Hub** (limitação documentada na entrega de T40/T41):
- * esta classe é a única peça do fluxo que efetivamente abre um socket, e não há como testá-la sem
- * um Hub de verdade rodando (Robolectric não sobe um servidor ASP.NET, e adicionar um framework de
- * mock de rede pra isso estaria fora do escopo desta task). Toda a lógica de negócio que importa —
- * montar o texto da notificação, decidir o que persistir, buscar eventos perdidos — foi extraída
- * pra [GroupEventNotificationBuilder], [GroupEventRecorder] e [MissedGroupEventsSynchronizer], as
- * três testadas isoladamente com dublês, sem SignalR nenhum. Esta classe foi verificada manualmente
- * (leitura cuidadosa da API pública do client, ver javadocs de `HubConnection`/
- * `HubConnectionBuilder`) e por inspeção do POM publicado do artefato (RxJava3 + Gson — não RxJava2
- * nem Jackson, como uma leitura desatualizada da documentação sugeriria).
+ * **No real unit test for Hub connection** (limitation documented in the T40/T41 delivery): this
+ * class is the only piece of the flow that actually opens a socket, and there's no way to test it
+ * without a real Hub running (Robolectric doesn't spin up an ASP.NET server, and adding a network
+ * mocking framework for this would be out of scope for this task). All the business logic that
+ * matters — building the notification text, deciding what to persist, fetching missed events —
+ * was extracted into [GroupEventNotificationBuilder], [GroupEventRecorder] and
+ * [MissedGroupEventsSynchronizer], all three tested in isolation with test doubles, no SignalR at
+ * all. This class was verified manually (careful reading of the client's public API, see the
+ * javadocs of `HubConnection`/`HubConnectionBuilder`) and by inspecting the artifact's published
+ * POM (RxJava3 + Gson — not RxJava2 or Jackson, as an outdated reading of the docs might suggest).
  *
- * Um único grupo por vez: [connect] sempre encerra uma conexão anterior antes de abrir a nova
- * (nunca duas conexões simultâneas) — consistente com "só conecta quando há um grupo sincronizado
- * sendo visualizado" (T40, não é uma feature de multi-grupo).
+ * A single group at a time: [connect] always closes a previous connection before opening a new one
+ * (never two simultaneous connections) — consistent with "only connects when a synced group is
+ * being viewed" (T40, not a multi-group feature).
  *
- * Constrói [GroupEventNotificationBuilder]/[GroupEventRecorder]/[MissedGroupEventsSynchronizer]
- * internamente a partir das dependências "cruas" (Room/Retrofit/[MoneyFormatter]) em vez de
- * recebê-las prontas: as três são `internal` a este módulo (só usadas por esta classe e testadas
- * direto por `:data`), e [com.rateio.app.di.AppContainer], em `:app`, não deveria conhecer esses
- * detalhes de composição — só o suficiente pra montar o gateway como um todo.
+ * Builds [GroupEventNotificationBuilder]/[GroupEventRecorder]/[MissedGroupEventsSynchronizer]
+ * internally from the "raw" dependencies (Room/Retrofit/[MoneyFormatter]) instead of receiving them
+ * ready-made: the three are `internal` to this module (only used by this class and tested directly
+ * by `:data`), and [com.rateio.app.di.AppContainer], in `:app`, shouldn't need to know these
+ * composition details — just enough to assemble the gateway as a whole.
  */
 class SignalRGroupRealtimeGateway(
     private val hubUrl: String,
@@ -105,10 +106,10 @@ class SignalRGroupRealtimeGateway(
     }
 
     /**
-     * Laço único (sem recursão) que mantém a conexão viva: conecta, aguarda o fechamento
-     * ([CompletableDeferred] completado pelo `onClosed` da conexão), reconecta com backoff. Roda
-     * inteiro em [scope] — cancelar [scope] (via [disconnect]) interrompe o laço no próximo ponto
-     * de suspensão.
+     * Single loop (no recursion) that keeps the connection alive: connects, waits for it to close
+     * ([CompletableDeferred] completed by the connection's `onClosed`), reconnects with backoff.
+     * Runs entirely in [scope] — cancelling [scope] (via [disconnect]) stops the loop at the next
+     * suspension point.
      */
     private suspend fun maintainConnection(scope: CoroutineScope, localGroupId: String, remoteGroupId: String) {
         var attempt = 0
@@ -122,7 +123,7 @@ class SignalRGroupRealtimeGateway(
 
             val connected = runCatching {
                 connection.start().blockingAwait()
-                connection.invoke("EntrarNoGrupoAsync", arrayOf<Any>(remoteGroupId)).blockingAwait()
+                connection.invoke("JoinGroupAsync", arrayOf<Any>(remoteGroupId)).blockingAwait()
             }.isSuccess
 
             if (!connected) {
@@ -147,14 +148,14 @@ class SignalRGroupRealtimeGateway(
             .build()
 
         connection.on(
-            EVENTO_DESPESA_CRIADA,
-            { payload: DespesaCriadaPayload -> recordEvent(scope, localGroupId, payload.toDomainEvent()) },
-            DespesaCriadaPayload::class.java,
+            EVENT_EXPENSE_CREATED,
+            { payload: ExpenseCreatedPayload -> recordEvent(scope, localGroupId, payload.toDomainEvent()) },
+            ExpenseCreatedPayload::class.java,
         )
         connection.on(
-            EVENTO_DIVIDA_QUITADA,
-            { payload: DividaQuitadaPayload -> recordEvent(scope, localGroupId, payload.toDomainEvent()) },
-            DividaQuitadaPayload::class.java,
+            EVENT_DEBT_SETTLED,
+            { payload: DebtSettledPayload -> recordEvent(scope, localGroupId, payload.toDomainEvent()) },
+            DebtSettledPayload::class.java,
         )
         return connection
     }
@@ -167,8 +168,8 @@ class SignalRGroupRealtimeGateway(
         RECONNECT_DELAYS_MILLIS.getOrElse(attempt - 1) { RECONNECT_DELAYS_MILLIS.last() }
 
     private companion object {
-        const val EVENTO_DESPESA_CRIADA = "DespesaCriada"
-        const val EVENTO_DIVIDA_QUITADA = "DividaQuitada"
+        const val EVENT_EXPENSE_CREATED = "ExpenseCreated"
+        const val EVENT_DEBT_SETTLED = "DebtSettled"
         val RECONNECT_DELAYS_MILLIS = longArrayOf(0, 2_000, 10_000, 30_000)
     }
 }

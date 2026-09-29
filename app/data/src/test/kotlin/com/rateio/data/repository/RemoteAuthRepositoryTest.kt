@@ -20,35 +20,35 @@ import retrofit2.HttpException
 import retrofit2.Response
 
 /**
- * Cobre T14.2: `RemoteAuthRepository.signOut` sempre limpa a sessão local — mesmo quando a
- * revogação no backend (`POST /auth/logout`, T14.1) falha por falta de rede ou erro HTTP — porque
- * o usuário não pode ficar preso logado no aparelho por falha de rede (logout local tem
- * prioridade sobre o de servidor, ver doc de `RemoteAuthRepository.signOut`).
+ * Covers T14.2: `RemoteAuthRepository.signOut` always clears the local session — even when the
+ * backend revocation (`POST /auth/logout`, T14.1) fails due to no network or an HTTP error —
+ * because the user can't be stuck signed in on the device due to a network failure (local logout
+ * takes priority over the server one, see `RemoteAuthRepository.signOut`'s doc).
  *
- * Usa dublês simples de [AuthApi]/[TokenStorage] em vez de um framework de mock: nenhum está nas
- * dependências de teste de `:data` hoje, e ambas são interfaces pequenas o bastante pra não
- * justificar a dependência nova.
+ * Uses simple test doubles for [AuthApi]/[TokenStorage] instead of a mocking framework: neither is
+ * in `:data`'s test dependencies today, and both are interfaces small enough not to justify the
+ * new dependency.
  */
 class RemoteAuthRepositoryTest {
 
     private val session = AuthSession(
         accessToken = "access-token",
-        refreshToken = "refresh-token-do-usuario",
+        refreshToken = "user-refresh-token",
         user = AuthenticatedUser(name = "Igor Baiocco", email = "igor@example.com"),
     )
 
     @Test
-    fun `signOut chama logout no backend com o refresh token da sessao atual`() = runTest {
+    fun `signOut calls logout on the backend with the current session's refresh token`() = runTest {
         val authApi = FakeAuthApi()
         val repository = RemoteAuthRepository(authApi, FakeTokenStorage(initialSession = session))
 
         repository.signOut()
 
-        assertEquals(listOf("refresh-token-do-usuario"), authApi.logoutCalls)
+        assertEquals(listOf("user-refresh-token"), authApi.logoutCalls)
     }
 
     @Test
-    fun `signOut sem sessao atual nao chama o backend`() = runTest {
+    fun `signOut with no current session does not call the backend`() = runTest {
         val authApi = FakeAuthApi()
         val repository = RemoteAuthRepository(authApi, FakeTokenStorage(initialSession = null))
 
@@ -58,8 +58,8 @@ class RemoteAuthRepositoryTest {
     }
 
     @Test
-    fun `signOut limpa sessao local mesmo quando o backend esta sem rede`() = runTest {
-        val authApi = FakeAuthApi(logoutFailure = { IOException("sem conexão com o servidor do Rateio") })
+    fun `signOut clears the local session even when the backend has no network`() = runTest {
+        val authApi = FakeAuthApi(logoutFailure = { IOException("no connection to the Rateio server") })
         val tokenStorage = FakeTokenStorage(initialSession = session)
         val repository = RemoteAuthRepository(authApi, tokenStorage)
 
@@ -70,9 +70,9 @@ class RemoteAuthRepositoryTest {
     }
 
     @Test
-    fun `signOut limpa sessao local mesmo quando o backend responde com erro HTTP`() = runTest {
-        val corpoDeErro = "".toResponseBody("application/json".toMediaType())
-        val authApi = FakeAuthApi(logoutFailure = { HttpException(Response.error<Unit>(401, corpoDeErro)) })
+    fun `signOut clears the local session even when the backend responds with an HTTP error`() = runTest {
+        val errorBody = "".toResponseBody("application/json".toMediaType())
+        val authApi = FakeAuthApi(logoutFailure = { HttpException(Response.error<Unit>(401, errorBody)) })
         val tokenStorage = FakeTokenStorage(initialSession = session)
         val repository = RemoteAuthRepository(authApi, tokenStorage)
 
@@ -86,7 +86,7 @@ class RemoteAuthRepositoryTest {
         val logoutCalls = mutableListOf<String>()
 
         override suspend fun loginWithGoogle(request: GoogleLoginRequestDto): GoogleLoginResponseDto =
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
 
         override suspend fun logout(request: LogoutRequestDto) {
             logoutCalls += request.refreshToken

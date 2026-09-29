@@ -1,2 +1,2 @@
-# Regras de ProGuard/R8 do módulo :app.
-# Vazio por enquanto — minifyEnabled é false no build de release até isso virar necessário.
+# ProGuard/R8 rules for the :app module.
+# Empty for now — minifyEnabled is false in the release build until this becomes necessary.

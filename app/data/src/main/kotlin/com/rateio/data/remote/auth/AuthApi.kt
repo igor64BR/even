@@ -5,28 +5,28 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 
 /**
- * Espelha os endpoints de auth do backend (`backend/src/Rateio.Api/Controllers/AuthController.cs`):
- * login via Google (T11) e logout (T14.1). O client HTTP inteiro (ver
- * [com.rateio.data.remote.RateioHttpClientFactory]) existe só pra estes dois.
+ * Mirrors the backend's auth endpoints (`backend/src/Rateio.Api/Controllers/AuthController.cs`):
+ * login via Google (T11) and logout (T14.1). The whole HTTP client (see
+ * [com.rateio.data.remote.RateioHttpClientFactory]) exists just for these two.
  */
 interface AuthApi {
     @POST("auth/google")
     suspend fun loginWithGoogle(@Body request: GoogleLoginRequestDto): GoogleLoginResponseDto
 
     /**
-     * Espelha `POST /auth/logout` (T14.1). Sem corpo de resposta (204) — só lança se a chamada de
-     * rede falhar, que é o único caso que `RemoteAuthRepository.signOut` trata (logout local
-     * segue mesmo assim).
+     * Mirrors `POST /auth/logout` (T14.1). No response body (204) — only throws if the network
+     * call fails, the only case `RemoteAuthRepository.signOut` handles (local logout proceeds
+     * anyway).
      */
     @POST("auth/logout")
     suspend fun logout(@Body request: LogoutRequestDto)
 }
 
-/** Corpo de `POST /auth/google` — espelha `GoogleLoginRequest` (record `IdToken`) do backend. */
+/** Body of `POST /auth/google` — mirrors the backend's `GoogleLoginRequest` (record `IdToken`). */
 @Serializable
 data class GoogleLoginRequestDto(val idToken: String)
 
-/** Resposta de sucesso — espelha `GoogleLoginResponse` do backend. */
+/** Success response — mirrors the backend's `GoogleLoginResponse`. */
 @Serializable
 data class GoogleLoginResponseDto(
     val accessToken: String,
@@ -34,14 +34,14 @@ data class GoogleLoginResponseDto(
     val user: UserDto,
 )
 
-/** Espelha `UsuarioResponse(Nome, Email)` do backend (System.Text.Json em camelCase). */
+/** Mirrors the backend's `UserResponse(Name, Email)` (System.Text.Json in camelCase). */
 @Serializable
-data class UserDto(val nome: String, val email: String)
+data class UserDto(val name: String, val email: String)
 
 /**
- * Corpo de `POST /auth/logout` — espelha `LogoutRequest` (record `RefreshToken`) do backend. É o
- * refresh token, não o access token, porque é ele que identifica a sessão a revogar (mesma
- * justificativa do contrato do backend).
+ * Body of `POST /auth/logout` — mirrors the backend's `LogoutRequest` (record `RefreshToken`). It's
+ * the refresh token, not the access token, because that's what identifies the session to revoke
+ * (same rationale as the backend contract).
  */
 @Serializable
 data class LogoutRequestDto(val refreshToken: String)

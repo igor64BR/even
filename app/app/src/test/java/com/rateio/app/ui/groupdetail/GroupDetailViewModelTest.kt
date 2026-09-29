@@ -42,10 +42,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Cobre T42.2 (saldo exibido bate com `computeBalances`, T33, pra um grupo com despesas reais) e
- * a ação "Sincronizar este grupo" (T19, movida do card da lista pra cá em T42.4 — mesma cobertura
- * que existia em `GroupListViewModelTest` antes do rewire). Mesmo padrão Robolectric das demais
- * telas: banco Room em memória, DAOs de verdade por trás de `Room*Repository`.
+ * Covers T42.2 (the displayed balance matches `computeBalances`, T33, for a group with real
+ * expenses) and the "Sync this group" action (T19, moved here from the list card in T42.4 — the
+ * same coverage that existed in `GroupListViewModelTest` before the rewire). Same Robolectric
+ * pattern as the other screens: an in-memory Room database, real DAOs behind `Room*Repository`.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -103,16 +103,16 @@ class GroupDetailViewModelTest {
     )
 
     private suspend fun seedGroupWithExpense(): String {
-        val groupId = "churras"
-        groupRepository.insertGroup(Group(id = groupId, name = "Churras de sábado", createdAt = Instant.now()))
-        participantRepository.insertParticipant(Participant(id = "p1", groupId = groupId, name = "Você", isYou = true))
+        val groupId = "barbecue"
+        groupRepository.insertGroup(Group(id = groupId, name = "Saturday barbecue", createdAt = Instant.now()))
+        participantRepository.insertParticipant(Participant(id = "p1", groupId = groupId, name = "You", isYou = true))
         participantRepository.insertParticipant(Participant(id = "p2", groupId = groupId, name = "Marina"))
         participantRepository.insertParticipant(Participant(id = "p3", groupId = groupId, name = "Diego"))
         expenseRepository.insertExpense(
             Expense(
                 id = "e1",
                 groupId = groupId,
-                description = "Carvão e carne",
+                description = "Charcoal and meat",
                 amountCents = 1000,
                 paidByParticipantId = "p1",
                 createdAt = Instant.EPOCH,
@@ -127,14 +127,14 @@ class GroupDetailViewModelTest {
     }
 
     @Test
-    fun `saldo exibido bate com computeBalances para um grupo com despesas reais`() = runTest(testDispatcher) {
+    fun `the displayed balance matches computeBalances for a group with real expenses`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         val viewModel = buildViewModel(groupId)
 
         val state = viewModel.uiState.first { it is GroupDetailUiState.Content } as GroupDetailUiState.Content
 
-        // dividirIgualmente(1000, [p1,p2,p3]): base=333, resto=1 -> p1=334, p2=333, p3=333.
-        // p1 pagou 1000 e deve 334 -> +666 (credor); p2/p3 devem 333 cada (devedores).
+        // splitEqually(1000, [p1,p2,p3]): base=333, remainder=1 -> p1=334, p2=333, p3=333.
+        // p1 paid 1000 and owes 334 -> +666 (creditor); p2/p3 owe 333 each (debtors).
         assertEquals(3, state.balances.size)
         val p1 = state.balances.single { it.participantId == "p1" }
         val p2 = state.balances.single { it.participantId == "p2" }
@@ -142,21 +142,21 @@ class GroupDetailViewModelTest {
         assertEquals(ParticipantBalance.Credit(666), p1.balance)
         assertEquals(ParticipantBalance.Owed(333), p2.balance)
         assertEquals(ParticipantBalance.Owed(333), p3.balance)
-        assertTrue("p1 é o participante 'você'", p1.isYou)
+        assertTrue("p1 is the 'you' participant", p1.isYou)
 
         assertEquals(1, state.expenses.size)
         val expenseRow = state.expenses.single()
-        assertEquals("Carvão e carne", expenseRow.description)
-        assertEquals("Você", expenseRow.payerName)
+        assertEquals("Charcoal and meat", expenseRow.description)
+        assertEquals("You", expenseRow.payerName)
         assertEquals(1000L, expenseRow.amountCents)
-        assertEquals("dividido igual", expenseRow.splitTypeLabel)
+        assertEquals("split equally", expenseRow.splitTypeLabel)
     }
 
     @Test
-    fun `grupo com saldos zerados mostra todos os participantes quitados`() = runTest(testDispatcher) {
-        val groupId = "republica"
-        groupRepository.insertGroup(Group(id = groupId, name = "República", createdAt = Instant.now()))
-        participantRepository.insertParticipant(Participant(id = "p1", groupId = groupId, name = "Você", isYou = true))
+    fun `a group with zeroed balances shows every participant as settled`() = runTest(testDispatcher) {
+        val groupId = "household"
+        groupRepository.insertGroup(Group(id = groupId, name = "Household", createdAt = Instant.now()))
+        participantRepository.insertParticipant(Participant(id = "p1", groupId = groupId, name = "You", isYou = true))
         participantRepository.insertParticipant(Participant(id = "p2", groupId = groupId, name = "Marina"))
         val viewModel = buildViewModel(groupId)
 
@@ -167,7 +167,7 @@ class GroupDetailViewModelTest {
     }
 
     @Test
-    fun `sincronizar com sucesso marca isSynced e esconde a acao`() = runTest(testDispatcher) {
+    fun `syncing successfully marks isSynced and hides the action`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         val viewModel = buildViewModel(
             groupId = groupId,
@@ -178,58 +178,58 @@ class GroupDetailViewModelTest {
 
         viewModel.onSyncGroupClick()
 
-        val stateAposSync = viewModel.uiState
+        val stateAfterSync = viewModel.uiState
             .first { it is GroupDetailUiState.Content && it.syncAction == GroupSyncActionUiState.Hidden }
                 as GroupDetailUiState.Content
-        assertTrue(stateAposSync.isSynced)
+        assertTrue(stateAfterSync.isSynced)
 
         val persisted = database.groupDao().getGroupById(groupId)!!
-        assertTrue("sync bem-sucedido marca isSynced=true", persisted.isSynced)
+        assertTrue("a successful sync marks isSynced=true", persisted.isSynced)
         assertEquals("remote-$groupId", persisted.remoteId)
     }
 
     @Test
-    fun `falha de rede na sincronizacao mantem isSynced false e mostra erro`() = runTest(testDispatcher) {
+    fun `a network failure while syncing keeps isSynced false and shows an error`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         val viewModel = buildViewModel(
             groupId = groupId,
             authRepository = FakeAuthRepository(authenticatedSession),
             remoteGroupRepository = FakeRemoteGroupRepository(
-                failure = { GroupSyncException("Sem conexão com o servidor do Rateio.") },
+                failure = { GroupSyncException("No connection to the Rateio server.") },
             ),
         )
         viewModel.uiState.first { it is GroupDetailUiState.Content }
 
         viewModel.onSyncGroupClick()
 
-        val stateAposFalha = viewModel.uiState
+        val stateAfterFailure = viewModel.uiState
             .first { it is GroupDetailUiState.Content && it.syncAction is GroupSyncActionUiState.Failed }
                 as GroupDetailUiState.Content
-        val syncAction = stateAposFalha.syncAction as GroupSyncActionUiState.Failed
-        assertEquals("Sem conexão com o servidor do Rateio.", syncAction.message)
+        val syncAction = stateAfterFailure.syncAction as GroupSyncActionUiState.Failed
+        assertEquals("No connection to the Rateio server.", syncAction.message)
 
         val persisted = database.groupDao().getGroupById(groupId)!!
-        assertFalse("falha de rede nao pode deixar o grupo marcado como sincronizado", persisted.isSynced)
+        assertFalse("a network failure must not leave the group marked as synced", persisted.isSynced)
         assertNull(persisted.remoteId)
     }
 
     /**
-     * Marca o grupo como sincronizado reinserindo a mesma linha com `isSynced=true` — mesmo
-     * caminho de produção ([GroupDetailViewModel.syncGroup], T19). Antes de `GroupDao.insert`
-     * virar `@Upsert` (achado em T29, corrigido à parte), isso apagava silenciosamente
-     * participantes/despesas via `ON DELETE CASCADE` (SQLite `INSERT OR REPLACE` é DELETE+INSERT);
-     * `@Upsert` faz um `UPDATE` de verdade, então este helper hoje é só um atalho de teste, não um
-     * workaround.
+     * Marks the group as synced by reinserting the same row with `isSynced=true` — the same
+     * production path ([GroupDetailViewModel.syncGroup], T19). Before `GroupDao.insert` became
+     * `@Upsert` (found during T29, fixed separately), this would silently wipe out
+     * participants/expenses via `ON DELETE CASCADE` (SQLite `INSERT OR REPLACE` is a
+     * DELETE+INSERT); `@Upsert` does a real `UPDATE`, so this helper today is just a test shortcut,
+     * not a workaround.
      */
     private suspend fun markGroupAsSynced(groupId: String, remoteId: String) {
         val group = requireNotNull(groupRepository.getGroupById(groupId))
         groupRepository.insertGroup(group.copy(isSynced = true, remoteId = remoteId))
     }
 
-    // --- T37: histórico de quitações ---
+    // --- T37: settlement history ---
 
     @Test
-    fun `quitacoes registradas aparecem no historico, mais recente primeiro`() = runTest(testDispatcher) {
+    fun `recorded settlements show up in the history, most recent first`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         settlementRepository.insertSettlement(
             Settlement(
@@ -258,12 +258,12 @@ class GroupDetailViewModelTest {
 
         assertEquals(listOf("s2", "s1"), state.settlements.map { it.id })
         assertEquals("Diego", state.settlements.first().payerName)
-        assertEquals("Você", state.settlements.first().receiverName)
+        assertEquals("You", state.settlements.first().receiverName)
         assertEquals(333L, state.settlements.first().amountCents)
     }
 
     @Test
-    fun `grupo sem quitacoes tem historico vazio`() = runTest(testDispatcher) {
+    fun `a group with no settlements has an empty history`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         val viewModel = buildViewModel(groupId)
 
@@ -272,24 +272,24 @@ class GroupDetailViewModelTest {
         assertTrue(state.settlements.isEmpty())
     }
 
-    // --- T29.2: excluir despesa ---
+    // --- T29.2: delete expense ---
 
     @Test
-    fun `excluir despesa local remove do Room e recalcula saldo`() = runTest(testDispatcher) {
+    fun `deleting a local expense removes it from Room and recalculates the balance`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         val viewModel = buildViewModel(groupId)
         viewModel.uiState.first { it is GroupDetailUiState.Content && it.expenses.isNotEmpty() }
 
         viewModel.onDeleteExpenseClick("e1")
 
-        val stateAposExcluir = viewModel.uiState
+        val stateAfterDelete = viewModel.uiState
             .first { it is GroupDetailUiState.Content && it.expenses.isEmpty() } as GroupDetailUiState.Content
-        assertTrue("sem despesas, todo mundo volta a ficar quitado", stateAposExcluir.balances.all { it.balance is ParticipantBalance.Settled })
+        assertTrue("with no expenses, everyone goes back to settled", stateAfterDelete.balances.all { it.balance is ParticipantBalance.Settled })
         assertTrue(expenseRepository.getExpensesFlow(groupId).first().isEmpty())
     }
 
     @Test
-    fun `excluir despesa de grupo nao sincronizado nao chama o backend`() = runTest(testDispatcher) {
+    fun `deleting an expense from an unsynced group does not call the backend`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         val remoteExpenseRepository = FakeRemoteExpenseRepository()
         val viewModel = buildViewModel(groupId, remoteExpenseRepository = remoteExpenseRepository)
@@ -298,11 +298,11 @@ class GroupDetailViewModelTest {
         viewModel.onDeleteExpenseClick("e1")
         viewModel.uiState.first { it is GroupDetailUiState.Content && it.expenses.isEmpty() }
 
-        assertNull("grupo local (nao sincronizado) nunca deve tentar falar com o backend", remoteExpenseRepository.lastDeletedExpenseId)
+        assertNull("a local (unsynced) group should never try to talk to the backend", remoteExpenseRepository.lastDeletedExpenseId)
     }
 
     @Test
-    fun `excluir despesa de grupo sincronizado propaga a exclusao pro backend`() = runTest(testDispatcher) {
+    fun `deleting an expense from a synced group propagates the deletion to the backend`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         markGroupAsSynced(groupId, remoteId = "remote-$groupId")
         val remoteExpenseRepository = FakeRemoteExpenseRepository()
@@ -317,31 +317,31 @@ class GroupDetailViewModelTest {
     }
 
     @Test
-    fun `falha de rede ao propagar exclusao nao desfaz a remocao local`() = runTest(testDispatcher) {
+    fun `a network failure while propagating a deletion does not undo the local removal`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         markGroupAsSynced(groupId, remoteId = "remote-$groupId")
         val remoteExpenseRepository = FakeRemoteExpenseRepository(
-            failure = { GroupSyncException("Sem conexão com o servidor do Rateio.") },
+            failure = { GroupSyncException("No connection to the Rateio server.") },
         )
         val viewModel = buildViewModel(groupId, remoteExpenseRepository = remoteExpenseRepository)
         viewModel.uiState.first { it is GroupDetailUiState.Content }
 
         viewModel.onDeleteExpenseClick("e1")
-        remoteExpenseRepository.awaitDelete() // espera a tentativa de propagação (que vai falhar) acontecer.
+        remoteExpenseRepository.awaitDelete() // waits for the (about to fail) propagation attempt to happen.
 
-        val stateAposExcluir = viewModel.uiState
+        val stateAfterDelete = viewModel.uiState
             .first { it is GroupDetailUiState.Content && it.expenses.isEmpty() } as GroupDetailUiState.Content
-        assertTrue("exclusao local vale independente da falha de rede (local-first)", stateAposExcluir.expenses.isEmpty())
+        assertTrue("the local deletion stands regardless of the network failure (local-first)", stateAfterDelete.expenses.isEmpty())
     }
 
-    // T40.1: GroupDetailViewModel.startRealtimeUpdates()/stopRealtimeUpdates() só orquestram QUANDO
-    // conectar/desconectar — a lógica de conexão em si (SignalRGroupRealtimeGateway) é testada à
-    // parte em :data, sem HubConnection nenhum (ver GroupEventRecorderTest/
-    // MissedGroupEventsSynchronizerTest). Aqui só verificamos que o gateway é chamado com os ids
-    // certos, nas condições certas.
+    // T40.1: GroupDetailViewModel.startRealtimeUpdates()/stopRealtimeUpdates() only orchestrate
+    // WHEN to connect/disconnect — the connection logic itself (SignalRGroupRealtimeGateway) is
+    // tested separately in :data, with no HubConnection at all (see GroupEventRecorderTest/
+    // MissedGroupEventsSynchronizerTest). Here we only verify the gateway is called with the right
+    // ids, under the right conditions.
 
     @Test
-    fun `startRealtimeUpdates conecta o gateway com localGroupId e remoteId quando grupo sincronizado e autenticado`() =
+    fun `startRealtimeUpdates connects the gateway with localGroupId and remoteId when the group is synced and authenticated`() =
         runTest(testDispatcher) {
             val groupId = seedGroupWithExpense()
             database.groupDao().insert(
@@ -363,7 +363,7 @@ class GroupDetailViewModelTest {
         }
 
     @Test
-    fun `startRealtimeUpdates nao conecta o gateway quando grupo nao esta sincronizado`() = runTest(testDispatcher) {
+    fun `startRealtimeUpdates does not connect the gateway when the group is not synced`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         val gateway = FakeGroupRealtimeGateway()
         val viewModel = buildViewModel(
@@ -376,11 +376,11 @@ class GroupDetailViewModelTest {
         viewModel.startRealtimeUpdates()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertTrue("grupo nao sincronizado nao pode abrir conexao (nao tem remoteId)", gateway.connectCalls.isEmpty())
+        assertTrue("an unsynced group cannot open a connection (it has no remoteId)", gateway.connectCalls.isEmpty())
     }
 
     @Test
-    fun `startRealtimeUpdates nao conecta o gateway quando nao ha sessao autenticada`() = runTest(testDispatcher) {
+    fun `startRealtimeUpdates does not connect the gateway when there is no authenticated session`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         database.groupDao().insert(
             database.groupDao().getGroupById(groupId)!!.copy(isSynced = true, remoteId = "remote-$groupId"),
@@ -396,11 +396,11 @@ class GroupDetailViewModelTest {
         viewModel.startRealtimeUpdates()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertTrue("sem sessao nao pode abrir conexao", gateway.connectCalls.isEmpty())
+        assertTrue("with no session, a connection cannot be opened", gateway.connectCalls.isEmpty())
     }
 
     @Test
-    fun `stopRealtimeUpdates desconecta uma conexao ativa`() = runTest(testDispatcher) {
+    fun `stopRealtimeUpdates disconnects an active connection`() = runTest(testDispatcher) {
         val groupId = seedGroupWithExpense()
         database.groupDao().insert(
             database.groupDao().getGroupById(groupId)!!.copy(isSynced = true, remoteId = "remote-$groupId"),
@@ -422,12 +422,12 @@ class GroupDetailViewModelTest {
     }
 
     /**
-     * [awaitConnect] existe porque [com.rateio.domain.repository.GroupRepository.getGroupsFlow]
-     * (Room) entrega sua primeira emissão a partir de um executor real, fora do controle do
-     * `TestCoroutineScheduler` — `testDispatcher.scheduler.advanceUntilIdle()` não espera por isso
-     * de forma confiável (corrida: nada garante que a query do Room já terminou quando
-     * `advanceUntilIdle()` roda). Suspender de verdade em cima de um `Channel` é a forma
-     * determinística de esperar o primeiro `connect()` acontecer.
+     * [awaitConnect] exists because [com.rateio.domain.repository.GroupRepository.getGroupsFlow]
+     * (Room) delivers its first emission from a real executor, outside the
+     * `TestCoroutineScheduler`'s control — `testDispatcher.scheduler.advanceUntilIdle()` doesn't
+     * reliably wait for that (a race: nothing guarantees Room's query has already finished when
+     * `advanceUntilIdle()` runs). Really suspending on a `Channel` is the deterministic way to wait
+     * for the first `connect()` to happen.
      */
     private class FakeGroupRealtimeGateway : GroupRealtimeGateway {
         val connectCalls = mutableListOf<Pair<String, String>>()
@@ -456,7 +456,7 @@ class GroupDetailViewModelTest {
         override fun getSessionFlow(): Flow<AuthSession?> = session
 
         override suspend fun signInWithGoogle(googleIdToken: String): AuthSession =
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
 
         override suspend fun signOut() {
             session.value = null
@@ -473,17 +473,17 @@ class GroupDetailViewModelTest {
         }
 
         override suspend fun joinByCode(inviteCode: String): String {
-            throw UnsupportedOperationException("não usado neste teste — ver JoinGroupViewModelTest (T22)")
+            throw UnsupportedOperationException("not used in this test — see JoinGroupViewModelTest (T22)")
         }
     }
 
     /**
-     * [awaitDelete] existe pela mesma razão de [FakeGroupRealtimeGateway.awaitConnect]:
-     * [GroupDetailViewModel.onDeleteExpenseClick] dispara num `viewModelScope.launch` próprio, e o
-     * `Flow` de despesas (Room) já pode ter emitido "lista vazia" — o sinal que os testes usam pra
-     * saber que a exclusão local aconteceu — antes da chamada de propagação pro backend, mais
-     * adiante na mesma coroutine, ter rodado. Suspender de verdade num `Channel` é a forma
-     * determinística de esperar a tentativa de propagação (sucesso ou falha) acontecer.
+     * [awaitDelete] exists for the same reason as [FakeGroupRealtimeGateway.awaitConnect]:
+     * [GroupDetailViewModel.onDeleteExpenseClick] fires inside its own `viewModelScope.launch`, and
+     * the expenses `Flow` (Room) may have already emitted "empty list" — the signal the tests use
+     * to know the local deletion happened — before the backend propagation call, further along in
+     * the same coroutine, has run. Really suspending on a `Channel` is the deterministic way to
+     * wait for the propagation attempt (success or failure) to happen.
      */
     private class FakeRemoteExpenseRepository(
         private val failure: (() -> Throwable)? = null,
@@ -497,7 +497,7 @@ class GroupDetailViewModelTest {
         )
 
         override suspend fun updateExpense(remoteGroupId: String, expense: Expense) {
-            throw UnsupportedOperationException("não usado neste teste — ver CreateExpenseViewModelTest (T29.1)")
+            throw UnsupportedOperationException("not used in this test — see CreateExpenseViewModelTest (T29.1)")
         }
 
         override suspend fun deleteExpense(remoteGroupId: String, expenseId: String) {

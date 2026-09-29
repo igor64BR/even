@@ -28,18 +28,18 @@ import com.rateio.domain.model.Money
 import java.time.LocalDate
 
 /**
- * Tela "Nova despesa" (T24), aberta a partir do botão "+" em "Detalhes do grupo" (T42.2/RF42) —
- * até T42.4 era aberta direto do [com.rateio.app.ui.groups.GroupCard] na lista de grupos, atalho
- * temporário porque a tela de detalhe ainda não existia. `factory` injeta o
- * [CreateExpenseViewModel] pela composição manual de [com.rateio.app.di.AppContainer], mesmo
- * padrão de [com.rateio.app.ui.creategroup.CreateGroupRoute]. `factory.expenseId` não-nulo (T29)
- * é o único gatilho do modo edição — nem esta Route nem [CreateExpenseScreen] decidem isso, só
- * repassam [CreateExpenseUiState.isEditMode] pra pintar título/botão.
+ * The "New expense" screen (T24), opened from the "+" button in "Group details" (T42.2/RF42) —
+ * until T42.4 it opened directly from [com.rateio.app.ui.groups.GroupCard] in the group list, a
+ * temporary shortcut because the detail screen didn't exist yet. `factory` injects the
+ * [CreateExpenseViewModel] through [com.rateio.app.di.AppContainer]'s manual composition, the same
+ * pattern as [com.rateio.app.ui.creategroup.CreateGroupRoute]. A non-null `factory.expenseId`
+ * (T29) is the only trigger for edit mode — neither this Route nor [CreateExpenseScreen] decide
+ * that, they just pass along [CreateExpenseUiState.isEditMode] to paint the title/button.
  *
- * [key] identifica esta visita à tela pro `viewModel()` do Compose (ver KDoc de
- * `RateioDestination.CreateExpense.instanceId` em `MainActivity`) — sem ela, lançar uma segunda
- * despesa seguida reaproveitava o `ViewModel` da primeira, com o formulário e `isSaving` da última
- * submissão ainda presos.
+ * [key] identifies this visit to the screen for Compose's `viewModel()` (see the KDoc of
+ * `RateioDestination.CreateExpense.instanceId` in `MainActivity`) — without it, logging a second
+ * expense right after the first would reuse the first one's `ViewModel`, with the form and
+ * `isSaving` from the last submission still stuck.
  */
 @Composable
 fun CreateExpenseRoute(
@@ -91,8 +91,8 @@ fun CreateExpenseRoute(
 }
 
 /**
- * Composable fina: só orquestra topbar + campos + lista de participantes + botão — nenhuma delas
- * sabe de onde vem o estado nem faz validação/cálculo (mesmo Object Calisthenics de
+ * A thin Composable: only orchestrates the topbar + fields + participant list + button — none of
+ * them know where the state comes from or do validation/calculation (same Object Calisthenics as
  * [com.rateio.app.ui.creategroup.CreateGroupScreen]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -133,14 +133,14 @@ fun CreateExpenseScreen(
         },
         bottomBar = {
             RateioBottomBar(
-                selectedTab = RateioBottomTab.GRUPOS,
+                selectedTab = RateioBottomTab.GROUPS,
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
                     when (tab) {
-                        RateioBottomTab.GRUPOS -> onGroupsClick()
-                        RateioBottomTab.AVISOS -> onNotificationsClick()
-                        RateioBottomTab.PERFIL -> onProfileClick()
+                        RateioBottomTab.GROUPS -> onGroupsClick()
+                        RateioBottomTab.NOTIFICATIONS -> onNotificationsClick()
+                        RateioBottomTab.PROFILE -> onProfileClick()
                     }
                 },
             )
@@ -173,7 +173,7 @@ fun CreateExpenseScreen(
             DateField(date = uiState.date, onDateSelected = onDateSelected)
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(text = "Como dividir", fontWeight = FontWeight.SemiBold)
+                Text(text = "How to split", fontWeight = FontWeight.SemiBold)
                 SplitTypeTabs(selectedMode = uiState.splitMode, onModeSelected = onSplitModeSelected)
                 when (uiState.splitMode) {
                     SplitMode.EQUAL -> ParticipantSplitList(
@@ -207,7 +207,7 @@ fun CreateExpenseScreen(
                     .padding(bottom = 24.dp),
             ) {
                 Text(
-                    text = if (uiState.isEditMode) "Salvar alterações" else "Salvar despesa",
+                    text = if (uiState.isEditMode) "Save changes" else "Save expense",
                     fontWeight = FontWeight.SemiBold,
                 )
             }

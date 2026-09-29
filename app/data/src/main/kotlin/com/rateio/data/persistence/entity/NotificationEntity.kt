@@ -6,18 +6,18 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Mapeamento de persistência de `com.rateio.domain.model.GroupNotification` (T40.1/T41.1). [id] é
- * o id do evento no servidor prefixado pelo tipo ("despesa:"/"quitacao:", ver
- * `com.rateio.data.remote.realtime.GroupEventNotificationBuilder`) — chave natural que deduplica
- * automaticamente o mesmo evento chegando duas vezes (tempo real + pull de reconexão, T40.2) via
- * `OnConflictStrategy.IGNORE` em vez de um UUID aleatório.
+ * Persistence mapping for `com.rateio.domain.model.GroupNotification` (T40.1/T41.1). [id] is the
+ * event's id on the server prefixed by its type ("expense:"/"settlement:", see
+ * `com.rateio.data.remote.realtime.GroupEventNotificationBuilder`) — a natural key that
+ * automatically deduplicates the same event arriving twice (live + reconnect pull, T40.2) via
+ * `OnConflictStrategy.IGNORE` instead of a random UUID.
  *
- * [occurredAtEpochMillis] é o horário local do aparelho no momento em que o evento foi processado,
- * não um timestamp de servidor — nem o payload em tempo real (`EventoDespesaCriada`/
- * `EventoDividaQuitada`, backend T38) nem a resposta do fallback de pull (T39) carregam um
- * timestamp de quando o evento aconteceu (lacuna documentada em
- * `com.rateio.data.remote.groups.GroupEventsApi`). Schema v5 (T40.1) — sem migration explícita,
- * mesmo racional das versões anteriores (`RateioDatabase`): ainda não existe build distribuído.
+ * [occurredAtEpochMillis] is the device's local time at the moment the event was processed, not a
+ * server timestamp — neither the live payload (`ExpenseCreatedEvent`/`DebtSettledEvent`, backend
+ * T38) nor the pull-fallback response (T39) carry a timestamp of when the event actually happened
+ * (gap documented in `com.rateio.data.remote.groups.GroupEventsApi`). Schema v5 (T40.1) — no
+ * explicit migration, same rationale as earlier versions (`RateioDatabase`): there's still no
+ * distributed build.
  */
 @Entity(
     tableName = "notifications",

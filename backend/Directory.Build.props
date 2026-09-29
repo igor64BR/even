@@ -1,14 +1,14 @@
 <Project>
 
-  <!-- Convenções comuns a todos os projetos da solução Rateio.
-       Cada .csproj individual só declara o que é específico dele
-       (tipo de SDK, pacotes, referências). -->
+  <!-- Conventions shared by every project in the Rateio solution.
+       Each individual .csproj only declares what's specific to it
+       (SDK type, packages, references). -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <!-- Desligado por enquanto; ligar quando o time topar tratar todo warning como erro. -->
+    <!-- Off for now; turn on when the team is ready to treat every warning as an error. -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 

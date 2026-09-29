@@ -11,9 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * `#tabs` do protótipo ("Igual / Percentual / Valor fixo"). T24 só implementava a divisão Igual —
- * as outras duas apareciam desabilitadas; T26 troca isso por abas de verdade, todas habilitadas,
- * trocando [CreateExpenseUiState.splitMode] via [onModeSelected].
+ * The prototype's `#tabs` ("Equal / Percentage / Fixed amount"). T24 only implemented the Equal
+ * split — the other two showed up disabled; T26 swaps that for real tabs, all enabled, changing
+ * [CreateExpenseUiState.splitMode] via [onModeSelected].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,21 +24,21 @@ fun SplitTypeTabs(
 ) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         SplitModeChip(
-            label = "Igual",
+            label = "Equal",
             mode = SplitMode.EQUAL,
             selectedMode = selectedMode,
             onModeSelected = onModeSelected,
             modifier = Modifier.weight(1f),
         )
         SplitModeChip(
-            label = "Percentual",
+            label = "Percentage",
             mode = SplitMode.PERCENTAGE,
             selectedMode = selectedMode,
             onModeSelected = onModeSelected,
             modifier = Modifier.weight(1f),
         )
         SplitModeChip(
-            label = "Valor fixo",
+            label = "Fixed amount",
             mode = SplitMode.FIXED_AMOUNT,
             selectedMode = selectedMode,
             onModeSelected = onModeSelected,

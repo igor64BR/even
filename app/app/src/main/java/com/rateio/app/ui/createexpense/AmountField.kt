@@ -14,9 +14,10 @@ import androidx.compose.ui.unit.dp
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `#field-valor` do protótipo: valor total da despesa + erro "O valor precisa ser maior que
- * zero." Aceita vírgula ou ponto como decimal ([com.rateio.app.ui.format.parseAmountInputToCents]
- * faz o parsing na borda, nunca aqui).
+ * The prototype's `#field-valor`: the expense's total amount + the "The amount must be greater
+ * than zero." error. Accepts comma or dot as the decimal separator
+ * ([com.rateio.app.ui.format.parseAmountInputToCents] does the parsing at the boundary, never
+ * here).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,11 +32,11 @@ fun AmountField(
         value = amountInput,
         onValueChange = onAmountChange,
         modifier = modifier.fillMaxWidth(),
-        label = { Text(text = "Valor total") },
+        label = { Text(text = "Total amount") },
         placeholder = { Text(text = "0,00") },
         prefix = { Text(text = "R$ ") },
         isError = isError,
-        supportingText = errorTextOrNull(isError, "O valor precisa ser maior que zero."),
+        supportingText = errorTextOrNull(isError, "The amount must be greater than zero."),
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         shape = RoundedCornerShape(10.dp),

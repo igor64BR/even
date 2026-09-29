@@ -28,14 +28,15 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Cobre T41.1: estado "exige conta" pra usuário deslogado, lista vazia, lista com notificações
- * (fiel a `prototype/notificacoes.html`), e o badge de não lidas (T41.2). Mesmo padrão Robolectric
- * das demais telas — Room em memória, DAO de verdade por trás de [RoomNotificationRepository].
+ * Covers T41.1: "requires account" state for a signed-out user, empty list, list with
+ * notifications (faithful to `prototype/notifications.html`), and the unread badge (T41.2). Same
+ * Robolectric pattern as the other screens — in-memory Room, real DAO behind
+ * [RoomNotificationRepository].
  *
- * Sempre coleta via [kotlinx.coroutines.flow.first] (nunca lê `.value` direto): os `StateFlow`
- * de [NotificationsViewModel] usam `SharingStarted.WhileSubscribed`, então o upstream só começa a
- * ser coletado quando alguém assina — ler `.value` sem nunca ter assinado ficaria preso no
- * `initialValue` pra sempre, mesmo depois de `advanceUntilIdle()`.
+ * Always collects via [kotlinx.coroutines.flow.first] (never reads `.value` directly): the
+ * `StateFlow`s in [NotificationsViewModel] use `SharingStarted.WhileSubscribed`, so the upstream
+ * only starts being collected once someone subscribes — reading `.value` without ever having
+ * subscribed would stay stuck at `initialValue` forever, even after `advanceUntilIdle()`.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -59,7 +60,7 @@ class NotificationsViewModelTest {
             RateioDatabase::class.java,
         ).build()
         notificationRepository = RoomNotificationRepository(database.notificationDao())
-        runBlocking { database.groupDao().insert(GroupEntity(id = "g1", name = "Viagem pra praia", createdAtEpochMillis = 500L)) }
+        runBlocking { database.groupDao().insert(GroupEntity(id = "g1", name = "Beach trip", createdAtEpochMillis = 500L)) }
     }
 
     @After
@@ -72,7 +73,7 @@ class NotificationsViewModelTest {
         NotificationsViewModel(notificationRepository = notificationRepository, authRepository = authRepository)
 
     @Test
-    fun `sem sessao autenticada, estado e RequiresAccount`() = runTest(testDispatcher) {
+    fun `without an authenticated session, state is RequiresAccount`() = runTest(testDispatcher) {
         val viewModel = buildViewModel(FakeAuthRepository(initialSession = null))
 
         val state = viewModel.uiState.first { it !is NotificationsUiState.Loading }
@@ -81,7 +82,7 @@ class NotificationsViewModelTest {
     }
 
     @Test
-    fun `autenticado sem notificacoes no Room, estado e Empty`() = runTest(testDispatcher) {
+    fun `authenticated with no notifications in Room, state is Empty`() = runTest(testDispatcher) {
         val viewModel = buildViewModel(FakeAuthRepository(authenticatedSession))
 
         val state = viewModel.uiState.first { it !is NotificationsUiState.Loading }
@@ -90,23 +91,23 @@ class NotificationsViewModelTest {
     }
 
     @Test
-    fun `autenticado com notificacoes no Room, Content lista ordenada por mais recente`() = runTest(testDispatcher) {
+    fun `authenticated with notifications in Room, Content lists them ordered by most recent`() = runTest(testDispatcher) {
         database.notificationDao().insert(
-            NotificationEntity(id = "n1", groupId = "g1", message = "mais antiga", occurredAtEpochMillis = 1_000L, isRead = true),
+            NotificationEntity(id = "n1", groupId = "g1", message = "older", occurredAtEpochMillis = 1_000L, isRead = true),
         )
         database.notificationDao().insert(
-            NotificationEntity(id = "n2", groupId = "g1", message = "mais nova", occurredAtEpochMillis = 9_000L, isRead = false),
+            NotificationEntity(id = "n2", groupId = "g1", message = "newer", occurredAtEpochMillis = 9_000L, isRead = false),
         )
         val viewModel = buildViewModel(FakeAuthRepository(authenticatedSession))
 
         val state = viewModel.uiState.first { it is NotificationsUiState.Content } as NotificationsUiState.Content
 
-        assertEquals(listOf("mais nova", "mais antiga"), state.notifications.map { it.message })
-        assertTrue(state.notifications.first { it.message == "mais nova" }.isRead.not())
+        assertEquals(listOf("newer", "older"), state.notifications.map { it.message })
+        assertTrue(state.notifications.first { it.message == "newer" }.isRead.not())
     }
 
     @Test
-    fun `unreadNotificationsCount reflete notificacoes nao lidas`() = runTest(testDispatcher) {
+    fun `unreadNotificationsCount reflects unread notifications`() = runTest(testDispatcher) {
         database.notificationDao().insert(
             NotificationEntity(id = "n1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
         )
@@ -118,7 +119,7 @@ class NotificationsViewModelTest {
     }
 
     @Test
-    fun `onScreenClosed marca todas as notificacoes como lidas`() = runTest(testDispatcher) {
+    fun `onScreenClosed marks all notifications as read`() = runTest(testDispatcher) {
         database.notificationDao().insert(
             NotificationEntity(id = "n1", groupId = "g1", message = "a", occurredAtEpochMillis = 1_000L, isRead = false),
         )
@@ -137,7 +138,7 @@ class NotificationsViewModelTest {
         override fun getSessionFlow(): Flow<AuthSession?> = session
 
         override suspend fun signInWithGoogle(googleIdToken: String): AuthSession =
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
 
         override suspend fun signOut() {
             session.value = null

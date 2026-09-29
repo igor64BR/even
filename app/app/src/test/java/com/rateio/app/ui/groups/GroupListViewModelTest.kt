@@ -25,18 +25,18 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Smoke test de T8.2 ("dados de smoke test inseridos via Room diretamente num teste", já que a
- * tela "Novo grupo" — T16 — ainda não existia). Insere via os DAOs de verdade (mesmo Room de T7)
- * e confirma que [GroupListViewModel] combina [RoomGroupRepository] + [RoomParticipantRepository]
- * no [GroupListUiState] certo: sem grupos -> Empty; com grupo -> Content com a contagem de
- * participantes reativa. Mesmo padrão Robolectric do `RateioDatabaseTest` de `:data` (T7),
- * banco em memória, sem tocar disco nem precisar de emulador.
+ * Smoke test from T8.2 ("smoke test data inserted directly via Room in a test", since the "New
+ * group" screen — T16 — didn't exist yet). Inserts through the real DAOs (same Room from T7) and
+ * confirms that [GroupListViewModel] combines [RoomGroupRepository] + [RoomParticipantRepository]
+ * into the right [GroupListUiState]: no groups -> Empty; with a group -> Content with a reactive
+ * participant count. Same Robolectric pattern as `:data`'s `RateioDatabaseTest` (T7), in-memory
+ * database, no disk access or emulator needed.
  *
- * T19.1/T19.2 tinha acrescentado cobertura de "Sincronizar este grupo" aqui, como atalho
- * temporário (não existia tela de detalhe de grupo ainda). T42.4 moveu essa ação e seus testes
- * para [com.rateio.app.ui.groupdetail.GroupDetailViewModelTest]. T41.2 acrescenta
- * `unreadNotificationsCount` (badge da aba "Avisos") — esta classe volta a cobrir só o que
- * [GroupListViewModel] de fato faz hoje, mais essa contagem.
+ * T19.1/T19.2 had added coverage for "Sync this group" here, as a temporary shortcut (a group
+ * detail screen didn't exist yet). T42.4 moved that action and its tests to
+ * [com.rateio.app.ui.groupdetail.GroupDetailViewModelTest]. T41.2 adds `unreadNotificationsCount`
+ * (badge for the "Notifications" tab) — this class goes back to covering only what
+ * [GroupListViewModel] actually does today, plus that count.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -67,62 +67,62 @@ class GroupListViewModelTest {
     }
 
     @Test
-    fun `sem grupos no Room, estado e Empty`() = runTest(testDispatcher) {
+    fun `no groups in Room, state is Empty`() = runTest(testDispatcher) {
         val state = viewModel.uiState.first { it !is GroupListUiState.Loading }
 
         assertEquals(GroupListUiState.Empty, state)
     }
 
     @Test
-    fun `grupo com participantes no Room aparece no Content com a contagem certa`() = runTest(testDispatcher) {
+    fun `group with participants in Room shows up in Content with the right count`() = runTest(testDispatcher) {
         database.groupDao().insert(
-            GroupEntity(id = "churras", name = "Churras de sábado", createdAtEpochMillis = 1_000L),
+            GroupEntity(id = "bbq", name = "Saturday BBQ", createdAtEpochMillis = 1_000L),
         )
         database.participantDao().insert(
-            ParticipantEntity(id = "voce", groupId = "churras", name = "Você", isYou = true),
+            ParticipantEntity(id = "you", groupId = "bbq", name = "You", isYou = true),
         )
         database.participantDao().insert(
-            ParticipantEntity(id = "marina", groupId = "churras", name = "Marina", isYou = false),
+            ParticipantEntity(id = "marina", groupId = "bbq", name = "Marina", isYou = false),
         )
 
         val state = viewModel.uiState.first { it is GroupListUiState.Content } as GroupListUiState.Content
 
         val group = state.groups.single()
-        assertEquals("Churras de sábado", group.name)
+        assertEquals("Saturday BBQ", group.name)
         assertEquals(2, group.participantCount)
-        assertEquals("CH", group.tag)
+        assertEquals("SA", group.tag)
         assertTrue(group.balance is GroupBalance.Settled)
-        assertTrue("grupo inserido sem isSynced explícito nasce local (isSynced=false)", !group.isSynced)
+        assertTrue("a group inserted without an explicit isSynced starts out local (isSynced=false)", !group.isSynced)
     }
 
     @Test
-    fun `grupo sincronizado no Room aparece com isSynced true no Content`() = runTest(testDispatcher) {
+    fun `synced group in Room shows up with isSynced true in Content`() = runTest(testDispatcher) {
         database.groupDao().insert(
-            GroupEntity(id = "viagem", name = "Viagem", createdAtEpochMillis = 2_000L, isSynced = true),
+            GroupEntity(id = "trip", name = "Trip", createdAtEpochMillis = 2_000L, isSynced = true),
         )
         database.participantDao().insert(
-            ParticipantEntity(id = "voce", groupId = "viagem", name = "Você", isYou = true),
+            ParticipantEntity(id = "you", groupId = "trip", name = "You", isYou = true),
         )
 
         val state = viewModel.uiState.first { it is GroupListUiState.Content } as GroupListUiState.Content
 
         val group = state.groups.single()
         assertTrue(
-            "GroupListViewModel.toUiModel() precisa repassar Group.isSynced real (T7B), não mais o false fixo de T8",
+            "GroupListViewModel.toUiModel() must pass through the real Group.isSynced (T7B), not T8's fixed false anymore",
             group.isSynced,
         )
     }
 
     @Test
-    fun `badge de nao lidas reflete NotificationEntity com isRead false`() = runTest(testDispatcher) {
+    fun `unread badge reflects NotificationEntity with isRead false`() = runTest(testDispatcher) {
         database.groupDao().insert(
-            GroupEntity(id = "churras", name = "Churras de sábado", createdAtEpochMillis = 1_000L),
+            GroupEntity(id = "bbq", name = "Saturday BBQ", createdAtEpochMillis = 1_000L),
         )
         database.notificationDao().insert(
-            NotificationEntity(id = "despesa:e1", groupId = "churras", message = "Marina lançou algo.", occurredAtEpochMillis = 1_000L, isRead = false),
+            NotificationEntity(id = "expense:e1", groupId = "bbq", message = "Marina added an expense.", occurredAtEpochMillis = 1_000L, isRead = false),
         )
         database.notificationDao().insert(
-            NotificationEntity(id = "quitacao:s1", groupId = "churras", message = "Você quitou algo.", occurredAtEpochMillis = 2_000L, isRead = true),
+            NotificationEntity(id = "settlement:s1", groupId = "bbq", message = "You settled something.", occurredAtEpochMillis = 2_000L, isRead = true),
         )
 
         val count = viewModel.unreadNotificationsCount.first { it == 1 }

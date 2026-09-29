@@ -1,14 +1,14 @@
 package com.rateio.data.remote.realtime
 
-import com.rateio.data.remote.groups.GrupoEventoDto
-import com.rateio.data.remote.groups.TIPO_EVENTO_DESPESA_CRIADA
-import com.rateio.data.remote.groups.TIPO_EVENTO_DIVIDA_QUITADA
+import com.rateio.data.remote.groups.EVENT_TYPE_DEBT_SETTLED
+import com.rateio.data.remote.groups.EVENT_TYPE_EXPENSE_CREATED
+import com.rateio.data.remote.groups.GroupEventDto
 
 /**
- * Representação interna de um evento de grupo, independente de transporte — o mesmo tipo serve
- * pro payload recebido ao vivo pelo SignalR ([DespesaCriadaPayload]/[DividaQuitadaPayload]) e pro
- * DTO do fallback de pull T39 ([GrupoEventoDto]), pra [GroupEventRecorder]/
- * [GroupEventNotificationBuilder] não precisarem saber de onde o evento veio.
+ * Transport-independent internal representation of a group event — the same type serves both the
+ * payload received live over SignalR ([ExpenseCreatedPayload]/[DebtSettledPayload]) and the T39
+ * pull-fallback DTO ([GroupEventDto]), so [GroupEventRecorder]/[GroupEventNotificationBuilder]
+ * don't need to know where the event came from.
  */
 internal sealed interface GroupRealtimeEvent {
     data class ExpenseCreated(
@@ -26,37 +26,37 @@ internal sealed interface GroupRealtimeEvent {
     ) : GroupRealtimeEvent
 }
 
-internal fun DespesaCriadaPayload.toDomainEvent() = GroupRealtimeEvent.ExpenseCreated(
-    expenseId = despesaId,
-    description = descricao,
-    amountTotalCents = valorTotalCentavos,
-    payerId = pagadorId,
+internal fun ExpenseCreatedPayload.toDomainEvent() = GroupRealtimeEvent.ExpenseCreated(
+    expenseId = expenseId,
+    description = description,
+    amountTotalCents = totalAmountCents,
+    payerId = payerId,
 )
 
-internal fun DividaQuitadaPayload.toDomainEvent() = GroupRealtimeEvent.DebtSettled(
-    settlementId = quitacaoId,
-    fromParticipantId = deParticipanteId,
-    toParticipantId = paraParticipanteId,
-    amountCents = valorCentavos,
+internal fun DebtSettledPayload.toDomainEvent() = GroupRealtimeEvent.DebtSettled(
+    settlementId = settlementId,
+    fromParticipantId = fromParticipantId,
+    toParticipantId = toParticipantId,
+    amountCents = amountCents,
 )
 
-/** `null` pra um `tipo` desconhecido ou um evento sem o id que o identifica (payload malformado). */
-internal fun GrupoEventoDto.toDomainEvent(): GroupRealtimeEvent? = when (tipo) {
-    TIPO_EVENTO_DESPESA_CRIADA -> despesaId?.let { id ->
+/** `null` for an unknown [type] or an event missing the id that identifies it (malformed payload). */
+internal fun GroupEventDto.toDomainEvent(): GroupRealtimeEvent? = when (type) {
+    EVENT_TYPE_EXPENSE_CREATED -> expenseId?.let { id ->
         GroupRealtimeEvent.ExpenseCreated(
             expenseId = id,
-            description = descricao.orEmpty(),
-            amountTotalCents = valorTotalCentavos ?: 0L,
-            payerId = pagadorId.orEmpty(),
+            description = description.orEmpty(),
+            amountTotalCents = totalAmountCents ?: 0L,
+            payerId = payerId.orEmpty(),
         )
     }
 
-    TIPO_EVENTO_DIVIDA_QUITADA -> quitacaoId?.let { id ->
+    EVENT_TYPE_DEBT_SETTLED -> settlementId?.let { id ->
         GroupRealtimeEvent.DebtSettled(
             settlementId = id,
-            fromParticipantId = deParticipanteId.orEmpty(),
-            toParticipantId = paraParticipanteId.orEmpty(),
-            amountCents = valorCentavos ?: 0L,
+            fromParticipantId = fromParticipantId.orEmpty(),
+            toParticipantId = toParticipantId.orEmpty(),
+            amountCents = amountCents ?: 0L,
         )
     }
 

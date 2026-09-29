@@ -18,9 +18,9 @@ import com.rateio.app.ui.format.formatCentsAsBrl
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `.settle-row` de `quitar.html`: "A → B" + valor em destaque à esquerda, botão "Marcar como
- * pago" à direita. Puramente apresentação — [onMarkAsPaidClick] só repassa o clique, quem grava o
- * [com.rateio.domain.model.Settlement] é o ViewModel.
+ * `settle.html`'s `.settle-row`: "A → B" + the highlighted amount on the left, "Mark as paid"
+ * button on the right. Purely presentation — [onMarkAsPaidClick] just forwards the click, the
+ * ViewModel is the one that writes the [com.rateio.domain.model.Settlement].
  */
 @Composable
 fun SettlementSuggestionRow(
@@ -49,7 +49,7 @@ fun SettlementSuggestionRow(
             onClick = { onMarkAsPaidClick(suggestion) },
             colors = ButtonDefaults.buttonColors(containerColor = colors.paperAlt, contentColor = colors.ink),
         ) {
-            Text(text = "Marcar como pago", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(text = "Mark as paid", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }

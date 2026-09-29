@@ -1,11 +1,11 @@
 package com.rateio.app.ui.groupdetail
 
 /**
- * Estado da tela "Detalhes do grupo" (T42.2, RF42). [Content] é o único estado com dado real —
- * [Loading] cobre o instante antes do primeiro valor combinado chegar (Room + engine, T33) e
- * [NotFound] cobre um `groupId` que não existe mais no Room (grupo apagado em outra aba/tela
- * enquanto esta estava aberta; não deveria acontecer no fluxo normal, mas evita crash em vez de
- * assumir que o grupo sempre existe).
+ * State of the "Group details" screen (T42.2, RF42). [Content] is the only state with real data —
+ * [Loading] covers the instant before the first combined value arrives (Room + engine, T33) and
+ * [NotFound] covers a `groupId` that no longer exists in Room (group deleted from another
+ * tab/screen while this one was open; shouldn't happen in the normal flow, but avoids a crash
+ * instead of assuming the group always exists).
  */
 sealed interface GroupDetailUiState {
     data object Loading : GroupDetailUiState
@@ -23,9 +23,9 @@ sealed interface GroupDetailUiState {
 }
 
 /**
- * Uma linha de "Saldos" (`.split-row` do protótipo `grupo.html`): saldo de um participante,
- * calculado por [com.rateio.domain.engine.DebtSimplificationEngine.computeBalances] (T33) — nunca
- * recalculado aqui, `ParticipantBalanceRow` só apresenta [balance] já pronto.
+ * A row in "Balances" (the prototype `group.html`'s `.split-row`): a participant's balance,
+ * computed by [com.rateio.domain.engine.DebtSimplificationEngine.computeBalances] (T33) — never
+ * recalculated here, `ParticipantBalanceRow` just presents the already-ready [balance].
  */
 data class ParticipantBalanceUiModel(
     val participantId: String,
@@ -35,10 +35,10 @@ data class ParticipantBalanceUiModel(
 )
 
 /**
- * Saldo de UM participante do grupo, semântica genérica ("recebe"/"deve", `grupo.html` ->
- * `saldosHtml`) — não confundir com [com.rateio.app.ui.groups.GroupBalance], que é sempre sob a
- * perspectiva de "você" (usado só no card da lista). Aqui qualquer participante pode estar em
- * qualquer um dos três estados, o dono do aparelho incluso.
+ * The balance of ONE group participant, generic semantics ("gets back"/"owes", `group.html` ->
+ * `saldosHtml`) — don't confuse this with [com.rateio.app.ui.groups.GroupBalance], which is always
+ * from "your" perspective (used only in the list card). Here any participant can be in any of the
+ * three states, including the device owner.
  */
 sealed interface ParticipantBalance {
     data object Settled : ParticipantBalance
@@ -47,9 +47,9 @@ sealed interface ParticipantBalance {
 }
 
 /**
- * Uma linha de "Despesas" (`.expense-row` do protótipo): descrição, quem pagou, data curta, tipo
- * de divisão e valor total — nenhum cálculo de divisão mora aqui, [splitTypeLabel] só traduz o
- * subtipo de `ExpenseSplit` (T7B) já escolhido quando a despesa foi lançada (T24).
+ * A row in "Expenses" (the prototype's `.expense-row`): description, who paid, a short date, split
+ * type and total amount — no split calculation lives here, [splitTypeLabel] just translates the
+ * `ExpenseSplit` (T7B) subtype already chosen when the expense was logged (T24).
  */
 data class ExpenseRowUiModel(
     val id: String,
@@ -61,9 +61,9 @@ data class ExpenseRowUiModel(
 )
 
 /**
- * Uma linha de "Histórico de quitações" (T37, RF31/RF33): quem pagou, quem recebeu, quanto e
- * quando — só apresentação, `SettleDebtsViewModel` já registrou a quitação em si (T42.1); esta
- * lista nunca recalcula nada, é puramente o histórico do que já aconteceu.
+ * A row in "Settlement history" (T37, RF31/RF33): who paid, who received, how much and when —
+ * presentation only, `SettleDebtsViewModel` already recorded the settlement itself (T42.1); this
+ * list never recalculates anything, it's purely the history of what already happened.
  */
 data class SettlementRowUiModel(
     val id: String,
@@ -74,24 +74,24 @@ data class SettlementRowUiModel(
 )
 
 /**
- * Estado da ação "Sincronizar este grupo" (T19) para a tela de detalhe. Até T19/antes de T42.4
- * essa ação morava no card da lista de grupos (`com.rateio.app.ui.groups.GroupSyncActionUiState`),
- * atalho temporário porque esta tela ainda não existia. T42.4 move a ação pra cá — é o lugar certo
- * agora que "Detalhes do grupo" existe.
+ * State of the "Sync this group" action (T19) for the detail screen. Until T19/before T42.4 this
+ * action lived in the group list card (`com.rateio.app.ui.groups.GroupSyncActionUiState`), a
+ * temporary shortcut because this screen didn't exist yet. T42.4 moves the action here — it's the
+ * right place now that "Group details" exists.
  */
 sealed interface GroupSyncActionUiState {
-    /** Grupo já sincronizado, ou usuário não autenticado — não faz sentido oferecer a ação. */
+    /** The group is already synced, or the user isn't authenticated — offering the action makes no sense. */
     data object Hidden : GroupSyncActionUiState
 
-    /** Grupo local, usuário autenticado: pode tocar pra sincronizar. */
+    /** A local group, an authenticated user: can tap to sync. */
     data object Available : GroupSyncActionUiState
 
-    /** Chamada em andamento. */
+    /** A call in progress. */
     data object InProgress : GroupSyncActionUiState
 
     /**
-     * Falha de rede/HTTP na última tentativa — `Group.isSynced` continua `false` (nenhum estado
-     * inconsistente), [message] já vem pronta pra tela (ver
+     * A network/HTTP failure on the last attempt — `Group.isSynced` stays `false` (no inconsistent
+     * state), [message] already comes ready for the screen (see
      * [com.rateio.domain.repository.GroupSyncException]).
      */
     data class Failed(val message: String) : GroupSyncActionUiState

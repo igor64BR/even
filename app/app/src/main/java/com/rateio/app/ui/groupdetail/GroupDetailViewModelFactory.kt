@@ -14,11 +14,11 @@ import com.rateio.domain.repository.RemoteGroupRepository
 import com.rateio.domain.repository.SettlementRepository
 
 /**
- * Sem framework de DI no projeto ainda — fábrica manual que injeta os repositórios de
- * [com.rateio.app.di.AppContainer] no [GroupDetailViewModel]. Mesmo padrão de
- * [com.rateio.app.ui.createexpense.CreateExpenseViewModelFactory] (T24), com [groupId] porque a
- * tela sempre pertence a um grupo já existente. T40.1 acrescenta [groupRealtimeGateway] pro
- * cliente SignalR.
+ * No DI framework in the project yet — a manual factory that injects
+ * [com.rateio.app.di.AppContainer]'s repositories into the [GroupDetailViewModel]. Same pattern as
+ * [com.rateio.app.ui.createexpense.CreateExpenseViewModelFactory] (T24), with a [groupId] because
+ * the screen always belongs to an already-existing group. T40.1 adds [groupRealtimeGateway] for
+ * the SignalR client.
  */
 class GroupDetailViewModelFactory(
     private val groupId: String,
@@ -36,7 +36,7 @@ class GroupDetailViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         require(modelClass.isAssignableFrom(GroupDetailViewModel::class.java)) {
-            "GroupDetailViewModelFactory só sabe criar GroupDetailViewModel, pediram $modelClass"
+            "GroupDetailViewModelFactory only knows how to create GroupDetailViewModel, got $modelClass"
         }
         return GroupDetailViewModel(
             groupId = groupId,

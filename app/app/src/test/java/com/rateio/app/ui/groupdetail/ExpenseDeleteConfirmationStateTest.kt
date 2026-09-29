@@ -6,15 +6,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Cobre T29.2: "confirmação de exclusão realmente pede confirmação antes de excluir (não exclui
- * no primeiro toque)" — a regra vive inteira em [ExpenseDeleteConfirmationState] (extraída de
- * `GroupDetailScreen.ExpenseList` justamente pra ficar testável sem montar Compose), então dá pra
- * verificar aqui com JUnit puro, sem Robolectric.
+ * Covers T29.2: "the delete confirmation really asks for confirmation before deleting (doesn't
+ * delete on the first tap)" — the whole rule lives in [ExpenseDeleteConfirmationState] (extracted
+ * from `GroupDetailScreen.ExpenseList` precisely to make it testable without setting up Compose),
+ * so it can be verified here with plain JUnit, no Robolectric.
  */
 class ExpenseDeleteConfirmationStateTest {
 
     @Test
-    fun `pedir exclusao so guarda o id pendente, nao chama callback nenhum`() {
+    fun `requesting a delete only stores the pending id, doesn't call any callback`() {
         val state = ExpenseDeleteConfirmationState()
 
         state.request("e1")
@@ -23,42 +23,42 @@ class ExpenseDeleteConfirmationStateTest {
     }
 
     @Test
-    fun `confirmar sem ter pedido antes nao chama o callback`() {
+    fun `confirming without having requested first doesn't call the callback`() {
         val state = ExpenseDeleteConfirmationState()
-        var chamado = false
+        var called = false
 
-        state.confirm { chamado = true }
+        state.confirm { called = true }
 
-        assertTrue("sem exclusao pendente, confirm() nao deve fazer nada", !chamado)
+        assertTrue("with no pending deletion, confirm() shouldn't do anything", !called)
     }
 
     @Test
-    fun `confirmar depois de pedir chama o callback com o id certo e limpa o pendente`() {
+    fun `confirming after requesting calls the callback with the right id and clears the pending one`() {
         val state = ExpenseDeleteConfirmationState()
         state.request("e1")
-        var idExcluido: String? = null
+        var deletedId: String? = null
 
-        state.confirm { idExcluido = it }
+        state.confirm { deletedId = it }
 
-        assertEquals("e1", idExcluido)
-        assertNull("diálogo fecha depois de confirmar", state.pendingExpenseId)
+        assertEquals("e1", deletedId)
+        assertNull("dialog closes after confirming", state.pendingExpenseId)
     }
 
     @Test
-    fun `cancelar depois de pedir limpa o pendente sem chamar o callback`() {
+    fun `cancelling after requesting clears the pending id without calling the callback`() {
         val state = ExpenseDeleteConfirmationState()
         state.request("e1")
-        var chamado = false
+        var called = false
 
         state.dismiss()
 
         assertNull(state.pendingExpenseId)
-        state.confirm { chamado = true }
-        assertTrue("cancelar nao deixa uma exclusao pendente pra confirmar depois", !chamado)
+        state.confirm { called = true }
+        assertTrue("cancelling doesn't leave a pending deletion to confirm later", !called)
     }
 
     @Test
-    fun `pedir exclusao de outra despesa troca o pendente sem excluir a anterior`() {
+    fun `requesting a delete for another expense swaps the pending one without deleting the previous one`() {
         val state = ExpenseDeleteConfirmationState()
         state.request("e1")
 

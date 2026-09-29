@@ -10,15 +10,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * `.sync-icon` do protótipo (`app.js`, `syncIcon()`): nuvem cheia (preenchida) para grupo
- * sincronizado, nuvem cortada (contorno + traço) para grupo só local. `tint` é sempre
- * `--ink-soft`, resolvido pelo chamador via [LocalContentColor][androidx.compose.material3.LocalContentColor].
+ * The prototype's `.sync-icon` (`app.js`, `syncIcon()`): filled cloud for a synced group, crossed
+ * cloud (outline + slash) for a local-only group. `tint` is always `--ink-soft`, resolved by the
+ * caller via [LocalContentColor][androidx.compose.material3.LocalContentColor].
  */
 @Composable
 fun SyncStatusIcon(isSynced: Boolean, modifier: Modifier = Modifier) {
     Icon(
         imageVector = if (isSynced) Icons.Filled.Cloud else Icons.Filled.CloudOff,
-        contentDescription = if (isSynced) "Sincronizado" else "Local — só neste aparelho",
+        contentDescription = if (isSynced) "Synced" else "Local — this device only",
         modifier = modifier.size(16.dp),
     )
 }

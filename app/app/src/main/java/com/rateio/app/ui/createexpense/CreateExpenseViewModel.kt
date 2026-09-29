@@ -27,21 +27,21 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Estado + cálculo de divisão + persistência do formulário "Nova despesa"/"Editar despesa" (T24,
- * estendido em T29 pro modo edição), para um [groupId] já existente (grupo local ou sincronizado —
- * não importa aqui, ver nota em [propagateUpdateIfSynced]). Participantes vêm de
- * [participantRepository] (Room, T7B); a divisão Igual usa [calculateEqualSplit] (função pura,
- * testada isoladamente) em vez de `/` inteiro ingênuo, pra fechar centavo igual ao motor
- * (`algorithm-spec.md`). Persistência é sempre local via [expenseRepository] — zero chamada de
- * rede bloqueante (constitution.md, princípio 1).
+ * State + split calculation + persistence for the "New expense"/"Edit expense" form (T24, extended
+ * in T29 for edit mode), for an already-existing [groupId] (local or synced group — doesn't matter
+ * here, see the note in [propagateUpdateIfSynced]). Participants come from [participantRepository]
+ * (Room, T7B); the Equal split uses [calculateEqualSplit] (a pure function, tested in isolation)
+ * instead of naive integer `/`, to close out cents the same way the engine does
+ * (`algorithm-spec.md`). Persistence is always local via [expenseRepository] — zero blocking
+ * network calls (constitution.md, principle 1).
  *
- * [expenseId] é a única diferença de construção entre os dois modos (T29, "edição é estado, não
- * tela nova"): `null` cria uma despesa nova (T24), não-nulo pré-carrega essa despesa do Room
- * ([loadExpenseForEditing]) e faz `onSaveClick` fazer update em vez de insert
- * ([updateExistingExpense]). [groupRepository]/[remoteExpenseRepository] só entram em jogo na
- * edição, pra propagar a mudança pro backend quando o grupo já está sincronizado (T29,
- * [propagateUpdateIfSynced]) — T24 nunca precisou disso porque criar despesa em grupo sincronizado
- * é lacuna conhecida e documentada à parte (RemoteGroupRepository não cobre despesa avulsa).
+ * [expenseId] is the only construction difference between the two modes (T29, "editing is state,
+ * not a new screen"): `null` creates a new expense (T24), non-null pre-loads that expense from
+ * Room ([loadExpenseForEditing]) and makes `onSaveClick` do an update instead of an insert
+ * ([updateExistingExpense]). [groupRepository]/[remoteExpenseRepository] only come into play on
+ * edit, to propagate the change to the backend when the group is already synced (T29,
+ * [propagateUpdateIfSynced]) — T24 never needed this because creating an expense in a synced group
+ * is a known gap documented separately (RemoteGroupRepository doesn't cover a standalone expense).
  */
 class CreateExpenseViewModel(
     private val groupId: String,
@@ -67,11 +67,11 @@ class CreateExpenseViewModel(
     }
 
     /**
-     * T29.1: pré-preenche o formulário com a despesa sendo editada — leitura pontual
-     * ([ExpenseRepository.getExpenseById]), não o `Flow` da lista, porque só lemos uma vez, ao
-     * abrir a tela (ver KDoc de `ExpenseDao.getExpenseWithSplitsById`). Silenciosamente não faz
-     * nada se a despesa já não existir mais (apagada em outra tela enquanto esta abria) — mesma
-     * defesa de [com.rateio.app.ui.groupdetail.GroupDetailUiState.NotFound].
+     * T29.1: pre-fills the form with the expense being edited — a one-off read
+     * ([ExpenseRepository.getExpenseById]), not the list's `Flow`, because we only read once, when
+     * opening the screen (see the KDoc of `ExpenseDao.getExpenseWithSplitsById`). Silently does
+     * nothing if the expense no longer exists (deleted from another screen while this one was
+     * opening) — the same defense as [com.rateio.app.ui.groupdetail.GroupDetailUiState.NotFound].
      */
     private suspend fun loadExpenseForEditing(expenseId: String) {
         val expense = expenseRepository.getExpenseById(expenseId) ?: return
@@ -94,7 +94,7 @@ class CreateExpenseViewModel(
         _uiState.update { it.copy(date = date) }
     }
 
-    /** Marca/desmarca um participante da divisão (`data-id` do checkbox no protótipo). */
+    /** Checks/unchecks a participant in the split (`data-id` of the checkbox in the prototype). */
     fun onParticipantToggled(participantId: String) {
         _uiState.update { state ->
             state.copy(
@@ -105,13 +105,14 @@ class CreateExpenseViewModel(
         }
     }
 
-    /** Troca a aba ativa em "Como dividir" (T26). `participantsError` só faz sentido no modo Igual
-     * — some ao trocar de aba, igual o protótipo troca `#split-area` sem carregar erro da aba anterior. */
+    /** Switches the active tab in "How to split" (T26). `participantsError` only makes sense in
+     * Equal mode — it clears on tab switch, just like the prototype swaps `#split-area` without
+     * carrying over the previous tab's error. */
     fun onSplitModeSelected(mode: SplitMode) {
         _uiState.update { it.copy(splitMode = mode, participantsError = false) }
     }
 
-    /** `data-id` do input de `%` na aba Percentual (T26.1). */
+    /** `data-id` of the `%` input in the Percentage tab (T26.1). */
     fun onPercentageChanged(participantId: String, percentageInput: String) {
         _uiState.update { state ->
             state.copy(
@@ -122,7 +123,7 @@ class CreateExpenseViewModel(
         }
     }
 
-    /** `data-id` do input de R$ na aba Valor fixo (T26.2). */
+    /** `data-id` of the R$ input in the Fixed amount tab (T26.2). */
     fun onFixedAmountChanged(participantId: String, fixedAmountInput: String) {
         _uiState.update { state ->
             state.copy(
@@ -142,9 +143,9 @@ class CreateExpenseViewModel(
             it.copy(
                 descriptionError = !validation.descriptionValid,
                 amountError = !validation.amountValid,
-                // Só o modo Igual usa esse flag pra pintar a lista de participantes de erro — nos
-                // outros dois modos a soma inválida já é visível ao vivo em #split-sum, não precisa
-                // de um segundo aviso (ver nota de classe de CreateExpenseUiState).
+                // Only the Equal mode uses this flag to paint the participant list as an error — in
+                // the other two modes an invalid sum is already visible live in #split-sum, no need
+                // for a second warning (see CreateExpenseUiState's class note).
                 participantsError = state.splitMode == SplitMode.EQUAL && !validation.splitValid,
             )
         }
@@ -160,14 +161,15 @@ class CreateExpenseViewModel(
                     insertNewExpense(state, validation.amountCents)
                 }
             } finally {
-                // Sem isso, `isSaving` ficava `true` pra sempre — inofensivo enquanto a tela
-                // desmontava ao navegar de volta pro grupo logo após o evento abaixo, mas virava
-                // bug visível (botão "Salvar despesa" travado desabilitado) assim que o mesmo
-                // ViewModel era reaproveitado numa visita seguinte a esta tela (ver key em
-                // CreateExpenseRoute). Reseta ANTES de emitir o evento (não depois, num `finally`
-                // só em volta do emit também): "salvando" termina quando a despesa é persistida,
-                // não quando alguém reage à notificação de navegação — e só assim quem observa
-                // [events] já vê `isSaving = false` no mesmo instante em que o evento chega.
+                // Without this, `isSaving` would stay `true` forever — harmless while the screen
+                // unmounted when navigating back to the group right after the event below, but it
+                // turned into a visible bug (a permanently disabled "Save expense" button) as soon
+                // as the same ViewModel was reused on a subsequent visit to this screen (see the
+                // key in CreateExpenseRoute). Resets BEFORE emitting the event (not after, in a
+                // `finally` only around the emit either): "saving" ends when the expense is
+                // persisted, not when someone reacts to the navigation notification — and only this
+                // way does whoever observes [events] already see `isSaving = false` at the same
+                // instant the event arrives.
                 _uiState.update { it.copy(isSaving = false) }
             }
             _events.emit(CreateExpenseEvent.Saved)
@@ -175,20 +177,21 @@ class CreateExpenseViewModel(
     }
 
     private suspend fun insertNewExpense(state: CreateExpenseUiState, amountCents: Long) {
-        val payerId = requireNotNull(state.payerId) { "Nenhum pagador selecionado pro grupo $groupId." }
+        val payerId = requireNotNull(state.payerId) { "No payer selected for group $groupId." }
         expenseRepository.insertExpense(
             state.toExpense(id = UUID.randomUUID().toString(), payerId = payerId, amountCents = amountCents),
         )
     }
 
     /**
-     * T29.1: grava a edição no Room (upsert — [ExpenseRepository.insertExpense] com o mesmo
-     * [expenseId] substitui despesa + splits, ver KDoc de `ExpenseDao.insertWithSplits`) e só
-     * depois tenta propagar pro backend, nunca o contrário — local-first significa que a edição já
-     * vale localmente antes de qualquer tentativa de rede (constitution.md, princípio 1).
+     * T29.1: saves the edit to Room (an upsert — [ExpenseRepository.insertExpense] with the same
+     * [expenseId] replaces the expense + its splits, see the KDoc of
+     * `ExpenseDao.insertWithSplits`) and only then tries to propagate it to the backend, never the
+     * other way around — local-first means the edit already counts locally before any network
+     * attempt (constitution.md, principle 1).
      */
     private suspend fun updateExistingExpense(state: CreateExpenseUiState, amountCents: Long, editingExpenseId: String) {
-        val payerId = requireNotNull(state.payerId) { "Nenhum pagador selecionado pro grupo $groupId." }
+        val payerId = requireNotNull(state.payerId) { "No payer selected for group $groupId." }
         val expense = state.toExpense(id = editingExpenseId, payerId = payerId, amountCents = amountCents)
 
         expenseRepository.insertExpense(expense)
@@ -206,14 +209,14 @@ class CreateExpenseViewModel(
     )
 
     /**
-     * T29: propaga a edição pro backend quando [groupId] já está sincronizado — mesmo padrão de
-     * [com.rateio.app.ui.groupdetail.GroupDetailViewModel.onSyncGroupClick] (T19), só que
-     * best-effort e silencioso: a edição local já aconteceu na linha acima
-     * ([updateExistingExpense]), então uma falha de rede/sessão aqui nunca desfaz nem bloqueia o
-     * evento [CreateExpenseEvent.Saved] pra UI (local-first, constitution.md princípio 1 — "mudança
-     * local não espera confirmação de servidor", T29-app-editar-excluir-despesa.md). Diferente de
-     * "Sincronizar este grupo" (T19), não existe uma ação de "tentar de novo" pra uma única
-     * despesa hoje — fica pra quando o app ganhar uma fila de sincronização de verdade.
+     * T29: propagates the edit to the backend when [groupId] is already synced — the same pattern
+     * as [com.rateio.app.ui.groupdetail.GroupDetailViewModel.onSyncGroupClick] (T19), except
+     * best-effort and silent: the local edit already happened in the line above
+     * ([updateExistingExpense]), so a network/session failure here never undoes or blocks the
+     * [CreateExpenseEvent.Saved] event for the UI (local-first, constitution.md principle 1 —
+     * "local change doesn't wait for server confirmation", T29-app-editar-excluir-despesa.md).
+     * Unlike "Sync this group" (T19), there's no "retry" action for a single expense today — that's
+     * left for when the app gets a real sync queue.
      */
     private suspend fun propagateUpdateIfSynced(expense: Expense) {
         val group = groupRepository.getGroupById(groupId) ?: return
@@ -221,7 +224,7 @@ class CreateExpenseViewModel(
         try {
             remoteExpenseRepository.updateExpense(remoteId, expense)
         } catch (error: GroupSyncException) {
-            // Ver KDoc da função: falha de rede/HTTP não desfaz a edição local.
+            // See the function's KDoc: a network/HTTP failure doesn't undo the local edit.
         }
     }
 
@@ -231,9 +234,10 @@ class CreateExpenseViewModel(
 }
 
 /**
- * Participantes recém-carregados do Room: todos entram na divisão, pagador default é "Você". O
- * percentual default (`Math.round(100 / n)`, [defaultPercentage]) é semeado igual ao protótipo —
- * o valor fixo fica vazio (não existe "valor fixo padrão" sensato pra propor).
+ * Participants freshly loaded from Room: everyone enters the split, the default payer is "You".
+ * The default percentage (`Math.round(100 / n)`, [defaultPercentage]) is seeded just like the
+ * prototype — the fixed amount stays empty (there's no sensible "default fixed amount" to
+ * propose).
  */
 private fun CreateExpenseUiState.withParticipants(participants: List<Participant>): CreateExpenseUiState {
     val defaultPayerId = participants.firstOrNull { it.isYou }?.id ?: participants.firstOrNull()?.id
@@ -251,13 +255,13 @@ private fun CreateExpenseUiState.withParticipants(participants: List<Participant
 }
 
 /**
- * T29.1: inverso de [buildSplits] — reconstrói [CreateExpenseUiState.splitMode]/[ExpenseSplitRowUiModel]
- * a partir de [Expense.splits] de uma despesa já existente, em vez dos defaults de
- * [withParticipants]. Chamada depois de [withParticipants] no `init` (mesma ordem): as linhas já
- * existem com nome/isYou/percentual padrão semeados, aqui só os campos que a despesa gravada
- * realmente tinha são sobrescritos. Um participante sem split correspondente (entrou no grupo
- * depois que a despesa foi lançada) fica de fora da divisão ao reabrir pra editar — reflete
- * fielmente o que foi salvo, em vez de inventar uma participação que nunca existiu.
+ * T29.1: the inverse of [buildSplits] — reconstructs [CreateExpenseUiState.splitMode]/
+ * [ExpenseSplitRowUiModel] from [Expense.splits] of an already-existing expense, instead of
+ * [withParticipants]'s defaults. Called after [withParticipants] in `init` (same order): the rows
+ * already exist with name/isYou/default percentage seeded, here only the fields the recorded
+ * expense actually had are overwritten. A participant with no corresponding split (joined the
+ * group after the expense was logged) is left out of the split when reopened for editing —
+ * faithfully reflecting what was saved, instead of inventing a split that never existed.
  */
 private fun CreateExpenseUiState.withExpenseForEditing(expense: Expense): CreateExpenseUiState {
     val splitsByParticipant = expense.splits.associateBy { it.participantId }
@@ -280,14 +284,14 @@ private fun CreateExpenseUiState.withExpenseForEditing(expense: Expense): Create
     ).withRecalculatedSplit()
 }
 
-/** Espelha [com.rateio.app.ui.groupdetail.GroupDetailViewModel]'s `splitTypeLabel()` — deriva do primeiro split. */
+/** Mirrors [com.rateio.app.ui.groupdetail.GroupDetailViewModel]'s `splitTypeLabel()` — derived from the first split. */
 private fun List<ExpenseSplit>.toUiSplitMode(): SplitMode = when (firstOrNull()) {
     is ExpenseSplit.Weight -> SplitMode.PERCENTAGE
     is ExpenseSplit.FixedAmount -> SplitMode.FIXED_AMOUNT
     is ExpenseSplit.Equal, null -> SplitMode.EQUAL
 }
 
-/** Recalcula [ExpenseSplitRowUiModel.amountCents] de cada linha marcada (T24.2, cálculo ao vivo). */
+/** Recalculates [ExpenseSplitRowUiModel.amountCents] for each checked row (T24.2, live calculation). */
 private fun CreateExpenseUiState.withRecalculatedSplit(): CreateExpenseUiState {
     val totalCents = parseAmountInputToCents(amountInput) ?: 0L
     val includedIds = splitRows.filter { it.isIncluded }.map { it.participantId }
@@ -308,9 +312,9 @@ private data class FormValidation(
 }
 
 /**
- * T24.4 + T26.1/T26.2: descrição obrigatória, valor > 0, e a divisão precisa fechar de acordo com
- * a aba ativa — pelo menos 1 participante selecionado no modo Igual, soma = 100% no Percentual
- * (ver [isPercentageSplitComplete]), soma = valor total no Valor fixo (ver
+ * T24.4 + T26.1/T26.2: description required, amount > 0, and the split needs to add up according
+ * to the active tab — at least 1 participant selected in Equal mode, sum = 100% in Percentage (see
+ * [isPercentageSplitComplete]), sum = total amount in Fixed amount (see
  * [isFixedAmountSplitComplete]).
  */
 private fun CreateExpenseUiState.validate(): FormValidation {
@@ -329,15 +333,15 @@ private fun CreateExpenseUiState.validate(): FormValidation {
 }
 
 /**
- * Traduz [rows] pro subtipo [ExpenseSplit] certo de acordo com [mode] (T26.3: "ao salvar, constrói
- * Weight/FixedAmount pros participantes selecionados").
- * - Igual: só os participantes marcados, [ExpenseSplit.Equal] — inalterado desde T24.
- * - Percentual: todos os participantes (não há checkbox nessa aba, igual ao protótipo), peso =
- *   percentual digitado (0 se a entrada estiver vazia/inválida — só chega aqui se a soma já fechou
- *   100%, então "vazio" não deveria sobrar, mas não há por que persistir `null` como estado
- *   inválido em vez de 0).
- * - Valor fixo: só participantes com valor digitado e positivo (`fixos[p.id] > 0` no protótipo) —
- *   quem ficou com 0/vazio não participa da despesa.
+ * Translates [rows] into the right [ExpenseSplit] subtype based on [mode] (T26.3: "on save, build
+ * Weight/FixedAmount for the selected participants").
+ * - Equal: only the checked participants, [ExpenseSplit.Equal] — unchanged since T24.
+ * - Percentage: every participant (no checkbox in this tab, same as the prototype), weight = the
+ *   typed percentage (0 if the input is empty/invalid — this is only reached if the sum already
+ *   added up to 100%, so "empty" shouldn't be left over, but there's no reason to persist `null` as
+ *   an invalid state instead of 0).
+ * - Fixed amount: only participants with a typed, positive amount (`fixos[p.id] > 0` in the
+ *   prototype) — whoever is left at 0/empty doesn't take part in the expense.
  */
 private fun buildSplits(mode: SplitMode, rows: List<ExpenseSplitRowUiModel>): List<ExpenseSplit> =
     when (mode) {

@@ -31,18 +31,18 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Cobre T24.2 (cálculo ao vivo da divisão igual) e T24.3/T24.4 (persistência local + validação)
- * do formulário "Nova despesa". Mesmo padrão Robolectric de `CreateGroupViewModelTest` (T16):
- * banco Room em memória, DAOs de verdade por trás de `Room*Repository`, grupo + participantes
- * semeados diretamente via repositório (não existe tela de detalhe de grupo pra semear via UI).
+ * Covers T24.2 (live calculation of the equal split) and T24.3/T24.4 (local persistence +
+ * validation) of the "New expense" form. Same Robolectric pattern as `CreateGroupViewModelTest`
+ * (T16): an in-memory Room database, real DAOs behind `Room*Repository`, group + participants
+ * seeded directly through the repository (there's no group detail screen to seed through the UI).
  *
- * O carregamento inicial de participantes ([CreateExpenseViewModel.init]) e a gravação da despesa
- * ([CreateExpenseViewModel.onSaveClick]) rodam no `TransactionExecutor` de verdade do Room, fora
- * do [StandardTestDispatcher] — `advanceUntilIdle()` sozinho não espera esse trabalho real
- * terminar (mesma corrida documentada em `GroupListViewModelTest`, "sincronizar com sucesso").
- * Por isso os testes esperam suspendendo de verdade em `Flow.first { predicado }` (sobre
- * [CreateExpenseViewModel.uiState]/[CreateExpenseViewModel.events]/o repositório), nunca só lendo
- * `.value` depois de `advanceUntilIdle()`.
+ * The initial participant load ([CreateExpenseViewModel.init]) and the expense write
+ * ([CreateExpenseViewModel.onSaveClick]) run on Room's real `TransactionExecutor`, outside the
+ * [StandardTestDispatcher] — `advanceUntilIdle()` alone doesn't wait for that real work to finish
+ * (the same race documented in `GroupListViewModelTest`, "sync successfully"). That's why the
+ * tests wait by really suspending on `Flow.first { predicate }` (on
+ * [CreateExpenseViewModel.uiState]/[CreateExpenseViewModel.events]/the repository), never just
+ * reading `.value` after `advanceUntilIdle()`.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -66,8 +66,8 @@ class CreateExpenseViewModelTest {
         participantRepository = RoomParticipantRepository(database.participantDao())
         expenseRepository = RoomExpenseRepository(database.expenseDao())
 
-        groupId = "grupo-1"
-        groupRepository.insertGroup(Group(id = groupId, name = "Churras de sábado", createdAt = Instant.now()))
+        groupId = "group-1"
+        groupRepository.insertGroup(Group(id = groupId, name = "Saturday barbecue", createdAt = Instant.now()))
     }
 
     @After
@@ -81,11 +81,11 @@ class CreateExpenseViewModelTest {
     }
 
     /**
-     * Cria o ViewModel e suspende de verdade até o carregamento inicial de participantes chegar.
-     * [expenseId] (T29) liga o modo edição — `null` (default) mantém o comportamento de sempre
-     * (T24, modo criação). [remoteExpenseRepository] só importa pros testes de propagação da
-     * edição pro backend (grupo sincronizado); os demais usam o fake padrão, que nunca é chamado
-     * porque nenhum grupo semeado aqui tem `isSynced = true`.
+     * Creates the ViewModel and really suspends until the initial participant load arrives.
+     * [expenseId] (T29) switches on edit mode — `null` (default) keeps the usual behavior (T24,
+     * create mode). [remoteExpenseRepository] only matters for the tests about propagating the edit
+     * to the backend (a synced group); the others use the default fake, which is never called
+     * because no group seeded here has `isSynced = true`.
      */
     private suspend fun createViewModelWithParticipantsLoaded(
         expenseId: String? = null,
@@ -104,9 +104,9 @@ class CreateExpenseViewModelTest {
     }
 
     @Test
-    fun `divisao igual entre 3 participantes fecha o total exato mesmo sem divisao inteira`() = runTest(testDispatcher) {
+    fun `equal split among 3 participants matches the exact total even without integer division`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
             Participant(id = "p3", groupId = groupId, name = "Diego"),
         )
@@ -117,16 +117,16 @@ class CreateExpenseViewModelTest {
         val rows = viewModel.uiState.value.splitRows
         assertEquals(3, rows.size)
         assertEquals(1000L, rows.sumOf { it.amountCents })
-        // "p1" é o primeiro em ordem de participantId, recebe o centavo extra (334+333+333=1000).
+        // "p1" is first in participantId order, gets the extra cent (334+333+333=1000).
         assertEquals(334L, rows.single { it.participantId == "p1" }.amountCents)
         assertEquals(333L, rows.single { it.participantId == "p2" }.amountCents)
         assertEquals(333L, rows.single { it.participantId == "p3" }.amountCents)
     }
 
     @Test
-    fun `desmarcar um participante recalcula a divisao so entre os restantes`() = runTest(testDispatcher) {
+    fun `unchecking a participant recalculates the split only among the remaining ones`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
         )
         val viewModel = createViewModelWithParticipantsLoaded()
@@ -141,8 +141,8 @@ class CreateExpenseViewModelTest {
     }
 
     @Test
-    fun `salvar sem descricao marca erro e nao persiste nada`() = runTest(testDispatcher) {
-        seedParticipants(Participant(id = "p1", groupId = groupId, name = "Você", isYou = true))
+    fun `saving with no description marks an error and persists nothing`() = runTest(testDispatcher) {
+        seedParticipants(Participant(id = "p1", groupId = groupId, name = "You", isYou = true))
         val viewModel = createViewModelWithParticipantsLoaded()
 
         viewModel.onAmountChanged("10,00")
@@ -153,11 +153,11 @@ class CreateExpenseViewModelTest {
     }
 
     @Test
-    fun `salvar com valor zero marca erro e nao persiste nada`() = runTest(testDispatcher) {
-        seedParticipants(Participant(id = "p1", groupId = groupId, name = "Você", isYou = true))
+    fun `saving with a zero amount marks an error and persists nothing`() = runTest(testDispatcher) {
+        seedParticipants(Participant(id = "p1", groupId = groupId, name = "You", isYou = true))
         val viewModel = createViewModelWithParticipantsLoaded()
 
-        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onDescriptionChanged("Friday dinner")
         viewModel.onAmountChanged("0")
         viewModel.onSaveClick()
 
@@ -166,11 +166,11 @@ class CreateExpenseViewModelTest {
     }
 
     @Test
-    fun `salvar sem nenhum participante selecionado marca erro e nao persiste nada`() = runTest(testDispatcher) {
-        seedParticipants(Participant(id = "p1", groupId = groupId, name = "Você", isYou = true))
+    fun `saving with no participant selected marks an error and persists nothing`() = runTest(testDispatcher) {
+        seedParticipants(Participant(id = "p1", groupId = groupId, name = "You", isYou = true))
         val viewModel = createViewModelWithParticipantsLoaded()
 
-        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onDescriptionChanged("Friday dinner")
         viewModel.onAmountChanged("10,00")
         viewModel.onParticipantToggled("p1")
         viewModel.onSaveClick()
@@ -180,27 +180,27 @@ class CreateExpenseViewModelTest {
     }
 
     @Test
-    fun `salvar despesa valida persiste no Room com splits Equal e emite evento`() = runTest(testDispatcher) {
+    fun `saving a valid expense persists to Room with Equal splits and emits an event`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
             Participant(id = "p3", groupId = groupId, name = "Diego"),
         )
         val viewModel = createViewModelWithParticipantsLoaded()
 
-        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onDescriptionChanged("Friday dinner")
         viewModel.onAmountChanged("10,00")
         viewModel.onPayerSelected("p2")
         viewModel.onSaveClick()
 
-        // Suspensão real: só retorna depois que a despesa foi persistida e o evento emitido
-        // (ver nota de classe) — nada de advanceUntilIdle() sozinho aqui.
+        // A real suspension: only returns after the expense is persisted and the event emitted
+        // (see the class note) — no advanceUntilIdle() alone here.
         viewModel.events.first()
 
         val expenses = expenseRepository.getExpensesFlow(groupId).first()
         assertEquals(1, expenses.size)
         val expense = expenses.single()
-        assertEquals("Jantar de sexta", expense.description)
+        assertEquals("Friday dinner", expense.description)
         assertEquals(1000L, expense.amountCents)
         assertEquals("p2", expense.paidByParticipantId)
         assertEquals(3, expense.splits.size)
@@ -208,18 +208,18 @@ class CreateExpenseViewModelTest {
         assertEquals(setOf("p1", "p2", "p3"), expense.splits.map { it.participantId }.toSet())
     }
 
-    // --- T26.1: aba Percentual ---
+    // --- T26.1: Percentage tab ---
 
     @Test
-    fun `salvar com percentual que nao fecha 100 por cento nao persiste nada`() = runTest(testDispatcher) {
+    fun `saving with a percentage that does not add up to 100 percent persists nothing`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
         )
         val viewModel = createViewModelWithParticipantsLoaded()
 
         viewModel.onSplitModeSelected(SplitMode.PERCENTAGE)
-        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onDescriptionChanged("Friday dinner")
         viewModel.onAmountChanged("100,00")
         viewModel.onPercentageChanged("p1", "40")
         viewModel.onPercentageChanged("p2", "40")
@@ -229,15 +229,15 @@ class CreateExpenseViewModelTest {
     }
 
     @Test
-    fun `salvar despesa com divisao percentual persiste splits Weight correspondentes`() = runTest(testDispatcher) {
+    fun `saving an expense with a percentage split persists the corresponding Weight splits`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
         )
         val viewModel = createViewModelWithParticipantsLoaded()
 
         viewModel.onSplitModeSelected(SplitMode.PERCENTAGE)
-        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onDescriptionChanged("Friday dinner")
         viewModel.onAmountChanged("100,00")
         viewModel.onPayerSelected("p1")
         viewModel.onPercentageChanged("p1", "60")
@@ -254,18 +254,18 @@ class CreateExpenseViewModelTest {
         assertEquals(40L, weights.getValue("p2"))
     }
 
-    // --- T26.2: aba Valor fixo ---
+    // --- T26.2: Fixed amount tab ---
 
     @Test
-    fun `salvar com valor fixo que nao fecha o total nao persiste nada`() = runTest(testDispatcher) {
+    fun `saving with a fixed amount that does not match the total persists nothing`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
         )
         val viewModel = createViewModelWithParticipantsLoaded()
 
         viewModel.onSplitModeSelected(SplitMode.FIXED_AMOUNT)
-        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onDescriptionChanged("Friday dinner")
         viewModel.onAmountChanged("100,00")
         viewModel.onFixedAmountChanged("p1", "40,00")
         viewModel.onFixedAmountChanged("p2", "40,00")
@@ -275,15 +275,15 @@ class CreateExpenseViewModelTest {
     }
 
     @Test
-    fun `salvar despesa com divisao por valor fixo persiste splits FixedAmount correspondentes`() = runTest(testDispatcher) {
+    fun `saving an expense with a fixed-amount split persists the corresponding FixedAmount splits`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
         )
         val viewModel = createViewModelWithParticipantsLoaded()
 
         viewModel.onSplitModeSelected(SplitMode.FIXED_AMOUNT)
-        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onDescriptionChanged("Friday dinner")
         viewModel.onAmountChanged("100,00")
         viewModel.onPayerSelected("p1")
         viewModel.onFixedAmountChanged("p1", "70,00")
@@ -300,13 +300,13 @@ class CreateExpenseViewModelTest {
         assertEquals(3000L, amounts.getValue("p2"))
     }
 
-    // --- T29.1: modo edição ---
+    // --- T29.1: edit mode ---
 
     private suspend fun seedExpense(): Expense {
         val expense = Expense(
             id = "e1",
             groupId = groupId,
-            description = "Carvão e carne",
+            description = "Charcoal and meat",
             amountCents = 10_00,
             paidByParticipantId = "p1",
             createdAt = Instant.parse("2026-03-01T12:00:00Z"),
@@ -320,56 +320,56 @@ class CreateExpenseViewModelTest {
     }
 
     @Test
-    fun `abrir em modo edicao pre-preenche descricao valor pagador e divisao da despesa existente`() = runTest(testDispatcher) {
+    fun `opening in edit mode pre-fills description amount payer and split of the existing expense`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
             Participant(id = "p3", groupId = groupId, name = "Diego"),
         )
         val expense = seedExpense()
 
         val viewModel = createViewModelWithParticipantsLoaded(expenseId = expense.id)
-        val state = viewModel.uiState.first { it.description == "Carvão e carne" }
+        val state = viewModel.uiState.first { it.description == "Charcoal and meat" }
 
-        assertTrue("uiState.expenseId deve apontar pra despesa sendo editada", state.isEditMode)
+        assertTrue("uiState.expenseId should point to the expense being edited", state.isEditMode)
         assertEquals("10,00", state.amountInput)
         assertEquals("p1", state.payerId)
         assertEquals(SplitMode.EQUAL, state.splitMode)
         assertTrue(state.splitRows.single { it.participantId == "p1" }.isIncluded)
         assertTrue(state.splitRows.single { it.participantId == "p2" }.isIncluded)
         assertFalse(
-            "p3 nao estava na despesa original, nao deve entrar marcado ao reabrir pra editar",
+            "p3 was not in the original expense, should not show up checked when reopened for editing",
             state.splitRows.single { it.participantId == "p3" }.isIncluded,
         )
     }
 
     @Test
-    fun `salvar edicao substitui a despesa existente no Room mantendo o mesmo id`() = runTest(testDispatcher) {
+    fun `saving an edit replaces the existing expense in Room keeping the same id`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
         )
         val expense = seedExpense()
         val viewModel = createViewModelWithParticipantsLoaded(expenseId = expense.id)
-        viewModel.uiState.first { it.description == "Carvão e carne" }
+        viewModel.uiState.first { it.description == "Charcoal and meat" }
 
-        viewModel.onDescriptionChanged("Carvão, carne e gelo")
+        viewModel.onDescriptionChanged("Charcoal, meat and ice")
         viewModel.onAmountChanged("20,00")
         viewModel.onSaveClick()
         viewModel.events.first()
 
         val expenses = expenseRepository.getExpensesFlow(groupId).first()
-        assertEquals("edicao substitui a despesa (upsert), nunca duplica", 1, expenses.size)
+        assertEquals("editing replaces the expense (upsert), never duplicates it", 1, expenses.size)
         val updated = expenses.single()
         assertEquals("e1", updated.id)
-        assertEquals("Carvão, carne e gelo", updated.description)
+        assertEquals("Charcoal, meat and ice", updated.description)
         assertEquals(2000L, updated.amountCents)
     }
 
     @Test
-    fun `salvar edicao de grupo nao sincronizado nao chama o backend`() = runTest(testDispatcher) {
+    fun `saving an edit for an unsynced group does not call the backend`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
         )
         val expense = seedExpense()
@@ -378,21 +378,21 @@ class CreateExpenseViewModelTest {
             expenseId = expense.id,
             remoteExpenseRepository = remoteExpenseRepository,
         )
-        viewModel.uiState.first { it.description == "Carvão e carne" }
+        viewModel.uiState.first { it.description == "Charcoal and meat" }
 
-        viewModel.onDescriptionChanged("Carvão, carne e gelo")
+        viewModel.onDescriptionChanged("Charcoal, meat and ice")
         viewModel.onSaveClick()
         viewModel.events.first()
 
-        assertNull("grupo local (nao sincronizado) nunca deve tentar falar com o backend", remoteExpenseRepository.lastUpdatedExpense)
+        assertNull("a local (unsynced) group should never try to talk to the backend", remoteExpenseRepository.lastUpdatedExpense)
     }
 
     /**
-     * Marca o grupo como sincronizado reinserindo a mesma linha com `isSynced=true` — mesmo
-     * caminho de produção (`GroupDetailViewModel.syncGroup`, T19). `GroupDao.insert` é `@Upsert`
-     * (achado em T29, corrigido à parte: `@Insert(OnConflictStrategy.REPLACE)` fazia SQLite
-     * apagar+reinserir a linha, disparando `ON DELETE CASCADE` e apagando participantes/despesas
-     * junto), então isso não apaga o que já foi semeado.
+     * Marks the group as synced by reinserting the same row with `isSynced=true` — the same
+     * production path (`GroupDetailViewModel.syncGroup`, T19). `GroupDao.insert` is `@Upsert`
+     * (found during T29, fixed separately: `@Insert(OnConflictStrategy.REPLACE)` made SQLite
+     * delete+reinsert the row, triggering `ON DELETE CASCADE` and wiping out participants/expenses
+     * along with it), so this doesn't erase what was already seeded.
      */
     private suspend fun markGroupAsSynced(remoteId: String) {
         val group = requireNotNull(groupRepository.getGroupById(groupId))
@@ -400,9 +400,9 @@ class CreateExpenseViewModelTest {
     }
 
     @Test
-    fun `salvar edicao de grupo sincronizado propaga a mudanca pro backend`() = runTest(testDispatcher) {
+    fun `saving an edit for a synced group propagates the change to the backend`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
         )
         val expense = seedExpense()
@@ -412,61 +412,62 @@ class CreateExpenseViewModelTest {
             expenseId = expense.id,
             remoteExpenseRepository = remoteExpenseRepository,
         )
-        viewModel.uiState.first { it.description == "Carvão e carne" }
+        viewModel.uiState.first { it.description == "Charcoal and meat" }
 
-        viewModel.onDescriptionChanged("Carvão, carne e gelo")
+        viewModel.onDescriptionChanged("Charcoal, meat and ice")
         viewModel.onSaveClick()
         viewModel.events.first()
 
         assertEquals("remote-$groupId", remoteExpenseRepository.lastRemoteGroupId)
-        assertEquals("Carvão, carne e gelo", remoteExpenseRepository.lastUpdatedExpense?.description)
+        assertEquals("Charcoal, meat and ice", remoteExpenseRepository.lastUpdatedExpense?.description)
     }
 
     @Test
-    fun `falha de rede ao propagar edicao nao desfaz a mudanca local nem trava o evento de salvo`() = runTest(testDispatcher) {
+    fun `a network failure while propagating an edit does not undo the local change or block the saved event`() = runTest(testDispatcher) {
         seedParticipants(
-            Participant(id = "p1", groupId = groupId, name = "Você", isYou = true),
+            Participant(id = "p1", groupId = groupId, name = "You", isYou = true),
             Participant(id = "p2", groupId = groupId, name = "Marina"),
         )
         val expense = seedExpense()
         markGroupAsSynced(remoteId = "remote-$groupId")
         val remoteExpenseRepository = FakeRemoteExpenseRepository(
-            failure = { GroupSyncException("Sem conexão com o servidor do Rateio.") },
+            failure = { GroupSyncException("No connection to the Rateio server.") },
         )
         val viewModel = createViewModelWithParticipantsLoaded(
             expenseId = expense.id,
             remoteExpenseRepository = remoteExpenseRepository,
         )
-        viewModel.uiState.first { it.description == "Carvão e carne" }
+        viewModel.uiState.first { it.description == "Charcoal and meat" }
 
-        viewModel.onDescriptionChanged("Carvão, carne e gelo")
+        viewModel.onDescriptionChanged("Charcoal, meat and ice")
         viewModel.onSaveClick()
 
-        // Suspensão real: o evento chega mesmo com a propagação remota falhando.
+        // A real suspension: the event arrives even though the remote propagation fails.
         viewModel.events.first()
 
         val updated = expenseRepository.getExpensesFlow(groupId).first().single()
-        assertEquals("mudanca local vale independente da falha de rede (local-first)", "Carvão, carne e gelo", updated.description)
+        assertEquals("the local change stands regardless of the network failure (local-first)", "Charcoal, meat and ice", updated.description)
     }
 
     /**
-     * Regressão: `onSaveClick` marcava `isSaving = true` e nunca voltava a `false` depois do
-     * insert/update terminar — inofensivo enquanto a tela desmontava ao navegar de volta pro grupo
-     * logo após, mas travava o botão "Salvar despesa" (`enabled = !uiState.isSaving`) pra sempre
-     * assim que o mesmo `ViewModel` era reaproveitado numa visita seguinte (bug real relatado:
-     * lançar uma segunda despesa reabria o formulário sem conseguir salvar, mesmo preenchido).
+     * Regression: `onSaveClick` set `isSaving = true` and never went back to `false` after the
+     * insert/update finished — harmless while the screen unmounted when navigating back to the
+     * group right after, but it turned into a stuck "Save expense" button
+     * (`enabled = !uiState.isSaving`) forever as soon as the same `ViewModel` was reused on a
+     * subsequent visit (real bug reported: logging a second expense reopened the form unable to
+     * save, even when filled in).
      */
     @Test
-    fun `isSaving volta a false depois de salvar com sucesso`() = runTest(testDispatcher) {
-        seedParticipants(Participant(id = "p1", groupId = groupId, name = "Você", isYou = true))
+    fun `isSaving goes back to false after saving successfully`() = runTest(testDispatcher) {
+        seedParticipants(Participant(id = "p1", groupId = groupId, name = "You", isYou = true))
         val viewModel = createViewModelWithParticipantsLoaded()
 
-        viewModel.onDescriptionChanged("Jantar de sexta")
+        viewModel.onDescriptionChanged("Friday dinner")
         viewModel.onAmountChanged("10,00")
         viewModel.onSaveClick()
         viewModel.events.first()
 
-        assertFalse("isSaving deve voltar a false após salvar, senão o botão trava", viewModel.uiState.value.isSaving)
+        assertFalse("isSaving should go back to false after saving, otherwise the button gets stuck", viewModel.uiState.value.isSaving)
     }
 
     private class FakeRemoteExpenseRepository(private val failure: (() -> Throwable)? = null) : RemoteExpenseRepository {
@@ -482,7 +483,7 @@ class CreateExpenseViewModelTest {
         }
 
         override suspend fun deleteExpense(remoteGroupId: String, expenseId: String) {
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
         }
     }
 }

@@ -21,15 +21,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * Estado + ação de "Marcar como pago" da tela "Quitar dívidas" (T42.3, RF44). Recalcula
+ * State + "Mark as paid" action for the "Settle debts" screen (T42.3, RF44). Recomputes
  * [DebtSimplificationEngine.computeBalances] + [DebtSimplificationEngine.computeSettlement] (T33)
- * toda vez que despesas ou quitações do grupo mudam no Room — nunca guarda a lista de sugestões
- * como estado próprio, ela é sempre derivada (mesmo princípio de
+ * every time the group's expenses or settlements change in Room — the suggestion list is never
+ * kept as its own state, it's always derived (same principle as
  * [com.rateio.app.ui.groupdetail.GroupDetailViewModel]).
  *
- * "Marcar como pago" ([onMarkAsPaidClick]) grava um [Settlement] novo via [settlementRepository]
- * (T42.1); como [uiState] é combinado a partir de [SettlementRepository.getSettlementsFlow], a
- * gravação por si só já dispara o recálculo — não existe um "recarregar manual" aqui.
+ * "Mark as paid" ([onMarkAsPaidClick]) writes a new [Settlement] via [settlementRepository]
+ * (T42.1); since [uiState] is combined from [SettlementRepository.getSettlementsFlow], the write
+ * alone already triggers the recalculation — there's no "manual reload" here.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettleDebtsViewModel(
@@ -90,7 +90,7 @@ private fun SettlementSuggestion.toRowUiModel(
 ) = SettlementSuggestionRowUiModel(
     fromParticipantId = fromParticipantId,
     toParticipantId = toParticipantId,
-    fromName = participantNames[fromParticipantId] ?: "Alguém",
-    toName = participantNames[toParticipantId] ?: "Alguém",
+    fromName = participantNames[fromParticipantId] ?: "Someone",
+    toName = participantNames[toParticipantId] ?: "Someone",
     amountCents = amount.cents,
 )

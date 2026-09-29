@@ -7,15 +7,15 @@ import java.time.Instant
 import kotlinx.coroutines.flow.first
 
 /**
- * "Um evento de grupo aconteceu, grave a notificação local" — resolve grupo/participantes locais
- * (Room) e grava via [NotificationRepository]. Usado tanto por [SignalRGroupRealtimeGateway]
- * (evento ao vivo) quanto por [MissedGroupEventsSynchronizer] (T39, pull de reconexão), pra não
- * duplicar essa lógica nos dois lugares — extraída justamente pra ser testável sem SignalR nenhum
- * (`GroupEventRecorderTest`, com dublês de [GroupRepository]/[ParticipantRepository]/
+ * "A group event happened, record the local notification" — resolves the local group/participants
+ * (Room) and records via [NotificationRepository]. Used both by [SignalRGroupRealtimeGateway]
+ * (live event) and by [MissedGroupEventsSynchronizer] (T39, reconnect pull), to avoid duplicating
+ * this logic in both places — extracted precisely to be testable without any SignalR
+ * (`GroupEventRecorderTest`, with test doubles for [GroupRepository]/[ParticipantRepository]/
  * [NotificationRepository]).
  *
- * Silenciosamente não grava nada se [localGroupId] não existir mais localmente (grupo apagado
- * entre o evento ter sido disparado e chegar aqui) — não é um erro do fluxo de notificação.
+ * Silently records nothing if [localGroupId] no longer exists locally (group deleted between the
+ * event firing and reaching here) — not an error in the notification flow.
  */
 internal class GroupEventRecorder(
     private val notificationRepository: NotificationRepository,

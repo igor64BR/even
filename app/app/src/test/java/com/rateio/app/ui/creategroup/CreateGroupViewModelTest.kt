@@ -23,9 +23,9 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Cobre T16.2 (validação client-side) e T16.3 (persistência local via Room). Mesmo padrão
- * Robolectric de `GroupListViewModelTest` (T8): banco Room em memória, sem emulador, DAOs de
- * verdade por trás de [RoomGroupRepository]/[RoomParticipantRepository].
+ * Covers T16.2 (client-side validation) and T16.3 (local persistence via Room). Same Robolectric
+ * pattern as `GroupListViewModelTest` (T8): an in-memory Room database, no emulator, real DAOs
+ * behind [RoomGroupRepository]/[RoomParticipantRepository].
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -55,7 +55,7 @@ class CreateGroupViewModelTest {
     }
 
     @Test
-    fun `formulario nasce com Voce fixo e nao removivel`() {
+    fun `the form starts with a fixed, non-removable You`() {
         val participants = viewModel.uiState.value.participants
 
         assertEquals(1, participants.size)
@@ -63,7 +63,7 @@ class CreateGroupViewModelTest {
     }
 
     @Test
-    fun `salvar sem nome marca erro e nao persiste nada`() = runTest(testDispatcher) {
+    fun `saving with no name marks an error and persists nothing`() = runTest(testDispatcher) {
         viewModel.onNewParticipantNameChanged("Marina")
         viewModel.onAddParticipant()
 
@@ -74,8 +74,8 @@ class CreateGroupViewModelTest {
     }
 
     @Test
-    fun `salvar com menos de 2 participantes marca erro e nao persiste nada`() = runTest(testDispatcher) {
-        viewModel.onNameChanged("Churras de sábado")
+    fun `saving with fewer than 2 participants marks an error and persists nothing`() = runTest(testDispatcher) {
+        viewModel.onNameChanged("Saturday barbecue")
 
         viewModel.onSaveClick()
 
@@ -84,7 +84,7 @@ class CreateGroupViewModelTest {
     }
 
     @Test
-    fun `remover Voce nao tem efeito`() {
+    fun `removing You has no effect`() {
         val youId = viewModel.uiState.value.participants.single().id
 
         viewModel.onRemoveParticipant(youId)
@@ -93,14 +93,14 @@ class CreateGroupViewModelTest {
     }
 
     @Test
-    fun `salvar grupo valido persiste grupo e participantes no Room e emite evento`() = runTest(testDispatcher) {
+    fun `saving a valid group persists the group and participants to Room and emits an event`() = runTest(testDispatcher) {
         var eventEmitted = false
         val collectorJob = backgroundScope.launch(testDispatcher) {
             viewModel.events.collect { eventEmitted = true }
         }
 
-        viewModel.onNameChanged("Churras de sábado")
-        viewModel.onCategorySelected(GroupCategory.CHURRASCO)
+        viewModel.onNameChanged("Saturday barbecue")
+        viewModel.onCategorySelected(GroupCategory.BARBECUE)
         viewModel.onNewParticipantNameChanged("Marina")
         viewModel.onAddParticipant()
 
@@ -109,39 +109,40 @@ class CreateGroupViewModelTest {
 
         val groups = database.groupDao().getGroupsFlow().first()
         assertEquals(1, groups.size)
-        assertEquals("Churras de sábado", groups.single().name)
-        assertFalse("grupo criado localmente nasce nao sincronizado", groups.single().isSynced)
+        assertEquals("Saturday barbecue", groups.single().name)
+        assertFalse("a locally created group starts out unsynced", groups.single().isSynced)
 
         val participants = database.participantDao().getParticipantsFlow(groups.single().id).first()
         assertEquals(2, participants.size)
-        assertTrue(participants.any { it.name == "Você" && it.isYou })
+        assertTrue(participants.any { it.name == "You" && it.isYou })
         assertTrue(participants.any { it.name == "Marina" && !it.isYou })
 
-        assertTrue("CreateGroupEvent.GroupCreated deveria ter sido emitido", eventEmitted)
+        assertTrue("CreateGroupEvent.GroupCreated should have been emitted", eventEmitted)
         collectorJob.cancel()
     }
 
     /**
-     * Regressão: `onSaveClick` marcava `isSaving = true` e nunca voltava a `false` depois do
-     * `insertGroup` terminar — inofensivo enquanto a tela desmontava ao navegar de volta pra
-     * "Seus grupos" logo após, mas travava o botão "Criar grupo" (`enabled = !uiState.isSaving`)
-     * pra sempre assim que o mesmo `ViewModel` era reaproveitado numa visita seguinte (bug real
-     * relatado: formulário reaberto não deixava salvar mesmo com todos os campos preenchidos).
+     * Regression: `onSaveClick` set `isSaving = true` and never went back to `false` after
+     * `insertGroup` finished — harmless while the screen unmounted when navigating back to "Your
+     * groups" right after, but it turned into a stuck "Create group" button
+     * (`enabled = !uiState.isSaving`) forever as soon as the same `ViewModel` was reused on a
+     * subsequent visit (real bug reported: the reopened form wouldn't allow saving even with every
+     * field filled in).
      */
     @Test
-    fun `isSaving volta a false depois de salvar com sucesso`() = runTest(testDispatcher) {
-        viewModel.onNameChanged("Churras de sábado")
+    fun `isSaving goes back to false after saving successfully`() = runTest(testDispatcher) {
+        viewModel.onNameChanged("Saturday barbecue")
         viewModel.onNewParticipantNameChanged("Marina")
         viewModel.onAddParticipant()
 
         viewModel.onSaveClick()
-        // Suspensão real (não `advanceUntilIdle()` sozinho): `saveGroup` grava no Room via
-        // executor real, fora do `testDispatcher` (mesma corrida documentada em
-        // `CreateExpenseViewModelTest`) — só suspender de verdade até o evento garante que o
-        // `finally` que zera `isSaving` (que roda ANTES do emit, no mesmo corpo de corrotina) já
-        // aconteceu.
+        // A real suspension (not `advanceUntilIdle()` alone): `saveGroup` writes to Room via a
+        // real executor, outside the `testDispatcher` (the same race documented in
+        // `CreateExpenseViewModelTest`) — only really suspending until the event guarantees the
+        // `finally` that resets `isSaving` (which runs BEFORE the emit, in the same coroutine body)
+        // has already happened.
         viewModel.events.first()
 
-        assertFalse("isSaving deve voltar a false após salvar, senão o botão trava", viewModel.uiState.value.isSaving)
+        assertFalse("isSaving should go back to false after saving, otherwise the button gets stuck", viewModel.uiState.value.isSaving)
     }
 }

@@ -6,14 +6,14 @@ import com.rateio.domain.model.Participant
 import java.time.Instant
 
 /**
- * Monta o texto humano da notificação, fiel a `prototype/notificacoes.html`:
- * "Fulano lançou 'Descrição' — R$X — em 'Nome do grupo'." /
- * "Fulano quitou R$X com Beltrano em 'Nome do grupo'." — a partir de um [GroupRealtimeEvent] já
- * resolvido (nomes de participantes, nome do grupo). Pura — sem Room/SignalR/rede — por isso
- * testável isoladamente (`GroupEventNotificationBuilderTest`).
+ * Builds the human-readable notification text, faithful to `prototype/notifications.html`:
+ * "Alice logged 'Description' — $X — in 'Group name'." /
+ * "Alice settled $X with Bob in 'Group name'." — built from an already-resolved
+ * [GroupRealtimeEvent] (participant names, group name). Pure — no Room/SignalR/network — hence
+ * testable in isolation (`GroupEventNotificationBuilderTest`).
  *
- * [build] usa o id do evento no servidor prefixado pelo tipo como [GroupNotification.id] — ver
- * KDoc de `GroupNotification.id` pro racional de dedupe.
+ * [build] uses the server event id prefixed by its type as [GroupNotification.id] — see the KDoc
+ * of `GroupNotification.id` for the dedupe rationale.
  */
 internal class GroupEventNotificationBuilder(private val moneyFormatter: MoneyFormatter) {
 
@@ -31,29 +31,29 @@ internal class GroupEventNotificationBuilder(private val moneyFormatter: MoneyFo
     )
 
     private fun GroupRealtimeEvent.notificationId(): String = when (this) {
-        is GroupRealtimeEvent.ExpenseCreated -> "despesa:$expenseId"
-        is GroupRealtimeEvent.DebtSettled -> "quitacao:$settlementId"
+        is GroupRealtimeEvent.ExpenseCreated -> "expense:$expenseId"
+        is GroupRealtimeEvent.DebtSettled -> "settlement:$settlementId"
     }
 
     private fun GroupRealtimeEvent.messageFor(groupName: String, participants: List<Participant>): String =
         when (this) {
             is GroupRealtimeEvent.ExpenseCreated -> {
                 val payerName = participants.displayNameFor(payerId, capitalized = true)
-                "$payerName lançou \"$description\" — ${moneyFormatter.format(amountTotalCents)} — em \"$groupName\"."
+                "$payerName logged \"$description\" — ${moneyFormatter.format(amountTotalCents)} — in \"$groupName\"."
             }
 
             is GroupRealtimeEvent.DebtSettled -> {
                 val fromName = participants.displayNameFor(fromParticipantId, capitalized = true)
                 val toName = participants.displayNameFor(toParticipantId, capitalized = false)
-                "$fromName quitou ${moneyFormatter.format(amountCents)} com $toName em \"$groupName\"."
+                "$fromName settled ${moneyFormatter.format(amountCents)} with $toName in \"$groupName\"."
             }
         }
 }
 
-/** "Você"/"você" pro participante local (`Participant.isYou`, mesma convenção do protótipo); nome próprio pros demais. */
+/** "You"/"you" for the local participant (`Participant.isYou`, same convention as the prototype); their own name for everyone else. */
 private fun List<Participant>.displayNameFor(participantId: String, capitalized: Boolean): String {
     val participant = firstOrNull { it.id == participantId }
-        ?: return if (capitalized) "Alguém" else "alguém"
+        ?: return if (capitalized) "Someone" else "someone"
     if (!participant.isYou) return participant.name
-    return if (capitalized) "Você" else "você"
+    return if (capitalized) "You" else "you"
 }

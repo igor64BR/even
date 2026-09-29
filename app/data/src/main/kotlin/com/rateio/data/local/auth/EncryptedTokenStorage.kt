@@ -7,10 +7,10 @@ import com.rateio.domain.model.AuthSession
 import com.rateio.domain.model.AuthenticatedUser
 
 /**
- * [TokenStorage] sobre `EncryptedSharedPreferences` (Jetpack Security) — `accessToken` e
- * `refreshToken` nunca em `SharedPreferences` plano nem em log (T12.2, entregável explícito da
- * task). A chave mestra usada para cifrar o arquivo vive no Android Keystore, gerenciada pelo
- * próprio [MasterKey]; este código nunca vê nem guarda a chave.
+ * [TokenStorage] on top of `EncryptedSharedPreferences` (Jetpack Security) — `accessToken` and
+ * `refreshToken` never in plain `SharedPreferences` nor in logs (T12.2, an explicit deliverable of
+ * the task). The master key used to encrypt the file lives in the Android Keystore, managed by
+ * [MasterKey] itself; this code never sees or stores the key.
  */
 class EncryptedTokenStorage(context: Context) : TokenStorage {
 

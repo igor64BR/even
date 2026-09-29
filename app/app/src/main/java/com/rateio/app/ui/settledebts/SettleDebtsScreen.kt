@@ -21,13 +21,13 @@ import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * Tela "Quitar dívidas" (T42.3, RF44), aberta a partir do botão homônimo em "Detalhes do grupo"
- * (T42.2). `factory` injeta o [SettleDebtsViewModel] pela composição manual de
- * [com.rateio.app.di.AppContainer], mesmo padrão das demais telas do módulo.
+ * "Settle debts" screen (T42.3, RF44), opened from the button of the same name in "Group details"
+ * (T42.2). `factory` injects the [SettleDebtsViewModel] through the manual composition of
+ * [com.rateio.app.di.AppContainer], same pattern as the module's other screens.
  *
- * [key] = `"SettleDebts:$groupId"` (ver `RateioApp` em `MainActivity`, mesmo racional de
- * [com.rateio.app.ui.groupdetail.GroupDetailRoute]) — sem ela, quitar dívidas de um grupo
- * diferente do último visitado reaproveitava o `ViewModel` do primeiro.
+ * [key] = `"SettleDebts:$groupId"` (see `RateioApp` in `MainActivity`, same reasoning as
+ * [com.rateio.app.ui.groupdetail.GroupDetailRoute]) — without it, settling debts for a group
+ * different from the last one visited would reuse the first one's `ViewModel`.
  */
 @Composable
 fun SettleDebtsRoute(
@@ -62,8 +62,9 @@ fun SettleDebtsRoute(
 }
 
 /**
- * Composable fina: delega pro corpo certo conforme [uiState] — nenhum cálculo de saldo/settlement
- * mora aqui, [SettleDebtsViewModel] já entrega a lista pronta (Object Calisthenics).
+ * Thin composable: delegates to the right body based on [uiState] — no balance/settlement
+ * calculation lives here, [SettleDebtsViewModel] already delivers the ready-made list (Object
+ * Calisthenics).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,14 +91,14 @@ fun SettleDebtsScreen(
         },
         bottomBar = {
             RateioBottomBar(
-                selectedTab = RateioBottomTab.GRUPOS,
+                selectedTab = RateioBottomTab.GROUPS,
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
                     when (tab) {
-                        RateioBottomTab.GRUPOS -> onGroupsClick()
-                        RateioBottomTab.AVISOS -> onNotificationsClick()
-                        RateioBottomTab.PERFIL -> onProfileClick()
+                        RateioBottomTab.GROUPS -> onGroupsClick()
+                        RateioBottomTab.NOTIFICATIONS -> onNotificationsClick()
+                        RateioBottomTab.PROFILE -> onProfileClick()
                     }
                 },
             )
@@ -129,7 +130,7 @@ private fun SettleDebtsContent(
             .verticalScroll(rememberScrollState()),
     ) {
         Text(
-            text = "Menor número de transferências pra zerar todos os saldos do grupo.",
+            text = "The smallest number of transfers to zero out all of the group's balances.",
             fontSize = 13.sp,
             color = colors.inkSoft,
             modifier = Modifier.padding(top = 14.dp, bottom = 4.dp),

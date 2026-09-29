@@ -28,11 +28,11 @@ import androidx.compose.ui.unit.sp
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `#field-part` do protótipo: chips de participante (removíveis, exceto "Você"), input que
- * adiciona no Enter/Done — mais um botão "+" inline (`trailingIcon`) pra quem usa teclado sem
- * tecla de ação de Enter visível (ex.: teclados físicos/layouts customizados) ou simplesmente
- * prefere tocar em vez de confiar só no IME — erro "Precisa de pelo menos 2 participantes." e o
- * texto de reforço local-first ("Ninguém aqui precisa instalar o app nem ter conta").
+ * The prototype's `#field-part`: participant chips (removable, except "You"), an input that adds
+ * on Enter/Done — plus an inline "+" button (`trailingIcon`) for anyone using a keyboard with no
+ * visible Enter action key (e.g. physical keyboards/custom layouts) or who simply prefers tapping
+ * instead of relying only on the IME — the "Needs at least 2 participants." error and the
+ * local-first reinforcement text ("No one here needs to install the app or have an account").
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,30 +47,30 @@ fun ParticipantsField(
 ) {
     val colors = LocalRateioColors.current
     Column(modifier = modifier) {
-        FieldLabel(text = "Participantes")
+        FieldLabel(text = "Participants")
         ParticipantChipRow(participants = participants, onRemoveParticipant = onRemoveParticipant)
         OutlinedTextField(
             value = newParticipantName,
             onValueChange = onNewParticipantNameChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(text = "Nome e Enter") },
+            placeholder = { Text(text = "Name and Enter") },
             singleLine = true,
             isError = isError,
             supportingText = if (isError) {
-                { Text(text = "Precisa de pelo menos 2 participantes.") }
+                { Text(text = "Needs at least 2 participants.") }
             } else {
                 null
             },
             trailingIcon = {
                 IconButton(onClick = onAddParticipant, enabled = newParticipantName.isNotBlank()) {
-                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Adicionar participante")
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Add participant")
                 }
             },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onAddParticipant() }),
         )
         Text(
-            text = "Só o nome. Ninguém aqui precisa instalar o app nem ter conta.",
+            text = "Just the name. No one here needs to install the app or have an account.",
             fontSize = 12.sp,
             color = colors.inkSoft,
             modifier = Modifier.padding(top = 5.dp),
@@ -108,7 +108,7 @@ private fun ParticipantChip(participant: ParticipantChipUiModel, onRemove: (Stri
     )
 }
 
-/** "Você" não tem ícone de remoção — mesma regra do protótipo. */
+/** "You" has no removal icon — the same rule as the prototype. */
 @Composable
 private fun removeIconOrNull(
     participant: ParticipantChipUiModel,
@@ -118,7 +118,7 @@ private fun removeIconOrNull(
     return {
         Icon(
             imageVector = Icons.Filled.Close,
-            contentDescription = "Remover ${participant.name}",
+            contentDescription = "Remove ${participant.name}",
             modifier = Modifier
                 .size(InputChipDefaults.IconSize)
                 .clickable { onRemove(participant.id) },

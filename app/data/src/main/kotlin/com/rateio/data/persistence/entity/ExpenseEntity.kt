@@ -6,11 +6,11 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Mapeamento de persistência de uma despesa. Esqueleto mínimo (T7) — quem pagou e quanto; a
- * divisão entre participantes é escopo de uma task futura (ver `Expense` em `:domain`).
+ * Persistence mapping for an expense. Minimal skeleton (T7) — who paid and how much; the split
+ * among participants is a future task's scope (see `Expense` in `:domain`).
  *
- * [amountCents] guarda o valor em centavos (Long), nunca decimal cru na coluna — mesma
- * convenção do `Dinheiro` do motor de simplificação em Rateio.Domain (backend).
+ * [amountCents] holds the amount in cents (Long), never raw decimal in the column — the same
+ * convention as `Money` in the simplification engine in Rateio.Domain (backend).
  */
 @Entity(
     tableName = "expenses",

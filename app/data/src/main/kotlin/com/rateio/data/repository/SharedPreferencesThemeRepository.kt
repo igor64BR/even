@@ -6,12 +6,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * [ThemeRepository] sobre `SharedPreferences` plano — preferência de tema não é dado sensível
- * (diferente de [com.rateio.data.local.auth.EncryptedTokenStorage]), não precisa de cifra.
+ * [ThemeRepository] on top of plain `SharedPreferences` — a theme preference isn't sensitive data
+ * (unlike [com.rateio.data.local.auth.EncryptedTokenStorage]), it doesn't need encryption.
  *
- * `SharedPreferences` não tem API de `Flow` nativa; [preference] é a única fonte de verdade em
- * memória (atualizada em [setDarkTheme] antes de persistir), e a leitura em disco só acontece uma
- * vez, na construção — não há outro escritor no processo que justifique um
+ * `SharedPreferences` has no native `Flow` API; [preference] is the single source of truth in
+ * memory (updated in [setDarkTheme] before persisting), and the disk read only happens once, at
+ * construction — there's no other writer in the process that would justify an
  * `OnSharedPreferenceChangeListener`.
  */
 class SharedPreferencesThemeRepository(context: Context) : ThemeRepository {

@@ -15,9 +15,10 @@ import com.rateio.app.ui.format.formatCentsAsBrl
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `.split-row` de `grupo.html`: nome do participante (+ "você" quando [ParticipantBalanceUiModel.isYou])
- * à esquerda, saldo colorido à direita ("recebe"/"deve"/"quitado") — nenhum cálculo de saldo mora
- * aqui, [balance] já vem pronto do ViewModel (`DebtSimplificationEngine.computeBalances`, T33).
+ * `group.html`'s `.split-row`: the participant's name (+ "you" when [ParticipantBalanceUiModel.isYou])
+ * on the left, a colored balance on the right ("gets back"/"owes"/"settled") — no balance
+ * calculation lives here, [balance] already comes ready from the ViewModel
+ * (`DebtSimplificationEngine.computeBalances`, T33).
  */
 @Composable
 fun ParticipantBalanceRow(participant: ParticipantBalanceUiModel, modifier: Modifier = Modifier) {
@@ -29,15 +30,15 @@ fun ParticipantBalanceRow(participant: ParticipantBalanceUiModel, modifier: Modi
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = if (participant.isYou) "${participant.name} · você" else participant.name,
+            text = if (participant.isYou) "${participant.name} · you" else participant.name,
             fontSize = 14.5.sp,
             color = colors.ink,
         )
 
         val (color, label, value) = when (val balance = participant.balance) {
-            is ParticipantBalance.Settled -> Triple(colors.neutral, null, "quitado")
-            is ParticipantBalance.Credit -> Triple(colors.credit, "recebe", formatCentsAsBrl(balance.amountCents))
-            is ParticipantBalance.Owed -> Triple(colors.owed, "deve", formatCentsAsBrl(balance.amountCents))
+            is ParticipantBalance.Settled -> Triple(colors.neutral, null, "settled")
+            is ParticipantBalance.Credit -> Triple(colors.credit, "gets back", formatCentsAsBrl(balance.amountCents))
+            is ParticipantBalance.Owed -> Triple(colors.owed, "owes", formatCentsAsBrl(balance.amountCents))
         }
         Column {
             if (label != null) {

@@ -9,7 +9,7 @@ import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/** Implementação de [SettlementRepository] sobre [SettlementDao] (Room). */
+/** Implementation of [SettlementRepository] on top of [SettlementDao] (Room). */
 class RoomSettlementRepository(private val settlementDao: SettlementDao) : SettlementRepository {
 
     override fun getSettlementsFlow(groupId: String): Flow<List<Settlement>> =

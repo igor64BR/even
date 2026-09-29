@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rateio.app.ui.theme.LocalRateioColors
 
-/** `#categorias` do protótipo: chips de categoria, sempre uma selecionada. */
+/** The prototype's `#categorias`: category chips, always one selected. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CategoryChipRow(
@@ -27,7 +27,7 @@ fun CategoryChipRow(
 ) {
     val colors = LocalRateioColors.current
     Column(modifier = modifier) {
-        FieldLabel(text = "Categoria")
+        FieldLabel(text = "Category")
         FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
@@ -52,7 +52,7 @@ fun CategoryChipRow(
     }
 }
 
-/** `.field label` do protótipo: rótulo pequeno, maiúsculo, em `--ink-soft`. Comum aos três campos. */
+/** The prototype's `.field label`: a small, uppercase label in `--ink-soft`. Shared by all three fields. */
 @Composable
 internal fun FieldLabel(text: String) {
     val colors = LocalRateioColors.current

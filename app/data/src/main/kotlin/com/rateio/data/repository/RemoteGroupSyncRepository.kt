@@ -2,8 +2,8 @@ package com.rateio.data.repository
 
 import com.rateio.data.local.auth.TokenStorage
 import com.rateio.data.remote.groups.GroupsApi
-import com.rateio.data.remote.groups.ParticipanteSincronizadoDto
-import com.rateio.data.remote.groups.SincronizarGrupoRequestDto
+import com.rateio.data.remote.groups.SyncGroupRequestDto
+import com.rateio.data.remote.groups.SyncedParticipantDto
 import com.rateio.domain.model.Expense
 import com.rateio.domain.model.Group
 import com.rateio.domain.model.Participant
@@ -13,18 +13,18 @@ import java.io.IOException
 import retrofit2.HttpException
 
 /**
- * Implementação de [RemoteGroupRepository] sobre [GroupsApi] (`POST /groups/sync`, T18) +
- * [TokenStorage] (T12.2, leitura do access token) — T19.1.
+ * Implementation of [RemoteGroupRepository] on top of [GroupsApi] (`POST /groups/sync`, T18) +
+ * [TokenStorage] (T12.2, reading the access token) — T19.1.
  *
- * Duas lacunas de modelo herdadas de tasks anteriores, resolvidas aqui com o valor mais honesto
- * disponível (documentado, não inventado):
- * - [Group] (`:domain`, T7B) ainda não modela categoria (mesma lacuna que `CreateGroupViewModel`,
- *   T16, já registrou: a categoria escolhida no formulário não é persistida). Todo grupo
- *   sincroniza com [CATEGORIA_GRUPO_OUTRO] até uma task futura adicionar o campo de verdade.
- * - [Participant] (`:domain`) não modela vínculo com conta própria — o local-first do projeto
- *   (constitution.md, princípio 1) só exige nome. Todo participante sincroniza como convidado
- *   (`ehConvidado = true`); não existe hoje um jeito de um `Participant` corresponder a um usuário
- *   autenticado diferente do dono do aparelho.
+ * Two model gaps inherited from earlier tasks, resolved here with the most honest value available
+ * (documented, not invented):
+ * - [Group] (`:domain`, T7B) doesn't model category yet (same gap already flagged by
+ *   `CreateGroupViewModel`, T16: the category chosen in the form isn't persisted). Every group
+ *   syncs as [GROUP_CATEGORY_OTHER] until a future task adds the real field.
+ * - [Participant] (`:domain`) doesn't model a link to an actual account — the project's
+ *   local-first stance (constitution.md, principle 1) only requires a name. Every participant
+ *   syncs as a guest (`isGuest = true`); there's currently no way for a `Participant` to
+ *   correspond to an authenticated user other than the device owner.
  */
 class RemoteGroupSyncRepository(
     private val groupsApi: GroupsApi,
@@ -33,54 +33,54 @@ class RemoteGroupSyncRepository(
 
     override suspend fun syncGroup(group: Group, participants: List<Participant>, expenses: List<Expense>): String {
         val accessToken = tokenStorage.read()?.accessToken
-            ?: throw GroupSyncException("É preciso estar autenticado para sincronizar um grupo.")
+            ?: throw GroupSyncException("You need to be signed in to sync a group.")
 
         try {
             val response = groupsApi.sync(
                 bearerToken = "Bearer $accessToken",
                 request = group.toSyncRequest(participants, expenses),
             )
-            return response.grupoId
+            return response.groupId
         } catch (error: HttpException) {
-            throw GroupSyncException("O servidor do Rateio recusou a sincronização.", error)
+            throw GroupSyncException("The Rateio server rejected the sync.", error)
         } catch (error: IOException) {
-            throw GroupSyncException("Sem conexão com o servidor do Rateio.", error)
+            throw GroupSyncException("No connection to the Rateio server.", error)
         }
     }
 
     override suspend fun joinByCode(inviteCode: String): String {
         val accessToken = tokenStorage.read()?.accessToken
-            ?: throw GroupSyncException("É preciso estar autenticado para entrar num grupo.")
+            ?: throw GroupSyncException("You need to be signed in to join a group.")
 
         try {
-            val response = groupsApi.join(bearerToken = "Bearer $accessToken", codigo = inviteCode)
-            return response.grupoId
+            val response = groupsApi.join(bearerToken = "Bearer $accessToken", code = inviteCode)
+            return response.groupId
         } catch (error: HttpException) {
-            throw GroupSyncException("Não foi possível entrar nesse grupo — verifique o código.", error)
+            throw GroupSyncException("Couldn't join that group — check the code.", error)
         } catch (error: IOException) {
-            throw GroupSyncException("Sem conexão com o servidor do Rateio.", error)
+            throw GroupSyncException("No connection to the Rateio server.", error)
         }
     }
 }
 
 private fun Group.toSyncRequest(participants: List<Participant>, expenses: List<Expense>) =
-    SincronizarGrupoRequestDto(
-        nome = name,
-        categoria = CATEGORIA_GRUPO_OUTRO,
-        participantes = participants.map(Participant::toSyncDto),
-        despesas = expenses.map(Expense::toSyncDto),
+    SyncGroupRequestDto(
+        name = name,
+        category = GROUP_CATEGORY_OTHER,
+        participants = participants.map(Participant::toSyncDto),
+        expenses = expenses.map(Expense::toSyncDto),
     )
 
-private fun Participant.toSyncDto() = ParticipanteSincronizadoDto(
+private fun Participant.toSyncDto() = SyncedParticipantDto(
     id = id,
-    nome = name,
-    ehConvidado = true,
+    name = name,
+    isGuest = true,
 )
 
-// Expense.toSyncDto()/tradução de splits vivem em ExpenseSyncMapper.kt (mesmo pacote,
-// `internal` — compartilhado com RemoteExpenseSyncRepository, T29, pra não duplicar a mesma
-// tradução Expense -> DespesaSincronizadaDto nos dois lugares).
+// Expense.toSyncDto()/split translation live in ExpenseSyncMapper.kt (same package,
+// `internal` — shared with RemoteExpenseSyncRepository, T29, to avoid duplicating the same
+// Expense -> SyncedExpenseDto translation in both places).
 
-// Espelha o valor ordinal de CategoriaGrupo.Outro (C#) — o backend não registra
-// JsonStringEnumConverter, então System.Text.Json serializa/desserializa enum como Int.
-private const val CATEGORIA_GRUPO_OUTRO = 4
+// Mirrors the ordinal value of GroupCategory.Other (C#) — the backend doesn't register a
+// JsonStringEnumConverter, so System.Text.Json serializes/deserializes the enum as an Int.
+private const val GROUP_CATEGORY_OTHER = 4

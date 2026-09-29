@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Test
 class ExpenseTest {
 
     @Test
-    fun `splits eh vazia por padrao, para nao quebrar quem cria Expense sem se importar com divisao`() {
+    fun `splits is empty by default, so it does not break code that creates an Expense without caring about the split`() {
         val expense = Expense(
             id = "e1",
             groupId = "g1",
-            description = "Churrasco",
+            description = "Barbecue",
             amountCents = 1000,
             paidByParticipantId = "p1",
             createdAt = Instant.EPOCH,
@@ -22,7 +22,7 @@ class ExpenseTest {
     }
 
     @Test
-    fun `splits guarda a divisao por participante da despesa`() {
+    fun `splits stores the expense's per-participant split`() {
         val splits = listOf(
             ExpenseSplit.Equal(participantId = "p1"),
             ExpenseSplit.Equal(participantId = "p2"),
@@ -31,7 +31,7 @@ class ExpenseTest {
         val expense = Expense(
             id = "e1",
             groupId = "g1",
-            description = "Churrasco",
+            description = "Barbecue",
             amountCents = 1000,
             paidByParticipantId = "p1",
             createdAt = Instant.EPOCH,

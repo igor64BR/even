@@ -3,44 +3,45 @@ package com.rateio.domain.repository
 import com.rateio.domain.model.Expense
 
 /**
- * Contrato de propagação de edição/exclusão de uma despesa pro backend, pra um grupo já
- * sincronizado (T29, RF... — edição/exclusão de despesa). `:domain` declara, `:data` implementa
- * sobre Retrofit — nenhum tipo de rede (Retrofit/OkHttp) vaza pra esta interface, mesma Dependency
- * Inversion de [RemoteGroupRepository].
+ * Contract for propagating an expense edit/delete to the backend, for a group that's already
+ * synced (T29, RF... — expense edit/delete). `:domain` declares it, `:data` implements it on top
+ * of Retrofit — no network type (Retrofit/OkHttp) leaks into this interface, the same Dependency
+ * Inversion as [RemoteGroupRepository].
  *
- * Interface separada de [RemoteGroupRepository] (Interface Segregation): sincronizar um grupo
- * inteiro (bulk, primeira sincronização) e editar/excluir uma despesa avulsa já sincronizada são
- * operações com formas bem diferentes — [RemoteGroupRepository.syncGroup] recebe o grupo inteiro
- * (participantes + despesas), aqui só a despesa que mudou.
+ * A separate interface from [RemoteGroupRepository] (Interface Segregation): syncing a whole
+ * group (bulk, first sync) and editing/deleting a single already-synced expense are operations
+ * with very different shapes — [RemoteGroupRepository.syncGroup] takes the whole group
+ * (participants + expenses), here just the expense that changed.
  *
- * A ação só faz sentido pra um [com.rateio.domain.model.Group] com `isSynced = true` — quem chama
- * garante isso antes de invocar (mesma convenção de [RemoteGroupRepository.syncGroup]: local-first,
- * a mudança local já aconteceu antes desta chamada, e uma falha aqui nunca desfaz a mudança local —
- * ver `T29-app-editar-excluir-despesa.md`).
+ * The action only makes sense for a [com.rateio.domain.model.Group] with `isSynced = true` — the
+ * caller guarantees that before invoking it (same convention as
+ * [RemoteGroupRepository.syncGroup]: local-first, the local change already happened before this
+ * call, and a failure here never undoes the local change — see
+ * `T29-app-editar-excluir-despesa.md`).
  *
- * PENDÊNCIA conhecida (documentada, não inventada): T29 roda em paralelo com T28 (backend,
- * `PUT`/`DELETE /groups/{id}/expenses/{expenseId}`). A implementação em `:data`
- * ([com.rateio.data.repository.RemoteExpenseSyncRepository]) foi escrita contra o contrato já
- * documentado na task (mesmo formato de `DespesaSincronizadaRequest` que
- * `POST /groups/{id}/expenses`, T23.1, já usa) — se a rota/payload real divergir quando T28
- * fechar, só o lado `:data` precisa mudar, esta interface não.
+ * Known PENDING ITEM (documented, not invented): T29 runs in parallel with T28 (backend,
+ * `PUT`/`DELETE /groups/{id}/expenses/{expenseId}`). The `:data` implementation
+ * ([com.rateio.data.repository.RemoteExpenseSyncRepository]) was written against the contract
+ * already documented in the task (the same `SyncedExpenseRequest` shape
+ * `POST /groups/{id}/expenses`, T23.1, already uses) — if the actual route/payload diverges once
+ * T28 lands, only the `:data` side needs to change, not this interface.
  */
 interface RemoteExpenseRepository {
 
     /**
-     * Envia a versão atual de [expense] (já persistida localmente) pro backend, substituindo a
-     * despesa de id [Expense.id] dentro do grupo remoto [remoteGroupId].
+     * Sends the current version of [expense] (already persisted locally) to the backend,
+     * replacing the expense with id [Expense.id] inside the remote group [remoteGroupId].
      *
-     * @throws GroupSyncException se não houver sessão autenticada, ou se a chamada de rede/HTTP
-     * falhar — nunca deixa uma exceção de Retrofit/OkHttp vazar pra quem chama.
+     * @throws GroupSyncException if there's no authenticated session, or if the network/HTTP call
+     * fails — never lets a Retrofit/OkHttp exception leak out to the caller.
      */
     suspend fun updateExpense(remoteGroupId: String, expense: Expense)
 
     /**
-     * Remove a despesa [expenseId] do grupo remoto [remoteGroupId].
+     * Removes the expense [expenseId] from the remote group [remoteGroupId].
      *
-     * @throws GroupSyncException se não houver sessão autenticada, ou se a chamada de rede/HTTP
-     * falhar — nunca deixa uma exceção de Retrofit/OkHttp vazar pra quem chama.
+     * @throws GroupSyncException if there's no authenticated session, or if the network/HTTP call
+     * fails — never lets a Retrofit/OkHttp exception leak out to the caller.
      */
     suspend fun deleteExpense(remoteGroupId: String, expenseId: String)
 }

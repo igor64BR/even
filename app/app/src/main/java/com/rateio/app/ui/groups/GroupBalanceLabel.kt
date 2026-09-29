@@ -13,17 +13,17 @@ import com.rateio.app.ui.format.formatCentsAsBrl
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `.balance` do protótipo: rótulo pequeno ("te devem"/"você deve") sobre o valor, cor conforme
- * o saldo — verde (a receber), terracota (a dever), neutro (quitado). "Quitado" some o rótulo e
- * mostra só a palavra, igual ao `index.html`.
+ * The prototype's `.balance`: a small label ("owed to you"/"you owe") over the value, colored
+ * according to the balance — green (credit), terracotta (owed), neutral (settled). "Settled up"
+ * drops the label and shows only the word, same as `index.html`.
  */
 @Composable
 fun GroupBalanceLabel(balance: GroupBalance, modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
     val (color, label, value) = when (balance) {
-        is GroupBalance.Settled -> Triple(colors.neutral, null, "quitado")
-        is GroupBalance.YouAreOwed -> Triple(colors.credit, "te devem", formatCentsAsBrl(balance.amountCents))
-        is GroupBalance.YouOwe -> Triple(colors.owed, "você deve", formatCentsAsBrl(balance.amountCents))
+        is GroupBalance.Settled -> Triple(colors.neutral, null, "settled up")
+        is GroupBalance.YouAreOwed -> Triple(colors.credit, "owed to you", formatCentsAsBrl(balance.amountCents))
+        is GroupBalance.YouOwe -> Triple(colors.owed, "you owe", formatCentsAsBrl(balance.amountCents))
     }
 
     CompositionLocalProvider(LocalContentColor provides color) {

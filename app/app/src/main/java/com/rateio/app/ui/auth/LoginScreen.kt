@@ -49,15 +49,15 @@ import com.rateio.app.ui.theme.ThemeToggleButton
 import com.rateio.domain.model.AuthenticatedUser
 
 /**
- * Ponto de entrada da tela de login (T12.1), fiel a `prototype/login.html`. `factory` injeta o
- * [AuthViewModel] pela composição manual de [com.rateio.app.di.AppContainer] — mesma convenção de
- * [com.rateio.app.ui.groups.GroupListRoute] (T8): a Composable em si não sabe de onde vem o
- * estado nem como o ID token do Google é obtido.
+ * Entry point for the login screen (T12.1), faithful to `prototype/login.html`. `factory` injects
+ * the [AuthViewModel] through [com.rateio.app.di.AppContainer]'s manual composition — the same
+ * convention as [com.rateio.app.ui.groups.GroupListRoute] (T8): the Composable itself doesn't know
+ * where the state comes from or how the Google ID token is obtained.
  *
- * [onSignedIn] (T22.1) é opcional: quando não nulo, dispara uma única vez assim que [uiState] vira
- * [AuthUiState.SignedIn], via [LaunchedEffect]. Usado pelo fluxo "entrar no grupo por link" pra
- * retomar automaticamente depois do login — o acesso normal à tela (ícone de perfil) não passa
- * esse parâmetro e continua sem navegação automática após logar.
+ * [onSignedIn] (T22.1) is optional: when non-null, it fires once as soon as [uiState] becomes
+ * [AuthUiState.SignedIn], via [LaunchedEffect]. Used by the "join group via link" flow to resume
+ * automatically after login — normal access to the screen (the profile icon) doesn't pass this
+ * parameter and keeps no automatic navigation after signing in.
  */
 @Composable
 fun LoginRoute(
@@ -97,9 +97,9 @@ fun LoginRoute(
 }
 
 /**
- * Composable fina: escolhe entre [SignInContent] e [AccountContent] a partir do [uiState] e
- * sobrepõe [ConnectingOverlay] enquanto conecta — réplica de `#screen` + `#overlay` de
- * `prototype/login.html` (o overlay some por cima da tela em vez de substituí-la).
+ * A thin Composable: picks between [SignInContent] and [AccountContent] based on [uiState] and
+ * overlays [ConnectingOverlay] while connecting — a replica of `prototype/login.html`'s `#screen`
+ * + `#overlay` (the overlay appears on top of the screen instead of replacing it).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,14 +132,14 @@ fun LoginScreen(
         },
         bottomBar = {
             RateioBottomBar(
-                selectedTab = RateioBottomTab.PERFIL,
+                selectedTab = RateioBottomTab.PROFILE,
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
                     when (tab) {
-                        RateioBottomTab.GRUPOS -> onGroupsClick()
-                        RateioBottomTab.AVISOS -> onNotificationsClick()
-                        RateioBottomTab.PERFIL -> Unit
+                        RateioBottomTab.GROUPS -> onGroupsClick()
+                        RateioBottomTab.NOTIFICATIONS -> onNotificationsClick()
+                        RateioBottomTab.PROFILE -> Unit
                     }
                 },
             )
@@ -164,7 +164,7 @@ fun LoginScreen(
     }
 }
 
-/** `.topbar h1` do protótipo — "Entrar" deslogado/conectando, "Sua conta" logado. */
+/** The prototype's `.topbar h1` — "Sign in" signed out/connecting, "Your account" signed in. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LoginTopBar(
@@ -174,12 +174,12 @@ private fun LoginTopBar(
     onToggleTheme: () -> Unit,
 ) {
     val colors = LocalRateioColors.current
-    val title = if (uiState is AuthUiState.SignedIn) "Sua conta" else "Entrar"
+    val title = if (uiState is AuthUiState.SignedIn) "Your account" else "Sign in"
     TopAppBar(
         title = { Text(text = title, fontWeight = FontWeight.Bold) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         },
         actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },
@@ -191,7 +191,7 @@ private fun LoginTopBar(
     )
 }
 
-/** Estado deslogado: `.card` explicativo + `.btn-google` + `.btn-ghost` "Continuar sem conta". */
+/** Signed-out state: an explanatory `.card` + `.btn-google` + `.btn-ghost` "Continue without an account". */
 @Composable
 private fun SignInContent(
     errorMessage: String?,
@@ -220,7 +220,7 @@ private fun SignInContent(
     }
 }
 
-/** `.card` do protótipo: três motivos pra sincronizar, nenhum obrigatório (princípio 1). */
+/** The prototype's `.card`: three reasons to sync, none required (principle 1). */
 @Composable
 private fun SyncExplanationCard(modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
@@ -230,10 +230,10 @@ private fun SyncExplanationCard(modifier: Modifier = Modifier) {
             .background(color = colors.paperAlt, shape = RoundedCornerShape(14.dp))
             .padding(16.dp),
     ) {
-        ExplanationLine(text = "Usar o Rateio não exige conta. Entrar com Google é só pra:")
-        ExplanationLine(text = "· manter um grupo disponível em mais de um aparelho")
-        ExplanationLine(text = "· avisar em tempo real quando alguém no grupo lança despesa ou quita dívida")
-        ExplanationLine(text = "· guardar o histórico de grupos anteriores", isLast = true)
+        ExplanationLine(text = "Using Rateio doesn't require an account. Signing in with Google is only to:")
+        ExplanationLine(text = "· keep a group available on more than one device")
+        ExplanationLine(text = "· notify you in real time when someone in the group logs an expense or settles a debt")
+        ExplanationLine(text = "· keep the history of past groups", isLast = true)
     }
 }
 
@@ -249,7 +249,7 @@ private fun ExplanationLine(text: String, isLast: Boolean = false, modifier: Mod
     )
 }
 
-/** `.btn-google` do protótipo: fundo branco fixo (não segue tema), logo colorido + rótulo. */
+/** The prototype's `.btn-google`: fixed white background (doesn't follow the theme), colored logo + label. */
 @Composable
 private fun GoogleSignInButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
@@ -272,21 +272,21 @@ private fun GoogleSignInButton(onClick: () -> Unit, modifier: Modifier = Modifie
                 modifier = Modifier.size(18.dp),
             )
             Spacer(Modifier.width(10.dp))
-            Text(text = "Entrar com Google", color = GoogleButtonTextColor, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+            Text(text = "Sign in with Google", color = GoogleButtonTextColor, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
         }
     }
 }
 
-/** `.btn-ghost` do protótipo — sempre visível, nunca bloqueado por login (princípio 1). */
+/** The prototype's `.btn-ghost` — always visible, never gated behind login (principle 1). */
 @Composable
 private fun ContinueWithoutAccountLink(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
     TextButton(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        Text(text = "Continuar sem conta", color = colors.inkSoft, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
+        Text(text = "Continue without an account", color = colors.inkSoft, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
     }
 }
 
-/** `#overlay` do protótipo: scrim + spinner sobre a tela, sem trocar de tela. */
+/** The prototype's `#overlay`: scrim + spinner over the screen, without switching screens. */
 @Composable
 private fun ConnectingOverlay(modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
@@ -299,12 +299,12 @@ private fun ConnectingOverlay(modifier: Modifier = Modifier) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator(color = colors.brandInk, strokeWidth = 3.dp, modifier = Modifier.size(26.dp))
             Spacer(Modifier.height(12.dp))
-            Text(text = "Conectando ao Google…", color = colors.inkSoft, fontSize = 13.sp)
+            Text(text = "Connecting to Google…", color = colors.inkSoft, fontSize = 13.sp)
         }
     }
 }
 
-/** Estado logado: bloco "Sua conta" (avatar + nome + email), explicação e `.btn-secondary` "Sair". */
+/** Signed-in state: the "Your account" block (avatar + name + email), an explanation and a `.btn-secondary` "Sign out". */
 @Composable
 private fun AccountContent(user: AuthenticatedUser, onSignOutClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
@@ -318,8 +318,8 @@ private fun AccountContent(user: AuthenticatedUser, onSignOutClick: () -> Unit, 
         AccountCard(user = user)
         Spacer(Modifier.height(16.dp))
         Text(
-            text = "Grupos sincronizados ficam disponíveis em qualquer aparelho com essa conta, " +
-                "e você recebe aviso em tempo real quando alguém lança despesa ou quita dívida.",
+            text = "Synced groups become available on any device with this account, " +
+                "and you get a real-time notification when someone logs an expense or settles a debt.",
             color = colors.inkSoft,
             fontSize = 13.sp,
             lineHeight = 19.sp,
@@ -354,9 +354,9 @@ private fun AccountCard(user: AuthenticatedUser, modifier: Modifier = Modifier) 
 }
 
 /**
- * `.btn-secondary` do protótipo. Revoga a sessão no backend e limpa a sessão guardada no
- * aparelho (T14.2, via `AuthViewModel.signOut` → `RemoteAuthRepository.signOut`) — a limpeza
- * local acontece sempre, mesmo se a revogação no backend falhar por falta de rede.
+ * The prototype's `.btn-secondary`. Revokes the session on the backend and clears the session
+ * stored on the device (T14.2, via `AuthViewModel.signOut` → `RemoteAuthRepository.signOut`) — the
+ * local cleanup always happens, even if the backend revocation fails due to no network.
  */
 @Composable
 private fun SignOutButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -368,12 +368,12 @@ private fun SignOutButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         color = colors.paperAlt,
     ) {
         Box(modifier = Modifier.fillMaxWidth().padding(vertical = 13.dp), contentAlignment = Alignment.Center) {
-            Text(text = "Sair", color = colors.ink, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+            Text(text = "Sign out", color = colors.ink, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
         }
     }
 }
 
-/** Mesma heurística de `initials()` em `prototype/app.js`: até duas iniciais, maiúsculas. */
+/** Same heuristic as `initials()` in `prototype/app.js`: up to two initials, uppercase. */
 private fun initialsOf(name: String): String =
     name.split(" ")
         .filter { word -> word.isNotBlank() }

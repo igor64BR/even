@@ -37,14 +37,14 @@ import com.rateio.app.ui.theme.RateioTheme
 import java.util.UUID
 
 /**
- * Ponto de entrada do app (RF40 — abre direto em "Seus grupos", sem login). Só monta o tema e
- * delega pra [GroupListRoute]; nenhuma lógica de UI mora aqui.
+ * The app's entry point (RF40 — opens straight into "Your groups", no login). Only sets up the
+ * theme and delegates to [GroupListRoute]; no UI logic lives here.
  *
- * [pendingInviteCode] (T22.1) é a única lógica de plataforma que precisa viver na Activity em vez
- * de num ViewModel: extrair o código de convite de um [Intent] (deep link
- * `rateio://join/{codigo}`, `AndroidManifest.xml`) exige `Intent`/`Uri`, que não fazem sentido
- * vazar pra `:domain`/ViewModels. `android:launchMode="singleTop"` garante que reabrir o link com
- * o app já em memória chega em [onNewIntent] em vez de recriar a Activity.
+ * [pendingInviteCode] (T22.1) is the only platform logic that needs to live in the Activity
+ * instead of a ViewModel: extracting the invite code from an [Intent] (deep link
+ * `rateio://join/{code}`, `AndroidManifest.xml`) requires `Intent`/`Uri`, which don't make sense
+ * leaking into `:domain`/ViewModels. `android:launchMode="singleTop"` guarantees that reopening the
+ * link while the app is already in memory reaches [onNewIntent] instead of recreating the Activity.
  */
 class MainActivity : ComponentActivity() {
 
@@ -74,10 +74,10 @@ class MainActivity : ComponentActivity() {
 }
 
 /**
- * `rateio://join/{codigo}` — scheme e host fixos do deep link de T22.1, código do convite no
- * primeiro segmento do path. `null` pra qualquer intent que não seja esse link (abertura normal
- * pelo launcher, outras actions). `internal` (em vez de `private`) só pra ser testável direto —
- * mesma convenção de [com.rateio.app.ui.creategroup.FieldLabel].
+ * `rateio://join/{code}` — the fixed scheme and host of T22.1's deep link, the invite code in the
+ * first path segment. `null` for any intent that isn't this link (a normal launcher open, other
+ * actions). `internal` (instead of `private`) just to be directly testable — the same convention
+ * as [com.rateio.app.ui.creategroup.FieldLabel].
  */
 internal fun Intent?.extractInviteCode(): String? {
     val uri = this?.data ?: return null
@@ -90,42 +90,42 @@ private const val DEEP_LINK_SCHEME = "rateio"
 private const val DEEP_LINK_HOST = "join"
 
 /**
- * Destinos navegáveis a partir da raiz. Sem NavHost ainda (T9, bottom nav de verdade, não existe)
- * — essa é uma máquina de estados mínima entre as telas que já existem.
+ * Navigable destinations from the root. No NavHost yet (T9, a real bottom nav, doesn't exist) —
+ * this is a minimal state machine between the screens that already exist.
  *
- * [GroupDetail] (T42.2/T42.4, RF42) é o destino real de tocar num
- * [com.rateio.app.ui.groups.GroupCard] — até T42.4 isso ia direto pra [CreateExpense] ou
- * disparava "Sincronizar" no próprio card, atalhos temporários documentados por T19/T24 porque
- * esta tela não existia ainda. [CreateExpense] e [SettleDebts] continuam existindo, só que agora
- * são alcançados a partir de [GroupDetail], não direto da lista.
+ * [GroupDetail] (T42.2/T42.4, RF42) is the real destination for tapping a
+ * [com.rateio.app.ui.groups.GroupCard] — until T42.4 that went straight to [CreateExpense] or
+ * triggered "Sync" on the card itself, temporary shortcuts documented by T19/T24 because this
+ * screen didn't exist yet. [CreateExpense] and [SettleDebts] still exist, just now reached from
+ * [GroupDetail], not directly from the list.
  *
- * [Login.pendingInviteCode] (T22.1) carrega a intenção de entrar num grupo quando o deep link
- * chega com o usuário deslogado — `null` no acesso normal (ícone de perfil). [JoinGroup] é o
- * destino da tela de confirmação (T22.2), alcançado direto do deep link (usuário logado) ou como
- * retomada depois de [Login] (usuário logava primeiro).
+ * [Login.pendingInviteCode] (T22.1) carries the intent to join a group when the deep link arrives
+ * with the user signed out — `null` on normal access (the profile icon). [JoinGroup] is the
+ * confirmation screen's destination (T22.2), reached directly from the deep link (user signed in)
+ * or resumed after [Login] (user signed in first).
  *
- * [Notifications] (T41.1, RF35/RF36) é o destino da aba "Avisos" da bottom nav —
- * `RateioBottomBar` está presente em toda tela alcançável a partir da raiz (mesmo padrão do
- * protótipo: `grupo.html`/`nova-despesa.html`/`quitar.html`/`criar-grupo.html`/`login.html`
- * sempre têm `.bottombar`, com "Grupos" marcada ativa nas telas que são sub-fluxo da lista de
- * grupos e "Perfil" ativa em [Login]), não só em [GroupList]/[Notifications].
+ * [Notifications] (T41.1, RF35/RF36) is the destination of the bottom nav's "Notifications" tab —
+ * `RateioBottomBar` is present on every screen reachable from the root (the same pattern as the
+ * prototype: `group.html`/`new-expense.html`/`settle.html`/`create-group.html`/`login.html` always
+ * have `.bottombar`, with "Groups" marked active on screens that are a sub-flow of the group list
+ * and "Profile" active in [Login]), not just in [GroupList]/[Notifications].
  *
- * [CreateExpense.expenseId] (T29) é `null` pra "Nova despesa" (alcançada pelo FAB de
- * [GroupDetail]) e o id da despesa sendo editada quando vem de [GroupDetail]'s
- * `onEditExpenseClick` (tocar numa [com.rateio.app.ui.groupdetail.ExpenseRow]) — mesmo destino
- * pros dois fluxos, só muda o parâmetro (T29, "edição é estado, não tela nova").
+ * [CreateExpense.expenseId] (T29) is `null` for "New expense" (reached from [GroupDetail]'s FAB)
+ * and the id of the expense being edited when it comes from [GroupDetail]'s `onEditExpenseClick`
+ * (tapping an [com.rateio.app.ui.groupdetail.ExpenseRow]) — the same destination for both flows,
+ * only the parameter changes (T29, "editing is state, not a new screen").
  *
- * [CreateGroup.instanceId]/[CreateExpense.instanceId]: sem `NavHost`, todo destino compartilha o
- * mesmo `ViewModelStoreOwner` (a própria Activity) — `viewModel(factory=...)` sem uma `key`
- * explícita cacheia por classe, não por navegação, então reabrir "Novo grupo"/"Nova despesa"
- * devolvia o `ViewModel` da visita anterior, com o formulário inteiro (e `isSaving`) ainda no
- * estado da última submissão. `instanceId` gera um valor novo a cada `RateioDestination.CreateGroup()`/
- * `CreateExpense()` construído (default de `UUID.randomUUID()`), viram a `key` desse `viewModel()`
- * (ver `RateioApp`) e garantem um formulário zerado a cada visita. [GroupDetail]/[SettleDebts] não
- * precisam disso — o `ViewModel` dos dois é só um espelho de `Flow`s do Room (sem "isSaving" nem
- * campo de formulário pra ficar velho), então a `key` ali é só o `groupId`: revisitar o MESMO
- * grupo reaproveita a instância (barato, inofensivo), visitar um grupo DIFERENTE já força uma
- * nova (que era o bug real ali — sem isso, o segundo grupo aberto mostraria os dados do primeiro).
+ * [CreateGroup.instanceId]/[CreateExpense.instanceId]: with no `NavHost`, every destination shares
+ * the same `ViewModelStoreOwner` (the Activity itself) — `viewModel(factory=...)` with no explicit
+ * `key` caches by class, not by navigation, so reopening "New group"/"New expense" returned the
+ * previous visit's `ViewModel`, with the whole form (and `isSaving`) still in its last submission's
+ * state. `instanceId` generates a new value on every `RateioDestination.CreateGroup()`/
+ * `CreateExpense()` built (defaulting to `UUID.randomUUID()`), becomes that `viewModel()`'s `key`
+ * (see `RateioApp`) and guarantees a fresh form on every visit. [GroupDetail]/[SettleDebts] don't
+ * need this — their `ViewModel` is just a mirror of Room `Flow`s (no "isSaving" or form field to go
+ * stale), so their `key` is just the `groupId`: revisiting the SAME group reuses the instance
+ * (cheap, harmless), visiting a DIFFERENT group already forces a new one (which was the real bug
+ * there — without this, the second group opened would show the first one's data).
  */
 private sealed interface RateioDestination {
     data object GroupList : RateioDestination
@@ -150,27 +150,28 @@ private fun RateioApp(
 ) {
     var destination by remember { mutableStateOf<RateioDestination>(RateioDestination.GroupList) }
 
-    // Badge de não lidas (T41.2) hoisted aqui em vez de injetado em cada ViewModel: é a única
-    // peça de estado que toda tela por trás de RateioBottomBar precisa, e nenhuma delas (edição de
-    // despesa, criar grupo, login, ...) tem qualquer outro motivo pra conhecer
-    // NotificationRepository — adicionar essa dependência a cada uma só pra pintar um badge violaria
-    // a responsabilidade única de cada ViewModel. GroupList/Notifications continuam com sua própria
-    // fonte (já existia antes desta tela ganhar `RateioBottomBar` em todo lugar).
+    // Unread badge (T41.2) hoisted here instead of injected into each ViewModel: it's the only
+    // piece of state every screen behind RateioBottomBar needs, and none of them (expense editing,
+    // create group, login, ...) has any other reason to know about NotificationRepository — adding
+    // that dependency to each one just to paint a badge would violate each ViewModel's single
+    // responsibility. GroupList/Notifications keep their own source (it already existed before this
+    // screen got `RateioBottomBar` everywhere).
     val unreadNotificationsCount by container.notificationRepository.getUnreadCountFlow()
         .collectAsStateWithLifecycle(initialValue = 0)
 
-    // Nome do usuário autenticado (ou `null` deslogado) hoisted pelo mesmo motivo do badge acima —
-    // troca o rótulo "Entrar"/"Perfil" e o ícone (genérico/avatar com iniciais) de `RateioBottomBar`
-    // em toda tela, espelhando `renderHeaderAuth` do protótipo (`prototype/app.js`).
+    // Authenticated user's name (or `null` if signed out) hoisted for the same reason as the badge
+    // above — swaps the "Sign in"/"Profile" label and icon (generic/initials avatar) of
+    // `RateioBottomBar` on every screen, mirroring the prototype's `renderHeaderAuth`
+    // (`prototype/app.js`).
     val authenticatedUserName by container.authRepository.getSessionFlow()
         .map { session -> session?.user?.name }
         .collectAsStateWithLifecycle(initialValue = null)
 
-    // Botão sol/lua (mesmo componente global de `prototype/app.js`'s `initThemeToggle`, presente
-    // no TopAppBar de toda tela). `storedThemePreference` é `null` até o usuário tocar no botão
-    // pela primeira vez — nesse caso o app segue o tema do sistema, igual o protótipo seguia
-    // `prefers-color-scheme` antes de qualquer escolha salva em `localStorage`. Depois do primeiro
-    // toque, o valor salvo manda, em todo lançamento futuro, até o usuário tocar de novo.
+    // Sun/moon button (the same global component as `prototype/app.js`'s `initThemeToggle`,
+    // present in the TopAppBar on every screen). `storedThemePreference` is `null` until the user
+    // taps the button for the first time — in that case the app follows the system theme, just like
+    // the prototype followed `prefers-color-scheme` before any choice was saved to `localStorage`.
+    // After the first tap, the saved value rules, on every future launch, until the user taps again.
     val storedThemePreference by container.themeRepository.getIsDarkThemeFlow()
         .collectAsStateWithLifecycle(initialValue = null)
     val isDarkTheme = storedThemePreference ?: isSystemInDarkTheme()
@@ -179,10 +180,10 @@ private fun RateioApp(
         coroutineScope.launch { container.themeRepository.setDarkTheme(!isDarkTheme) }
     }
 
-    // T22.1 — deep link `rateio://join/{codigo}` (extraído do Intent em MainActivity). Roteia
-    // direto pra JoinGroup independente de sessão: é o próprio JoinGroupViewModel que checa login
-    // e expõe NeedsLogin — RateioApp só reage a esse estado (abaixo, no case JoinGroup) mandando
-    // pra Login com o código guardado, sem duplicar a checagem de sessão aqui.
+    // T22.1 — deep link `rateio://join/{code}` (extracted from the Intent in MainActivity). Routes
+    // straight to JoinGroup regardless of session: it's JoinGroupViewModel itself that checks login
+    // and exposes NeedsLogin — RateioApp only reacts to that state (below, in the JoinGroup case) by
+    // sending to Login with the stored code, without duplicating the session check here.
     LaunchedEffect(pendingInviteCode) {
         val code = pendingInviteCode ?: return@LaunchedEffect
         destination = RateioDestination.JoinGroup(code)

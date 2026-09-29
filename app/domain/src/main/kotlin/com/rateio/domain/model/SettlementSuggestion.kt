@@ -1,14 +1,15 @@
 package com.rateio.domain.model
 
 /**
- * Uma transação sugerida pelo motor de simplificação de dívidas (`DebtSimplificationEngine`,
- * T33): "[fromParticipantId] deve pagar [amount] para [toParticipantId]". Espelha `Transacao`
- * (`backend/src/Rateio.Domain/Transacao.cs`).
+ * A transaction suggested by the debt-simplification engine (`DebtSimplificationEngine`, T33):
+ * "[fromParticipantId] should pay [amount] to [toParticipantId]". Mirrors `Transaction`
+ * (`backend/src/Rateio.Domain/Transaction.cs`).
  *
- * Não confundir com [Settlement]: `Settlement` é uma quitação já registrada pelo usuário (tem
- * [Settlement.id] e alimenta `computeBalances` como entrada); `SettlementSuggestion` é uma saída
- * calculada de `computeSettlement` — não tem identidade própria, é derivada do saldo e recalculada
- * do zero a cada chamada, então não faz sentido carregar um `id` persistente.
+ * Don't confuse this with [Settlement]: `Settlement` is a settlement already recorded by the user
+ * (it has [Settlement.id] and feeds `computeBalances` as input); `SettlementSuggestion` is a
+ * calculated output of `computeSettlement` — it has no identity of its own, it's derived from the
+ * balance and recomputed from scratch on every call, so carrying a persistent `id` wouldn't make
+ * sense.
  */
 data class SettlementSuggestion(
     val fromParticipantId: String,

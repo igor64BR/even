@@ -7,9 +7,9 @@ import com.rateio.app.auth.GoogleIdentityClient
 import com.rateio.domain.repository.AuthRepository
 
 /**
- * Sem framework de DI no projeto ainda — fábrica manual que injeta [AuthRepository] (de
- * [com.rateio.app.di.AppContainer]) e [GoogleIdentityClient] no [AuthViewModel]. Mesma convenção
- * de [com.rateio.app.ui.groups.GroupListViewModelFactory] (T8).
+ * No DI framework in the project yet — a manual factory that injects [AuthRepository] (from
+ * [com.rateio.app.di.AppContainer]) and [GoogleIdentityClient] into the [AuthViewModel]. Same
+ * convention as [com.rateio.app.ui.groups.GroupListViewModelFactory] (T8).
  */
 class AuthViewModelFactory(
     private val authRepository: AuthRepository,
@@ -19,7 +19,7 @@ class AuthViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         require(modelClass.isAssignableFrom(AuthViewModel::class.java)) {
-            "AuthViewModelFactory só sabe criar AuthViewModel, pediram $modelClass"
+            "AuthViewModelFactory only knows how to create AuthViewModel, got $modelClass"
         }
         return AuthViewModel(authRepository, googleIdentityClient) as T
     }

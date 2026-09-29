@@ -13,15 +13,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * Estado do fluxo "entrar no grupo por link" (T22.1/T22.2). Fonte de verdade de "está logado?" é
- * [AuthRepository.getSessionFlow], mesmo padrão MVVM de [com.rateio.app.ui.auth.AuthViewModel]
- * (T12) e [com.rateio.app.ui.groupdetail.GroupDetailViewModel] (T19/T42.4): `combine` + `stateIn`,
- * nenhuma lógica de rede na Composable.
+ * State for the "join group via link" flow (T22.1/T22.2). The source of truth for "is signed in?"
+ * is [AuthRepository.getSessionFlow], same MVVM pattern as [com.rateio.app.ui.auth.AuthViewModel]
+ * (T12) and [com.rateio.app.ui.groupdetail.GroupDetailViewModel] (T19/T42.4): `combine` + `stateIn`,
+ * no network logic in the Composable.
  *
- * Este ViewModel só decide *o que mostrar*; ele não navega sozinho. Quando a sessão está ausente,
- * [uiState] vira [JoinGroupUiState.NeedsLogin] e quem observa (`JoinGroupRoute`) é responsável por
- * navegar pra tela de login e voltar pra cá depois — a mesma instância de [inviteCode] é reusada
- * pra retomar (T22, "guarde a intenção... após login bem-sucedido, retome o fluxo automaticamente").
+ * This ViewModel only decides *what to show*; it never navigates on its own. When there's no
+ * session, [uiState] becomes [JoinGroupUiState.NeedsLogin] and whoever observes it (`JoinGroupRoute`)
+ * is responsible for navigating to the login screen and coming back here afterwards — the same
+ * [inviteCode] instance is reused to resume (T22, "keep the intent... after a successful login,
+ * automatically resume the flow").
  */
 class JoinGroupViewModel(
     private val inviteCode: String,
@@ -39,7 +40,7 @@ class JoinGroupViewModel(
         initialValue = JoinGroupUiState.CheckingSession,
     )
 
-    /** Botão "Entrar" da tela de confirmação. Ignorado se já houver uma chamada em andamento. */
+    /** "Join" button on the confirmation screen. Ignored if a call is already in progress. */
     fun confirm() {
         if (phase.value is Phase.Joining) return
 
@@ -54,7 +55,7 @@ class JoinGroupViewModel(
         }
     }
 
-    /** "Tentar de novo" após [JoinGroupUiState.Error] — volta pra confirmação, não refaz a chamada sozinho. */
+    /** "Try again" after [JoinGroupUiState.Error] — goes back to confirmation, doesn't redo the call by itself. */
     fun retry() {
         phase.value = Phase.Confirming
     }
@@ -66,7 +67,7 @@ class JoinGroupViewModel(
         is Phase.Error -> JoinGroupUiState.Error(inviteCode, message)
     }
 
-    /** Estados transitórios que não vêm da sessão persistida — mesma ideia de `AuthViewModel.Phase`. */
+    /** Transient states that don't come from the persisted session — same idea as `AuthViewModel.Phase`. */
     private sealed interface Phase {
         data object Confirming : Phase
         data object Joining : Phase
@@ -76,6 +77,6 @@ class JoinGroupViewModel(
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
-        const val DEFAULT_ERROR_MESSAGE = "Não foi possível entrar nesse grupo."
+        const val DEFAULT_ERROR_MESSAGE = "Could not join this group."
     }
 }

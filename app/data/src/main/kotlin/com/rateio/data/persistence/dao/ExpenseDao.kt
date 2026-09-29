@@ -17,13 +17,13 @@ interface ExpenseDao {
     fun getExpensesWithSplitsFlow(groupId: String): Flow<List<ExpenseWithSplitsEntity>>
 
     /**
-     * T29.1: leitura pontual (não-`Flow`) de uma despesa por id — usada só pra pré-carregar o
-     * formulário de edição uma vez, ao abrir a tela (`CreateExpenseViewModel.loadExpenseForEditing`).
-     * Deliberadamente não reaproveita [getExpensesWithSplitsFlow] + `.first()` (assinar a lista
-     * inteira só pra pegar um item e cancelar a assinatura em seguida): esse padrão de "Flow
-     * cancelado logo depois de emitir", seguido de perto por uma escrita na mesma tabela
-     * (`onSaveClick`), mostrou-se instável sob o SQLite do Robolectric em teste (deadlock
-     * intermitente) — uma query direta evita o `InvalidationTracker` por completo pra esse caso.
+     * T29.1: a one-off (non-`Flow`) read of an expense by id — used only to pre-fill the edit
+     * form once, when opening the screen (`CreateExpenseViewModel.loadExpenseForEditing`).
+     * Deliberately doesn't reuse [getExpensesWithSplitsFlow] + `.first()` (subscribing to the
+     * whole list just to grab one item and cancel the subscription right after): that "Flow
+     * cancelled right after emitting" pattern, closely followed by a write to the same table
+     * (`onSaveClick`), proved unstable under Robolectric's SQLite in testing (intermittent
+     * deadlock) — a direct query avoids the `InvalidationTracker` entirely for this case.
      */
     @Transaction
     @Query("SELECT * FROM expenses WHERE id = :expenseId")
@@ -42,10 +42,11 @@ interface ExpenseDao {
     suspend fun deleteById(expenseId: String)
 
     /**
-     * Substitui despesa + partes numa única transação. Necessário porque `insertExpense` é um
-     * upsert (`REPLACE`) e Room não propaga esse replace pras linhas de `expense_splits`
-     * sozinho — sem o `deleteSplitsForExpense` antes de reinserir, uma edição que reduz o número
-     * de participantes da divisão deixaria partes órfãs da versão anterior da despesa.
+     * Replaces the expense + its splits in a single transaction. Necessary because `insertExpense`
+     * is an upsert (`REPLACE`) and Room doesn't propagate that replace to the `expense_splits`
+     * rows on its own — without `deleteSplitsForExpense` before reinserting, an edit that reduces
+     * the number of participants in the split would leave orphaned splits from the expense's
+     * previous version.
      */
     @Transaction
     suspend fun insertWithSplits(expense: ExpenseEntity, splits: List<ExpenseSplitEntity>) {

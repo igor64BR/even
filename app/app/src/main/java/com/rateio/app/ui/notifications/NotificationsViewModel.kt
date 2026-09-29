@@ -16,10 +16,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * Estado da tela "Notificações" (T41.1, RF35/RF36). Fonte é [NotificationRepository] (Room, T40.1)
- * — "exige conta" (RequiresAccount) reage a [AuthRepository.getSessionFlow] direto, sem esperar a
- * lista: grupo local não sincronizado não tem pra quem avisar (mesmo racional do protótipo,
- * `notificacoes.html`).
+ * State for the "Notifications" screen (T41.1, RF35/RF36). The source is [NotificationRepository]
+ * (Room, T40.1) — "requires account" (RequiresAccount) reacts directly to
+ * [AuthRepository.getSessionFlow], without waiting for the list: an unsynced local group has no
+ * one to notify (same reasoning as the prototype's `notifications.html`).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class NotificationsViewModel(
@@ -41,7 +41,7 @@ class NotificationsViewModel(
             initialValue = NotificationsUiState.Loading,
         )
 
-    /** Badge da própria aba "Avisos" (T41.2) enquanto esta tela está aberta — mesma fonte que [com.rateio.app.ui.groups.GroupListViewModel] usa pro badge em "Seus grupos". */
+    /** Badge for the "Notifications" tab itself (T41.2) while this screen is open — same source [com.rateio.app.ui.groups.GroupListViewModel] uses for the badge on "Your groups". */
     val unreadNotificationsCount: StateFlow<Int> = notificationRepository.getUnreadCountFlow()
         .stateIn(
             scope = viewModelScope,
@@ -50,12 +50,13 @@ class NotificationsViewModel(
         )
 
     /**
-     * Fiel ao protótipo (`notificacoes.html`, `render()`): abrir a tela mostra o estado real de
-     * lida/não lida da visita atual, e só marca tudo como lido quando a tela é fechada — assim o
-     * badge (T41.2) e uma nova visita já saem zerados, mas esta visita não "pisca" o ponto de não
-     * lida sumindo por baixo do usuário (diferente do protótipo estático, que re-renderiza só uma
-     * vez; aqui o estado é reativo via Flow, então marcar como lido antes de sair faria o ponto
-     * desaparecer da tela ainda com o usuário olhando).
+     * Faithful to the prototype (`notifications.html`, `render()`): opening the screen shows the
+     * real read/unread state for the current visit, and only marks everything as read when the
+     * screen is closed — that way the badge (T41.2) and a new visit already start at zero, but
+     * this visit doesn't have the unread dot "flicker" away under the user (unlike the static
+     * prototype, which only re-renders once; here the state is reactive via Flow, so marking as
+     * read before leaving would make the dot disappear from the screen while the user is still
+     * looking at it).
      */
     fun onScreenClosed() {
         viewModelScope.launch { notificationRepository.markAllAsRead() }

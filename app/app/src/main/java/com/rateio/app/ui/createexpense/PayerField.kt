@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.domain.model.Participant
 
-/** `#pagador` do protótipo: seletor de "Quem pagou" entre os participantes do grupo. */
+/** The prototype's `#pagador`: a "Who paid" selector among the group's participants. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PayerField(
@@ -42,7 +42,7 @@ fun PayerField(
             value = selectedLabel,
             onValueChange = {},
             readOnly = true,
-            label = { Text(text = "Quem pagou") },
+            label = { Text(text = "Who paid") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) },
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
@@ -70,4 +70,4 @@ fun PayerField(
 }
 
 private fun payerLabel(participant: Participant): String =
-    if (participant.isYou) "${participant.name} (você)" else participant.name
+    if (participant.isYou) "${participant.name} (you)" else participant.name

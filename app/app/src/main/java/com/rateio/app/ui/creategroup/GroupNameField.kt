@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rateio.app.ui.theme.LocalRateioColors
 
-/** `#field-nome` do protótipo: input de texto + erro "Dá um nome pro grupo." quando vazio. */
+/** The prototype's `#field-nome`: a text input + the "Give the group a name." error when empty. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupNameField(
@@ -24,10 +24,10 @@ fun GroupNameField(
         value = name,
         onValueChange = onNameChange,
         modifier = modifier,
-        label = { Text(text = "Nome do grupo") },
-        placeholder = { Text(text = "Ex.: Churras de sábado") },
+        label = { Text(text = "Group name") },
+        placeholder = { Text(text = "E.g.: Saturday barbecue") },
         isError = isError,
-        supportingText = errorTextOrNull(isError, "Dá um nome pro grupo."),
+        supportingText = errorTextOrNull(isError, "Give the group a name."),
         singleLine = true,
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
@@ -40,7 +40,7 @@ fun GroupNameField(
     )
 }
 
-/** Composable de erro só aparece quando há erro — mesma regra visual de `.field .error`. */
+/** The error Composable only shows up when there's an error — the same visual rule as `.field .error`. */
 @Composable
 private fun errorTextOrNull(isError: Boolean, message: String): (@Composable () -> Unit)? {
     if (!isError) return null

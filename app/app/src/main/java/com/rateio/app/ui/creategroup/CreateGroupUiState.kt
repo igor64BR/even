@@ -3,18 +3,18 @@ package com.rateio.app.ui.creategroup
 import java.util.UUID
 
 /**
- * Estado do formulário "Novo grupo" (T16.1/T16.2). [participants] sempre começa com "Você" fixo
- * ([ParticipantChipUiModel.you], não removível — mesma regra de `prototype/criar-grupo.html`).
+ * State of the "New group" form (T16.1/T16.2). [participants] always starts with a fixed "You"
+ * ([ParticipantChipUiModel.you], not removable — the same rule as `prototype/create-group.html`).
  *
- * [category] é seleção só de UI: `Group` (`:domain`, T7B) não tem campo de categoria hoje, então
- * esta escolha ainda não é persistida — ver nota em
- * [com.rateio.app.ui.creategroup.CreateGroupViewModel.saveGroup]. Mesmo tipo de lacuna documentada
- * que T8 deixou para `Group.isSynced` antes de T7B resolver, desta vez fora do escopo de T16
- * (restrita a `app/app/`, sem mexer em `:domain`).
+ * [category] is UI-only selection: `Group` (`:domain`, T7B) has no category field today, so this
+ * choice isn't persisted yet — see the note in
+ * [com.rateio.app.ui.creategroup.CreateGroupViewModel.saveGroup]. The same kind of documented gap
+ * T8 left for `Group.isSynced` before T7B resolved it, this time out of scope for T16 (restricted
+ * to `app/app/`, without touching `:domain`).
  */
 data class CreateGroupUiState(
     val name: String = "",
-    val category: GroupCategory = GroupCategory.VIAGEM,
+    val category: GroupCategory = GroupCategory.TRIP,
     val participants: List<ParticipantChipUiModel> = listOf(ParticipantChipUiModel.you()),
     val newParticipantName: String = "",
     val nameError: Boolean = false,
@@ -22,30 +22,30 @@ data class CreateGroupUiState(
     val isSaving: Boolean = false,
 )
 
-/** Réplica das opções de `#categorias` em `criar-grupo.html`, "Viagem" selecionada por padrão. */
+/** Mirrors the `#categorias` options in `create-group.html`, "Trip" selected by default. */
 enum class GroupCategory(val label: String) {
-    VIAGEM("Viagem"),
-    REPUBLICA("República"),
-    CHURRASCO("Churrasco"),
-    OUTRO("Outro"),
+    TRIP("Trip"),
+    HOUSEHOLD("Household"),
+    BARBECUE("Barbecue"),
+    OTHER("Other"),
 }
 
-/** Um chip de participante no formulário. [isYou] marca o dono do dispositivo — fixo, não-removível. */
+/** A participant chip in the form. [isYou] marks the device owner — fixed, not removable. */
 data class ParticipantChipUiModel(
     val id: String,
     val name: String,
     val isYou: Boolean = false,
 ) {
     companion object {
-        private const val YOU_ID = "voce"
+        private const val YOU_ID = "you"
 
-        fun you() = ParticipantChipUiModel(id = YOU_ID, name = "Você", isYou = true)
+        fun you() = ParticipantChipUiModel(id = YOU_ID, name = "You", isYou = true)
 
         fun named(name: String) = ParticipantChipUiModel(id = UUID.randomUUID().toString(), name = name)
     }
 }
 
-/** Evento de navegação, emitido depois que o grupo é persistido no Room. */
+/** A navigation event, emitted after the group is persisted to Room. */
 sealed interface CreateGroupEvent {
     data object GroupCreated : CreateGroupEvent
 }

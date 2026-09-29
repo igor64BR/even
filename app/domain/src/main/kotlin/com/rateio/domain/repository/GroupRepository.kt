@@ -4,8 +4,8 @@ import com.rateio.domain.model.Group
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Contrato de persistência de grupos. `:domain` declara, `:data` implementa com Room
- * (Dependency Inversion) — nenhum tipo do Room vaza para esta interface.
+ * Contract for persisting groups. `:domain` declares it, `:data` implements it with Room
+ * (Dependency Inversion) — no Room type leaks into this interface.
  */
 interface GroupRepository {
     fun getGroupsFlow(): Flow<List<Group>>

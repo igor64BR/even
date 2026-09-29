@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.sp
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `.empty-state` do protótipo (`index.html?vazio=1`): ícone de recibo, título, texto explicando
- * que não precisa de conta, botão "Criar grupo". Sem lista para mostrar quando não há grupos.
+ * The prototype's `.empty-state` (`index.html?vazio=1`): receipt icon, title, text explaining that
+ * no account is needed, "Create group" button. Nothing to list when there are no groups.
  */
 @Composable
 fun EmptyGroupsState(onCreateGroupClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -41,14 +41,14 @@ fun EmptyGroupsState(onCreateGroupClick: () -> Unit, modifier: Modifier = Modifi
             modifier = Modifier.padding(bottom = 4.dp),
         )
         Text(
-            text = "Nenhum grupo ainda",
+            text = "No groups yet",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = colors.ink,
         )
         Text(
-            text = "Criar um leva 10 segundos. Não precisa de conta — nem sua, nem de quem vai " +
-                "dividir a conta com você.",
+            text = "Creating one takes 10 seconds. No account needed — not yours, not the " +
+                "people splitting the bill with you.",
             fontSize = 13.5.sp,
             color = colors.inkSoft,
             textAlign = TextAlign.Center,
@@ -62,7 +62,7 @@ fun EmptyGroupsState(onCreateGroupClick: () -> Unit, modifier: Modifier = Modifi
             ),
             modifier = Modifier.padding(top = 12.dp),
         ) {
-            Text(text = "Criar grupo", fontWeight = FontWeight.SemiBold)
+            Text(text = "Create group", fontWeight = FontWeight.SemiBold)
         }
     }
 }

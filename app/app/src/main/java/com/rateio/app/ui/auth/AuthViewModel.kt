@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * Estado da tela de login/conta (T12). Fonte de verdade de "está logado?" é
- * [AuthRepository.getSessionFlow] (T12.2, persistida via `EncryptedSharedPreferences`) — [phase]
- * só cobre os estados transitórios que essa sessão sozinha não modela (conectando, erro da
- * última tentativa). Mesmo padrão MVVM de [com.rateio.app.ui.groups.GroupListViewModel] (T8):
- * `combine` + `stateIn`, nenhuma lógica de rede na Composable.
+ * State of the login/account screen (T12). The source of truth for "is signed in?" is
+ * [AuthRepository.getSessionFlow] (T12.2, persisted via `EncryptedSharedPreferences`) — [phase]
+ * only covers the transient states that session alone doesn't model (connecting, an error from
+ * the last attempt). Same MVVM pattern as [com.rateio.app.ui.groups.GroupListViewModel] (T8):
+ * `combine` + `stateIn`, no network logic in the Composable.
  */
 class AuthViewModel(
     private val authRepository: AuthRepository,
@@ -73,7 +73,7 @@ class AuthViewModel(
         is Phase.Error -> AuthUiState.SignedOut(errorMessage = reason)
     }
 
-    /** Estados transitórios de UI que não vêm da [AuthSession] persistida. */
+    /** Transient UI states that don't come from the persisted [AuthSession]. */
     private sealed interface Phase {
         data object Idle : Phase
         data object Connecting : Phase
@@ -82,6 +82,6 @@ class AuthViewModel(
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
-        const val DEFAULT_ERROR_MESSAGE = "Não foi possível entrar com essa conta."
+        const val DEFAULT_ERROR_MESSAGE = "Couldn't sign in with that account."
     }
 }

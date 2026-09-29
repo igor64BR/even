@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rateio.app.ui.theme.LocalRateioColors
 
-/** `.empty-state` de `grupo.html` quando `group.despesas` está vazio. */
+/** `group.html`'s `.empty-state` when the group's expenses are empty. */
 @Composable
 fun EmptyExpensesState(modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
@@ -26,13 +26,13 @@ fun EmptyExpensesState(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
-            text = "Nenhuma despesa lançada ainda",
+            text = "No expenses logged yet",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = colors.ink,
         )
         Text(
-            text = "Lance a primeira despesa e o saldo de cada participante aparece aqui.",
+            text = "Log the first expense and each participant's balance shows up here.",
             fontSize = 13.5.sp,
             color = colors.inkSoft,
             textAlign = TextAlign.Center,

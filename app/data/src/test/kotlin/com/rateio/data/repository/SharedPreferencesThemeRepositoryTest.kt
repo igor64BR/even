@@ -8,19 +8,19 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** Robolectric (mesmo padrão de `RateioDatabaseTest`) — `SharedPreferences` exige um `Context` real. */
+/** Robolectric (same pattern as `RateioDatabaseTest`) — `SharedPreferences` requires a real `Context`. */
 @RunWith(RobolectricTestRunner::class)
 class SharedPreferencesThemeRepositoryTest {
 
     @Test
-    fun `sem preferencia salva, getIsDarkThemeFlow comeca null`() = runTest {
+    fun `with no saved preference, getIsDarkThemeFlow starts null`() = runTest {
         val repository = SharedPreferencesThemeRepository(ApplicationProvider.getApplicationContext())
 
         assertNull(repository.getIsDarkThemeFlow().value)
     }
 
     @Test
-    fun `setDarkTheme atualiza o flow imediatamente`() = runTest {
+    fun `setDarkTheme updates the flow immediately`() = runTest {
         val repository = SharedPreferencesThemeRepository(ApplicationProvider.getApplicationContext())
 
         repository.setDarkTheme(true)
@@ -29,7 +29,7 @@ class SharedPreferencesThemeRepositoryTest {
     }
 
     @Test
-    fun `preferencia sobrevive a uma nova instancia (persistida em disco)`() = runTest {
+    fun `the preference survives a new instance (persisted to disk)`() = runTest {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         SharedPreferencesThemeRepository(context).setDarkTheme(true)
 
@@ -39,7 +39,7 @@ class SharedPreferencesThemeRepositoryTest {
     }
 
     @Test
-    fun `alternar duas vezes volta ao valor original`() = runTest {
+    fun `toggling twice returns to the original value`() = runTest {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val repository = SharedPreferencesThemeRepository(context)
 

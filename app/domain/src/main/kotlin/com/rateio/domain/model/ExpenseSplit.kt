@@ -1,27 +1,28 @@
 package com.rateio.domain.model
 
 /**
- * A parte de um [participantId] numa [Expense]. Espelha `ParticipacaoDespesa`
- * (`backend/src/Rateio.Domain/ParticipacaoDespesa.cs`): o subtipo concreto já carrega a regra de
- * divisão aplicável (Igual/Peso/ValorFixo, RF17-RF19) — não existe um enum `SplitType` solto do
- * lado, porque isso deixaria dois lugares que poderiam divergir (o enum dizendo uma coisa, o item
- * sendo de outro subtipo). `sealed class` com subtipos aninhados é o equivalente natural Kotlin da
- * hierarquia `abstract record` + `sealed record`s aninhados que `ParticipacaoDespesa.cs` usa em C#.
+ * A [participantId]'s share of an [Expense]. Mirrors `ExpenseSplit`
+ * (`backend/src/Rateio.Domain/ExpenseSplit.cs`): the concrete subtype already carries the
+ * applicable split rule (Equal/Weight/FixedAmount, RF17-RF19) — there's no separate `SplitType`
+ * enum, because that would leave two places that could diverge (the enum saying one thing, the
+ * item being of another subtype). A `sealed class` with nested subtypes is the natural Kotlin
+ * equivalent of the `abstract record` + nested `sealed record`s hierarchy `ExpenseSplit.cs` uses
+ * in C#.
  *
- * Todas as participações de uma mesma despesa devem ser do mesmo subtipo concreto; validar essa
- * consistência é responsabilidade da borda de entrada (formulário/DTO), não deste tipo nem do
- * motor de simplificação — mesma decisão documentada em `ParticipacaoDespesa.cs` e em
+ * All splits for the same expense must be of the same concrete subtype; validating that
+ * consistency is the responsibility of the input boundary (form/DTO), not this type nor the
+ * simplification engine — the same decision documented in `ExpenseSplit.cs` and in
  * `algorithm-spec.md`.
  */
 sealed class ExpenseSplit {
     abstract val participantId: String
 
-    /** Divisão em partes iguais entre todos os participantes (RF17). */
+    /** Equal split among all participants (RF17). */
     data class Equal(override val participantId: String) : ExpenseSplit()
 
-    /** Divisão proporcional a um peso/percentual por participante (RF18). */
+    /** Split proportional to a weight/percentage per participant (RF18). */
     data class Weight(override val participantId: String, val weight: Long) : ExpenseSplit()
 
-    /** Divisão por valor fixo definido por participante (RF19). */
+    /** Split by a fixed amount set per participant (RF19). */
     data class FixedAmount(override val participantId: String, val amount: Money) : ExpenseSplit()
 }

@@ -20,13 +20,13 @@ import androidx.compose.ui.unit.sp
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `.group-card` do protótipo: sigla do grupo, nome + contagem de participantes + ícone de sync,
- * saldo colorido à direita. Uma responsabilidade — apresentar um [GroupListItemUiModel]; nenhuma
- * lógica de saldo/sync mora aqui (isso é do ViewModel).
+ * The prototype's `.group-card`: group initials, name + participant count + sync icon, colored
+ * balance on the right. One responsibility — presenting a [GroupListItemUiModel]; no
+ * balance/sync logic lives here (that's the ViewModel's job).
  *
- * [onClick] leva pra "Detalhes do grupo" (T42.4/RF42). Até T19 este card também embutia a ação
- * "Sincronizar este grupo" (atalho temporário, porque a tela de detalhe não existia ainda); T42.4
- * remove esse atalho — sincronizar agora é uma ação dentro da tela de detalhe.
+ * [onClick] leads to "Group details" (T42.4/RF42). Up until T19 this card also embedded the
+ * "Sync this group" action (temporary shortcut, because the detail screen didn't exist yet);
+ * T42.4 removes that shortcut — syncing is now an action inside the detail screen.
  */
 @Composable
 fun GroupCard(
@@ -81,7 +81,7 @@ private fun GroupNameAndMeta(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
-                text = "$participantCount ${if (participantCount == 1) "pessoa" else "pessoas"}",
+                text = "$participantCount ${if (participantCount == 1) "person" else "people"}",
                 color = colors.inkSoft,
                 fontSize = 12.5.sp,
             )

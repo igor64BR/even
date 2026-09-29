@@ -7,30 +7,30 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val EXPENSE_DATE_FORMATTER: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("d MMM", Locale("pt", "BR"))
+    DateTimeFormatter.ofPattern("d MMM", Locale.ENGLISH)
 
 /**
- * "12 mar" — mesma formatação curta de `fmtDate()` em `prototype/app.js`, usada na lista de
- * despesas da tela "Detalhes do grupo" (T42.2). Converte pro fuso do aparelho antes de formatar,
- * já que [instant] é sempre UTC (ver `Expense.createdAt`).
+ * "12 Mar" — the same short formatting as `fmtDate()` in `prototype/app.js`, used in the expense
+ * list of the "Group details" screen (T42.2). Converts to the device's time zone before
+ * formatting, since [instant] is always UTC (see `Expense.createdAt`).
  */
 fun formatInstantAsShortDate(instant: Instant): String =
     EXPENSE_DATE_FORMATTER.format(instant.atZone(ZoneId.systemDefault()))
 
 /**
- * "hoje" / "ontem" / "há 3 dias" / "há 2 meses" — mesma escala de `fmtRelative()` em
- * `prototype/app.js`, usada na lista de notificações (T41.1). [now] só existe pra deixar o teste
- * determinístico (`DateFormatTest`); todo chamador real usa o default.
+ * "today" / "yesterday" / "3 days ago" / "2 months ago" — the same scale as `fmtRelative()` in
+ * `prototype/app.js`, used in the notification list (T41.1). [now] only exists to make the test
+ * deterministic (`DateFormatTest`); every real caller uses the default.
  */
 fun formatInstantAsRelative(instant: Instant, now: Instant = Instant.now()): String {
     val days = Duration.between(instant, now).toDays()
     return when {
-        days <= 0 -> "hoje"
-        days == 1L -> "ontem"
-        days < 30 -> "há $days dias"
+        days <= 0 -> "today"
+        days == 1L -> "yesterday"
+        days < 30 -> "$days days ago"
         else -> {
             val months = days / 30
-            "há $months ${if (months == 1L) "mês" else "meses"}"
+            "$months ${if (months == 1L) "month" else "months"} ago"
         }
     }
 }

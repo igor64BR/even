@@ -13,16 +13,16 @@ import androidx.compose.ui.text.font.FontWeight
 import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.app.ui.theme.ThemeToggleButton
 
-/** `.topbar` de `quitar.html` — volta pra "Detalhes do grupo". */
+/** `settle.html`'s `.topbar` — goes back to "Group details". */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettleDebtsTopBar(onBackClick: () -> Unit, isDarkTheme: Boolean, onToggleTheme: () -> Unit) {
     val colors = LocalRateioColors.current
     TopAppBar(
-        title = { Text(text = "Quitar dívidas", fontWeight = FontWeight.Bold) },
+        title = { Text(text = "Settle debts", fontWeight = FontWeight.Bold) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         },
         actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },

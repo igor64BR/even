@@ -13,7 +13,7 @@ import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/** Implementação de [ExpenseRepository] sobre [ExpenseDao] (Room). */
+/** Implementation of [ExpenseRepository] on top of [ExpenseDao] (Room). */
 class RoomExpenseRepository(private val expenseDao: ExpenseDao) : ExpenseRepository {
 
     override fun getExpensesFlow(groupId: String): Flow<List<Expense>> =
@@ -80,7 +80,7 @@ private fun ExpenseSplitEntity.toDomain(): ExpenseSplit = when (type) {
     SplitTypeEntity.WEIGHT -> ExpenseSplit.Weight(
         participantId = participantId,
         weight = requireNotNull(weight) {
-            "ExpenseSplitEntity do tipo WEIGHT sem weight (participantId=$participantId)"
+            "ExpenseSplitEntity of type WEIGHT with no weight (participantId=$participantId)"
         },
     )
 
@@ -88,7 +88,7 @@ private fun ExpenseSplitEntity.toDomain(): ExpenseSplit = when (type) {
         participantId = participantId,
         amount = Money.ofCents(
             requireNotNull(fixedAmountCents) {
-                "ExpenseSplitEntity do tipo FIXED_AMOUNT sem fixedAmountCents (participantId=$participantId)"
+                "ExpenseSplitEntity of type FIXED_AMOUNT with no fixedAmountCents (participantId=$participantId)"
             },
         ),
     )

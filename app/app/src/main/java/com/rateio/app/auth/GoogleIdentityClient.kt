@@ -12,12 +12,12 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingExcept
 import com.rateio.app.BuildConfig
 
 /**
- * Obtém o ID token do Google via Credential Manager (`androidx.credentials` + `googleid`) — a API
- * atual recomendada pelo Google, substitui o antigo `GoogleSignIn` deprecated (T12.1). Única
- * responsabilidade: transformar "pedir pro usuário escolher uma conta Google" numa String de ID
- * token ou numa falha explicada; trocar esse token pelo JWT do backend é trabalho do
- * [com.rateio.domain.repository.AuthRepository], não deste tipo — este client não sabe que
- * `POST /auth/google` existe.
+ * Obtains the Google ID token via Credential Manager (`androidx.credentials` + `googleid`) — the
+ * current API Google recommends, replacing the old deprecated `GoogleSignIn` (T12.1). Single
+ * responsibility: turning "ask the user to pick a Google account" into an ID token String or an
+ * explained failure; exchanging that token for the backend's JWT is
+ * [com.rateio.domain.repository.AuthRepository]'s job, not this type's — this client doesn't know
+ * `POST /auth/google` exists.
  */
 class GoogleIdentityClient(private val context: Context) {
 
@@ -32,14 +32,15 @@ class GoogleIdentityClient(private val context: Context) {
             val response = credentialManager.getCredential(context, request)
             response.credential.toGoogleIdentityResult()
         } catch (error: GetCredentialException) {
-            GoogleIdentityResult.Failure(error.message ?: "Não foi possível conectar à conta Google.")
+            GoogleIdentityResult.Failure(error.message ?: "Couldn't connect to the Google account.")
         }
     }
 
     /**
-     * `setServerClientId` é o client id OAuth **web** do projeto no Google Cloud (o backend valida
-     * o ID token contra essa mesma audience, ver `GoogleAuthOptions.ClientId` em `:Rateio.Infrastructure`)
-     * — client id ainda placeholder (ver `app/app/build.gradle.kts`), documentado em T12.
+     * `setServerClientId` is the project's **web** OAuth client id on Google Cloud (the backend
+     * validates the ID token against that same audience, see `GoogleAuthOptions.ClientId` in
+     * `:Rateio.Infrastructure`) — still a placeholder client id (see `app/app/build.gradle.kts`),
+     * documented in T12.
      */
     private fun googleIdOption(): GetGoogleIdOption = GetGoogleIdOption.Builder()
         .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
@@ -48,17 +49,17 @@ class GoogleIdentityClient(private val context: Context) {
 
     private fun Credential.toGoogleIdentityResult(): GoogleIdentityResult {
         if (this !is CustomCredential || type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-            return GoogleIdentityResult.Failure("Credencial retornada não é um ID token do Google.")
+            return GoogleIdentityResult.Failure("The returned credential isn't a Google ID token.")
         }
         return try {
             GoogleIdentityResult.Success(GoogleIdTokenCredential.createFrom(data).idToken)
         } catch (error: GoogleIdTokenParsingException) {
-            GoogleIdentityResult.Failure("Não foi possível interpretar a credencial do Google.")
+            GoogleIdentityResult.Failure("Couldn't parse the Google credential.")
         }
     }
 }
 
-/** Resultado de [GoogleIdentityClient.requestGoogleIdToken] — sem exceção cruzando pra UI. */
+/** Result of [GoogleIdentityClient.requestGoogleIdToken] — no exception crossing into the UI. */
 sealed interface GoogleIdentityResult {
     data class Success(val idToken: String) : GoogleIdentityResult
     data class Failure(val reason: String) : GoogleIdentityResult

@@ -16,7 +16,7 @@ TestResults/
 *.coverage
 *.coveragexml
 
-# User-specific ASP.NET Core secrets (nunca versionar segredo local)
+# User-specific ASP.NET Core secrets (never commit a local secret)
 secrets.json
 
 # NuGet

@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.rateio.app.ui.theme.LocalRateioColors
 
-/** `.fab` do protótipo: círculo `--brand-ink`, ícone de "adicionar pessoa" branco. */
+/** The prototype's `.fab`: a `--brand-ink` circle, white "add person" icon. */
 @Composable
 fun CreateGroupFab(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
@@ -18,6 +18,6 @@ fun CreateGroupFab(onClick: () -> Unit, modifier: Modifier = Modifier) {
         contentColor = colors.onBrand,
         modifier = modifier,
     ) {
-        Icon(imageVector = Icons.Filled.PersonAdd, contentDescription = "Criar grupo")
+        Icon(imageVector = Icons.Filled.PersonAdd, contentDescription = "Create group")
     }
 }

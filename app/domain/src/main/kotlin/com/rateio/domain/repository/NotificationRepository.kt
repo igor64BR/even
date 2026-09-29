@@ -5,26 +5,26 @@ import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Contrato de persistência de notificações locais (T40/T41, RF35/RF36). `:domain` declara,
- * `:data` implementa com Room (Dependency Inversion) — mesmo padrão de [SettlementRepository]:
- * nenhum tipo do Room vaza para esta interface.
+ * Contract for persisting local notifications (T40/T41, RF35/RF36). `:domain` declares it, `:data`
+ * implements it with Room (Dependency Inversion) — same pattern as [SettlementRepository]: no Room
+ * type leaks into this interface.
  */
 interface NotificationRepository {
     fun getNotificationsFlow(): Flow<List<GroupNotification>>
 
-    /** Contagem de não lidas — fonte do badge da aba "Avisos" (T41.2, `RateioBottomBar`). */
+    /** Unread count — source of the "Notifications" tab badge (T41.2, `RateioBottomBar`). */
     fun getUnreadCountFlow(): Flow<Int>
 
-    /** Idempotente por [GroupNotification.id] — ver KDoc de [GroupNotification.id]. */
+    /** Idempotent by [GroupNotification.id] — see the KDoc of [GroupNotification.id]. */
     suspend fun insert(notification: GroupNotification)
 
-    /** Tela "Notificações" (T41.1) marca tudo como lido ao ser fechada — fiel ao protótipo. */
+    /** The "Notifications" screen (T41.1) marks everything as read when closed — faithful to the prototype. */
     suspend fun markAllAsRead()
 
     /**
-     * Instante da notificação mais recente já persistida — usado como `desde` na chamada de
-     * fallback de pull (T39, ver `com.rateio.domain.realtime.GroupRealtimeGateway`). `null` se
-     * nenhuma notificação foi gravada ainda (o pull busca o histórico inteiro disponível).
+     * The instant of the most recent notification already persisted — used as `since` in the pull
+     * fallback call (T39, see `com.rateio.domain.realtime.GroupRealtimeGateway`). `null` if no
+     * notification has been recorded yet (the pull fetches the whole available history).
      */
     suspend fun getLastEventTimestamp(): Instant?
 }

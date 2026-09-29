@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rateio.app.ui.theme.LocalRateioColors
 
-/** `.empty-state` de `quitar.html` quando `transacoes` está vazia — "grupo quitado" (RF44). */
+/** `.empty-state` from `settle.html` when `transactions` is empty — "group settled up" (RF44). */
 @Composable
 fun SettledUpState(groupName: String, modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
@@ -29,9 +29,9 @@ fun SettledUpState(groupName: String, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = null, tint = colors.rule)
-        Text(text = "Grupo quitado", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colors.ink)
+        Text(text = "All settled up", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colors.ink)
         Text(
-            text = "Ninguém deve nada a ninguém em \"$groupName\".",
+            text = "No one owes anyone in \"$groupName\".",
             fontSize = 13.5.sp,
             color = colors.inkSoft,
             textAlign = TextAlign.Center,

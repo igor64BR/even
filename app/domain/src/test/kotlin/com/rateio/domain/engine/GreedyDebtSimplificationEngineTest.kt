@@ -11,22 +11,22 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * Um teste por caso da tabela "Casos de teste" em `specs/001-mvp-expense-splitting/algorithm-spec.md`,
- * nomeado com o id estável de cada caso (ex. `case-01-simples` -> [case01Simples]). Os cinco
- * casos `case-*` são o piso mínimo exigido pela spec e por T33; os testes extras no fim do
- * arquivo (invariante da soma, divisão por peso, divisão por valor fixo) espelham os mesmos
- * testes extras de `MotorDeSimplificacaoDeDividasTests.cs` (T31), para provar que as duas portas
- * do motor não divergiram em nenhum modo de divisão.
+ * One test per case in the "Test cases" table in
+ * `specs/001-mvp-expense-splitting/algorithm-spec.md`, named with each case's stable id (e.g.
+ * `case-01-simple` -> [case01Simple]). The five `case-*` cases are the minimum floor required by
+ * the spec and by T33; the extra tests at the end of the file (sum invariant, weighted split,
+ * fixed-amount split) mirror the same extra tests in `DebtSimplificationEngineTests.cs` (T31), to
+ * prove the two ports of the engine haven't diverged in any split mode.
  *
- * Os valores numéricos aqui precisam bater, número por número, com
- * `backend/tests/Rateio.Domain.Tests/MotorDeSimplificacaoDeDividasTests.cs`.
+ * The numeric values here need to match, number for number, with
+ * `backend/tests/Rateio.Domain.Tests/DebtSimplificationEngineTests.cs`.
  */
 class GreedyDebtSimplificationEngineTest {
 
     private val engine: DebtSimplificationEngine = GreedyDebtSimplificationEngine()
 
     @Test
-    fun `case-01-simples uma divida entre duas pessoas`() {
+    fun `case-01-simple a debt between two people`() {
         val balances = mapOf(
             "A" to Money.ofCents(-1000),
             "B" to Money.ofCents(1000),
@@ -38,7 +38,7 @@ class GreedyDebtSimplificationEngineTest {
     }
 
     @Test
-    fun `case-02-ciclo dividas par-a-par se cancelam no saldo liquido`() {
+    fun `case-02-cycle pairwise debts cancel out in the net balance`() {
         val balances = mapOf(
             "A" to Money.ZERO,
             "B" to Money.ZERO,
@@ -51,7 +51,7 @@ class GreedyDebtSimplificationEngineTest {
     }
 
     @Test
-    fun `case-03-zerado grupo ja quitado nao gera transacao`() {
+    fun `case-03-zeroed group already settled generates no transaction`() {
         val balances = mapOf(
             "A" to Money.ZERO,
             "B" to Money.ZERO,
@@ -64,7 +64,7 @@ class GreedyDebtSimplificationEngineTest {
     }
 
     @Test
-    fun `case-04-cadeia-longa guloso resolve cinco participantes em tres transacoes`() {
+    fun `case-04-long-chain greedy resolves five participants in three transactions`() {
         val balances = mapOf(
             "A" to Money.ofCents(-4000),
             "B" to Money.ofCents(-3000),
@@ -84,11 +84,11 @@ class GreedyDebtSimplificationEngineTest {
     }
 
     @Test
-    fun `case-05-arredondamento fechamento por maiores restos nao perde centavo`() {
+    fun `case-05-rounding largest-remainder closing does not lose a cent`() {
         val expense = Expense(
             id = "e1",
             groupId = "g1",
-            description = "Almoço",
+            description = "Lunch",
             amountCents = 1000,
             paidByParticipantId = "P1",
             createdAt = Instant.EPOCH,
@@ -116,11 +116,11 @@ class GreedyDebtSimplificationEngineTest {
     }
 
     @Test
-    fun `computeBalances soma dos saldos eh sempre zero mesmo com despesa e quitacao`() {
+    fun `computeBalances sum of balances is always zero even with an expense and a settlement`() {
         val expense = Expense(
             id = "e1",
             groupId = "g1",
-            description = "Almoço",
+            description = "Lunch",
             amountCents = 1000,
             paidByParticipantId = "P1",
             createdAt = Instant.EPOCH,
@@ -138,11 +138,11 @@ class GreedyDebtSimplificationEngineTest {
     }
 
     @Test
-    fun `computeBalances divisao por peso usa metodo dos maiores restos`() {
+    fun `computeBalances weighted split uses the largest-remainder method`() {
         val expense = Expense(
             id = "e1",
             groupId = "g1",
-            description = "Aluguel",
+            description = "Rent",
             amountCents = 100,
             paidByParticipantId = "X",
             createdAt = Instant.EPOCH,
@@ -155,7 +155,7 @@ class GreedyDebtSimplificationEngineTest {
 
         val balances = engine.computeBalances(listOf(expense), settlements = emptyList())
 
-        // 100 / 3 = base 33, resto 1 -> X (primeiro em ordem de id) recebe o centavo extra: 34/33/33.
+        // 100 / 3 = base 33, remainder 1 -> X (first in id order) gets the extra cent: 34/33/33.
         assertEquals(Money.ofCents(66), balances.getValue("X"))
         assertEquals(Money.ofCents(-33), balances.getValue("Y"))
         assertEquals(Money.ofCents(-33), balances.getValue("Z"))
@@ -163,7 +163,7 @@ class GreedyDebtSimplificationEngineTest {
     }
 
     @Test
-    fun `computeBalances divisao por valor fixo usa o valor de cada participante sem arredondar`() {
+    fun `computeBalances fixed-amount split uses each participant's amount without rounding`() {
         val expense = Expense(
             id = "e1",
             groupId = "g1",

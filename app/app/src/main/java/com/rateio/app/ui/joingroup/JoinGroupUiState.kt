@@ -1,38 +1,39 @@
 package com.rateio.app.ui.joingroup
 
 /**
- * Estado da tela "Entrar no grupo" (T22.2, deep link `rateio://join/{codigo}`).
+ * State for the "Join group" screen (T22.2, deep link `rateio://join/{code}`).
  *
- * Não existe um estado "grupo X" com nome pra mostrar antes de confirmar: o backend (T21) não
- * expõe um endpoint de preview do grupo pelo código, só o de entrar de verdade — por isso
- * [Confirming] carrega só o [inviteCode] usado na chamada, nunca um nome de grupo inventado (ver
- * `T22-app-entrar-via-link.md`, "não invente").
+ * There's no "group X" state with a name to show before confirming: the backend (T21) doesn't
+ * expose an endpoint to preview the group by its code, only the one to actually join — that's why
+ * [Confirming] only carries the [inviteCode] used in the call, never a made-up group name (see
+ * `T22-app-entrar-via-link.md`, "don't make one up").
  */
 sealed interface JoinGroupUiState {
 
-    /** Sessão ainda não resolvida (primeira emissão de [com.rateio.domain.repository.AuthRepository.getSessionFlow] não chegou). */
+    /** Session not resolved yet (first emission of [com.rateio.domain.repository.AuthRepository.getSessionFlow] hasn't arrived). */
     data object CheckingSession : JoinGroupUiState
 
     /**
-     * Deslogado: a ação só faz sentido autenticado (T21 exige `[Authorize]`). Quem observa este
-     * estado é responsável por guardar [inviteCode] e mandar pra tela de login, retomando o fluxo
-     * depois — a própria tela de confirmação não navega sozinha.
+     * Signed out: the action only makes sense authenticated (T21 requires `[Authorize]`). Whoever
+     * observes this state is responsible for keeping [inviteCode] and sending the user to the
+     * login screen, resuming the flow afterwards — the confirmation screen itself never navigates
+     * on its own.
      */
     data class NeedsLogin(val inviteCode: String) : JoinGroupUiState
 
-    /** Logado, aguardando confirmação — "Você foi convidado a entrar em um grupo". */
+    /** Signed in, waiting for confirmation — "You've been invited to join a group". */
     data class Confirming(val inviteCode: String) : JoinGroupUiState
 
-    /** Botão "Entrar" tocado, chamada em andamento. */
+    /** "Join" button tapped, call in progress. */
     data object Joining : JoinGroupUiState
 
     /**
-     * `POST /groups/join/{codigo}` respondeu com sucesso. Só [remoteGroupId] — sem nome,
-     * participantes ou despesas (lacuna documentada em [com.rateio.domain.repository.RemoteGroupRepository.joinByCode]),
-     * então a UI mostra confirmação genérica, não os detalhes do grupo.
+     * `POST /groups/join/{code}` responded successfully. Only [remoteGroupId] — no name,
+     * participants or expenses (gap documented in [com.rateio.domain.repository.RemoteGroupRepository.joinByCode]),
+     * so the UI shows a generic confirmation, not the group's details.
      */
     data class Success(val remoteGroupId: String) : JoinGroupUiState
 
-    /** Falha de rede/HTTP (inclui código inválido/expirado) já traduzida por [com.rateio.domain.repository.GroupSyncException]. */
+    /** Network/HTTP failure (includes invalid/expired code) already translated by [com.rateio.domain.repository.GroupSyncException]. */
     data class Error(val inviteCode: String, val message: String) : JoinGroupUiState
 }

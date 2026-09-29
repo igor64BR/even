@@ -38,21 +38,21 @@ import com.rateio.app.ui.groups.SyncStatusIcon
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * Tela "Detalhes do grupo" (T42.2/RF42), aberta a partir do
- * [com.rateio.app.ui.groups.GroupCard] — até T42.4 tocar num card ia direto pra "Nova despesa"
- * (T24) ou "Sincronizar" (T19), atalhos temporários porque esta tela não existia. `factory` injeta
- * o [GroupDetailViewModel] pela composição manual de [com.rateio.app.di.AppContainer], mesmo
- * padrão de [com.rateio.app.ui.createexpense.CreateExpenseRoute].
+ * The "Group details" screen (T42.2/RF42), opened from
+ * [com.rateio.app.ui.groups.GroupCard] — until T42.4 tapping a card went straight to "New expense"
+ * (T24) or "Sync" (T19), temporary shortcuts because this screen didn't exist. `factory` injects
+ * the [GroupDetailViewModel] through [com.rateio.app.di.AppContainer]'s manual composition, the
+ * same pattern as [com.rateio.app.ui.createexpense.CreateExpenseRoute].
  *
- * `DisposableEffect` liga o cliente SignalR (T40.1) à presença desta tela na composição — conecta
- * ao entrar, desconecta ao sair, independente do ciclo de vida do `ViewModel` em si. É essa
- * `DisposableEffect`, não o `ViewModel`, que garante "só conecta enquanto a tela está sendo
- * vista" (constitution.md princípio 3).
+ * `DisposableEffect` ties the SignalR client (T40.1) to this screen's presence in the composition —
+ * connects on entry, disconnects on exit, independent of the `ViewModel`'s own lifecycle. It's
+ * this `DisposableEffect`, not the `ViewModel`, that guarantees "only connects while the screen is
+ * being viewed" (constitution.md principle 3).
  *
- * [key] = `"GroupDetail:$groupId"` (ver `RateioApp` em `MainActivity`) — sem `NavHost`/back stack
- * real, todo destino compartilha o mesmo `ViewModelStoreOwner`; sem essa `key`, abrir um grupo
- * diferente do último visitado reaproveitava o `ViewModel` (e o `groupId` travado nele) do
- * primeiro, mostrando o grupo errado.
+ * [key] = `"GroupDetail:$groupId"` (see `RateioApp` in `MainActivity`) — with no real
+ * `NavHost`/back stack, every destination shares the same `ViewModelStoreOwner`; without this
+ * `key`, opening a group different from the last one visited would reuse the first one's
+ * `ViewModel` (and the `groupId` locked into it), showing the wrong group.
  */
 @Composable
 fun GroupDetailRoute(
@@ -99,9 +99,9 @@ fun GroupDetailRoute(
 }
 
 /**
- * Composable fina: título/estado vem de [uiState], corpo delega pra
- * [GroupDetailContent]/estados de carregamento — nenhuma delas calcula saldo/divisão (Object
- * Calisthenics, mesmo padrão de [com.rateio.app.ui.groups.GroupListScreen]).
+ * A thin Composable: title/state comes from [uiState], the body delegates to
+ * [GroupDetailContent]/loading states — none of them compute balance/split (Object Calisthenics,
+ * same pattern as [com.rateio.app.ui.groups.GroupListScreen]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,7 +123,7 @@ fun GroupDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalRateioColors.current
-    val title = (uiState as? GroupDetailUiState.Content)?.groupName ?: "Grupo"
+    val title = (uiState as? GroupDetailUiState.Content)?.groupName ?: "Group"
 
     Scaffold(
         modifier = modifier,
@@ -143,20 +143,20 @@ fun GroupDetailScreen(
                     containerColor = colors.brandInk,
                     contentColor = colors.onBrand,
                 ) {
-                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Nova despesa")
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "New expense")
                 }
             }
         },
         bottomBar = {
             RateioBottomBar(
-                selectedTab = RateioBottomTab.GRUPOS,
+                selectedTab = RateioBottomTab.GROUPS,
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
                     when (tab) {
-                        RateioBottomTab.GRUPOS -> onGroupsClick()
-                        RateioBottomTab.AVISOS -> onNotificationsClick()
-                        RateioBottomTab.PERFIL -> onProfileClick()
+                        RateioBottomTab.GROUPS -> onGroupsClick()
+                        RateioBottomTab.NOTIFICATIONS -> onNotificationsClick()
+                        RateioBottomTab.PROFILE -> onProfileClick()
                     }
                 },
             )
@@ -195,7 +195,7 @@ private fun GroupDetailContent(
     ) {
         GroupEyebrow(participantCount = uiState.participantCount, isSynced = uiState.isSynced)
 
-        SectionLabel(text = "Saldos")
+        SectionLabel(text = "Balances")
         Column {
             uiState.balances.forEach { participant -> ParticipantBalanceRow(participant = participant) }
         }
@@ -205,12 +205,12 @@ private fun GroupDetailContent(
             colors = ButtonDefaults.buttonColors(containerColor = colors.brandInk, contentColor = colors.onBrand),
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
         ) {
-            Text(text = "Quitar dívidas", fontWeight = FontWeight.SemiBold)
+            Text(text = "Settle debts", fontWeight = FontWeight.SemiBold)
         }
 
         SyncSection(syncAction = uiState.syncAction, onSyncClick = onSyncClick)
 
-        SectionLabel(text = "Despesas")
+        SectionLabel(text = "Expenses")
         if (uiState.expenses.isEmpty()) {
             EmptyExpensesState()
         } else {
@@ -222,7 +222,7 @@ private fun GroupDetailContent(
         }
 
         if (uiState.settlements.isNotEmpty()) {
-            SectionLabel(text = "Histórico de quitações")
+            SectionLabel(text = "Settlement history")
             Column {
                 uiState.settlements.forEach { settlement -> SettlementRow(settlement = settlement) }
             }
@@ -231,12 +231,13 @@ private fun GroupDetailContent(
 }
 
 /**
- * T29.2: [ExpenseDeleteConfirmationState] guarda qual despesa está com exclusão pendente — o
- * primeiro toque no ícone de lixeira de [ExpenseRow] só chega até [ExpenseDeleteConfirmationState
- * .request] (abre o diálogo), nunca exclui direto; só "Excluir" no [AlertDialog] chama
- * [ExpenseDeleteConfirmationState.confirm], que aí sim dispara [onDeleteExpenseConfirmed]. Estado
- * de UI pura (não sobrevive rotação/processo morto, sem necessidade — reabrir a confirmação é
- * barato), por isso `remember` em vez de morar no `ViewModel`.
+ * T29.2: [ExpenseDeleteConfirmationState] holds which expense has a pending deletion — the first
+ * tap on [ExpenseRow]'s trash icon only reaches
+ * [ExpenseDeleteConfirmationState.request] (opens the dialog), never deletes directly; only
+ * "Delete" in the [AlertDialog] calls [ExpenseDeleteConfirmationState.confirm], which is what
+ * triggers [onDeleteExpenseConfirmed]. Pure UI state (doesn't survive rotation/process death, no
+ * need to — reopening the confirmation is cheap), hence `remember` instead of living in the
+ * `ViewModel`.
  */
 @Composable
 private fun ExpenseList(
@@ -270,16 +271,16 @@ private fun DeleteExpenseConfirmationDialog(onConfirm: () -> Unit, onDismiss: ()
     val colors = LocalRateioColors.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Excluir despesa?", fontWeight = FontWeight.Bold) },
-        text = { Text(text = "Essa despesa some da lista e o saldo do grupo é recalculado. Não dá pra desfazer.") },
+        title = { Text(text = "Delete expense?", fontWeight = FontWeight.Bold) },
+        text = { Text(text = "This expense disappears from the list and the group's balance is recalculated. This can't be undone.") },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(text = "Excluir", color = colors.danger, fontWeight = FontWeight.SemiBold)
+                Text(text = "Delete", color = colors.danger, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Cancelar")
+                Text(text = "Cancel")
             }
         },
     )
@@ -294,7 +295,7 @@ private fun GroupEyebrow(participantCount: Int, isSynced: Boolean, modifier: Mod
         modifier = modifier.padding(top = 4.dp),
     ) {
         Text(
-            text = "$participantCount ${if (participantCount == 1) "pessoa" else "pessoas"}",
+            text = "$participantCount ${if (participantCount == 1) "person" else "people"}",
             fontSize = 11.sp,
             color = colors.inkSoft,
         )
@@ -314,9 +315,9 @@ private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 }
 
 /**
- * "Sincronizar este grupo" (T19), movida do card da lista pra cá em T42.4. Só desenha algo
- * quando há uma ação disponível — grupo já sincronizado ou usuário deslogado não ganham espaço
- * extra na tela (mesma regra de [com.rateio.app.ui.groupdetail.GroupSyncActionUiState.Hidden]).
+ * "Sync this group" (T19), moved here from the list card in T42.4. Only draws something when an
+ * action is available — an already-synced group or a signed-out user get no extra room on the
+ * screen (the same rule as [com.rateio.app.ui.groupdetail.GroupSyncActionUiState.Hidden]).
  */
 @Composable
 private fun SyncSection(syncAction: GroupSyncActionUiState, onSyncClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -329,18 +330,18 @@ private fun SyncSection(syncAction: GroupSyncActionUiState, onSyncClick: () -> U
             colors = ButtonDefaults.buttonColors(containerColor = colors.paperAlt, contentColor = colors.ink),
             modifier = modifier.fillMaxWidth().padding(top = 10.dp),
         ) {
-            Text(text = "Sincronizar este grupo", fontWeight = FontWeight.SemiBold)
+            Text(text = "Sync this group", fontWeight = FontWeight.SemiBold)
         }
 
         GroupSyncActionUiState.InProgress -> Text(
-            text = "Sincronizando…",
+            text = "Syncing…",
             color = colors.inkSoft,
             fontSize = 13.sp,
             modifier = modifier.padding(top = 10.dp),
         )
 
         is GroupSyncActionUiState.Failed -> Text(
-            text = "${syncAction.message} — tocar pra tentar de novo",
+            text = "${syncAction.message} — tap to try again",
             color = colors.danger,
             fontWeight = FontWeight.SemiBold,
             fontSize = 13.sp,
@@ -353,6 +354,6 @@ private fun SyncSection(syncAction: GroupSyncActionUiState, onSyncClick: () -> U
 private fun GroupNotFoundState(modifier: Modifier = Modifier) {
     val colors = LocalRateioColors.current
     Column(modifier = modifier.fillMaxWidth().padding(top = 60.dp, start = 20.dp, end = 20.dp)) {
-        Text(text = "Grupo não encontrado", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = colors.ink)
+        Text(text = "Group not found", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = colors.ink)
     }
 }

@@ -35,20 +35,21 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * Estado da tela "Detalhes do grupo" (T42.2, RF42) — o consumidor real de
- * [DebtSimplificationEngine] (T33) na UI: até esta task o motor estava pronto e testado, mas
- * nenhuma tela chamava [DebtSimplificationEngine.computeBalances]. Saldo é sempre recomputado do
- * zero a partir do histórico vigente de despesas + quitações (`algorithm-spec.md`, seção
- * "Regras de negócio" de `computeBalances`) — nunca um contador incremental.
+ * State of the "Group details" screen (T42.2, RF42) — the actual UI consumer of
+ * [DebtSimplificationEngine] (T33): before this task the engine was ready and tested, but no
+ * screen called [DebtSimplificationEngine.computeBalances]. The balance is always recomputed from
+ * scratch from the current history of expenses + settlements (`algorithm-spec.md`,
+ * `computeBalances`'s "Business rules" section) — never an incremental counter.
  *
- * Fontes: [GroupRepository] (nome/isSynced do grupo, filtrado de [GroupRepository.getGroupsFlow]
- * porque não existe uma versão reativa de "um grupo só" — mesmo approach que [Group]-por-id já
- * não tinha antes de T42), [ParticipantRepository], [ExpenseRepository] e, desde T42.1,
- * [SettlementRepository] — as quatro em Room, zero rede (constitution.md, princípio 1).
+ * Sources: [GroupRepository] (the group's name/isSynced, filtered from
+ * [GroupRepository.getGroupsFlow] because there's no reactive "single group" version — the same
+ * approach [Group]-by-id already lacked before T42), [ParticipantRepository], [ExpenseRepository]
+ * and, since T42.1, [SettlementRepository] — all four in Room, zero network (constitution.md,
+ * principle 1).
  *
- * [AuthRepository]/[RemoteGroupRepository] entram só para a ação "Sincronizar este grupo" (T19),
- * que T42.4 move do card da lista para cá — mesma lógica que [GroupListViewModel] tinha antes de
- * T42.4, agora escopada a um `groupId` em vez de todos os grupos de uma vez.
+ * [AuthRepository]/[RemoteGroupRepository] only come in for the "Sync this group" action (T19),
+ * which T42.4 moves here from the list card — the same logic [GroupListViewModel] had before
+ * T42.4, now scoped to a single `groupId` instead of every group at once.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupDetailViewModel(
@@ -64,7 +65,7 @@ class GroupDetailViewModel(
     private val groupRealtimeGateway: GroupRealtimeGateway,
 ) : ViewModel() {
 
-    /** Override transiente de [GroupSyncActionUiState] — só guarda InProgress/Failed da última tentativa. */
+    /** Transient override for [GroupSyncActionUiState] — only holds InProgress/Failed from the last attempt. */
     private val syncOverride = MutableStateFlow<GroupSyncActionUiState?>(null)
 
     private var realtimeJob: Job? = null
@@ -84,9 +85,9 @@ class GroupDetailViewModel(
     )
 
     /**
-     * T19.1/T19.2, reaproveitado: envia grupo + participantes + despesas pro backend; ao sucesso,
-     * persiste `isSynced=true` + `remoteId` no Room. Falha de rede nunca chega a mudar o Room —
-     * `isSynced` continua `false`, só [syncOverride] vira [GroupSyncActionUiState.Failed].
+     * T19.1/T19.2, reused: sends group + participants + expenses to the backend; on success,
+     * persists `isSynced=true` + `remoteId` to Room. A network failure never changes Room —
+     * `isSynced` stays `false`, only [syncOverride] becomes [GroupSyncActionUiState.Failed].
      */
     fun onSyncGroupClick() {
         if (syncOverride.value is GroupSyncActionUiState.InProgress) return
@@ -97,14 +98,14 @@ class GroupDetailViewModel(
                 syncGroup()
                 syncOverride.value = null
             } catch (error: GroupSyncException) {
-                syncOverride.value = GroupSyncActionUiState.Failed(error.message ?: "Não foi possível sincronizar.")
+                syncOverride.value = GroupSyncActionUiState.Failed(error.message ?: "Couldn't sync.")
             }
         }
     }
 
     private suspend fun syncGroup() {
         val group = requireNotNull(groupRepository.getGroupById(groupId)) {
-            "Grupo $groupId não encontrado pra sincronizar."
+            "Group $groupId not found to sync."
         }
         val participants = participantRepository.getParticipantsFlow(groupId).first()
         val expenses = expenseRepository.getExpensesFlow(groupId).first()
@@ -115,10 +116,11 @@ class GroupDetailViewModel(
     }
 
     /**
-     * T29.2: exclui a despesa localmente (Room) — chamado só depois que a confirmação do diálogo
-     * ([GroupDetailScreen]) já aconteceu, esta função nunca é o gatilho de "tocar pra excluir" em
-     * si. `uiState` reflete a exclusão sozinho, via o mesmo `Flow` combinado que já recalcula saldo
-     * a cada mudança em [expenseRepository] (T33/T42.2) — não precisa de estado extra aqui.
+     * T29.2: deletes the expense locally (Room) — called only after the dialog's confirmation
+     * ([GroupDetailScreen]) already happened, this function is never the "tap to delete" trigger
+     * itself. `uiState` reflects the deletion on its own, via the same combined `Flow` that already
+     * recomputes the balance on every change in [expenseRepository] (T33/T42.2) — no extra state
+     * needed here.
      */
     fun onDeleteExpenseClick(expenseId: String) {
         viewModelScope.launch {
@@ -128,10 +130,11 @@ class GroupDetailViewModel(
     }
 
     /**
-     * T29: propaga a exclusão pro backend quando o grupo já está sincronizado — mesmo racional de
-     * [com.rateio.app.ui.createexpense.CreateExpenseViewModel.propagateUpdateIfSynced]: a exclusão
-     * local já aconteceu na linha acima, best-effort e silenciosa, nunca desfaz a exclusão local
-     * nem bloqueia a UI esperando confirmação de servidor (constitution.md, princípio 1).
+     * T29: propagates the deletion to the backend when the group is already synced — the same
+     * rationale as
+     * [com.rateio.app.ui.createexpense.CreateExpenseViewModel.propagateUpdateIfSynced]: the local
+     * deletion already happened on the line above, best-effort and silent, never undoes the local
+     * deletion nor blocks the UI waiting for server confirmation (constitution.md, principle 1).
      */
     private suspend fun propagateDeleteIfSynced(expenseId: String) {
         val group = groupRepository.getGroupById(groupId) ?: return
@@ -139,20 +142,19 @@ class GroupDetailViewModel(
         try {
             remoteExpenseRepository.deleteExpense(remoteId, expenseId)
         } catch (error: GroupSyncException) {
-            // Ver KDoc da função: falha de rede/HTTP não desfaz a exclusão local.
+            // See the function's KDoc: a network/HTTP failure doesn't undo the local deletion.
         }
     }
 
     /**
-     * T40.1: conecta o [groupRealtimeGateway] enquanto este grupo está sincronizado e o usuário
-     * autenticado — desconecta assim que qualquer uma das duas condições deixar de valer (grupo
-     * ainda não sincronizado, sessão encerrada) e reconecta se voltar a valer. Chamado
-     * explicitamente por [GroupDetailRoute] via `DisposableEffect` (não automaticamente no `init`)
-     * porque a tela, não o `ViewModel`, sabe quando está de fato em primeiro plano — mesmo cuidado
-     * que a constitution.md princípio 3 pede: "não conecte o Hub globalmente, só quando há grupo
-     * sincronizado sendo visualizado".
+     * T40.1: connects the [groupRealtimeGateway] while this group is synced and the user is
+     * authenticated — disconnects as soon as either condition stops holding (group not synced yet,
+     * session ended) and reconnects if it holds again. Called explicitly by [GroupDetailRoute] via
+     * `DisposableEffect` (not automatically in `init`) because the screen, not the `ViewModel`,
+     * knows when it's actually in the foreground — the same care constitution.md principle 3 asks
+     * for: "don't connect the Hub globally, only when a synced group is being viewed".
      *
-     * Idempotente: chamar de novo com um job já rodando não faz nada.
+     * Idempotent: calling again with a job already running does nothing.
      */
     fun startRealtimeUpdates() {
         if (realtimeJob != null) return
@@ -162,13 +164,13 @@ class GroupDetailViewModel(
         }
     }
 
-    /** `null` sempre que o grupo não está sincronizado ou não há sessão — as duas condições de [startRealtimeUpdates]. */
+    /** `null` whenever the group isn't synced or there's no session — [startRealtimeUpdates]'s two conditions. */
     private fun syncedGroupWhileAuthenticatedFlow(): Flow<Group?> = combine(
         groupRepository.getGroupsFlow().map { groups -> groups.firstOrNull { it.id == groupId } },
         authRepository.getSessionFlow(),
     ) { group, session -> group.takeIf { it?.isSynced == true && session != null } }.distinctUntilChanged()
 
-    /** Encerra a conexão em tempo real, se houver uma ativa — chamado por [GroupDetailRoute] e por [onCleared]. */
+    /** Ends the realtime connection, if there's one active — called by [GroupDetailRoute] and by [onCleared]. */
     fun stopRealtimeUpdates() {
         realtimeJob?.cancel()
         realtimeJob = null
@@ -179,11 +181,12 @@ class GroupDetailViewModel(
     }
 
     /**
-     * Mantém no máximo uma conexão em tempo real ativa por vez: cada nova emissão de "deveria
-     * estar conectado a este grupo" cancela a anterior (via `collectLatest`) e conecta de novo;
-     * `null` (grupo não sincronizado ou sem sessão) só desconecta e espera a próxima emissão.
-     * `remoteId` sempre não-nulo aqui: [com.rateio.domain.model.Group.isSynced] e
-     * [com.rateio.domain.model.Group.remoteId] transicionam juntos (ver KDoc de `Group.remoteId`).
+     * Keeps at most one realtime connection active at a time: every new emission of "should be
+     * connected to this group" cancels the previous one (via `collectLatest`) and connects again;
+     * `null` (group not synced or no session) just disconnects and waits for the next emission.
+     * `remoteId` is always non-null here: [com.rateio.domain.model.Group.isSynced] and
+     * [com.rateio.domain.model.Group.remoteId] transition together (see the KDoc of
+     * `Group.remoteId`).
      */
     private suspend fun Flow<Group?>.collectLatestConnection() = collectLatest { group ->
         val remoteId = group?.remoteId ?: return@collectLatest
@@ -242,7 +245,7 @@ private fun Participant.toBalanceUiModel(netBalance: Money) = ParticipantBalance
 private fun Expense.toRowUiModel(participantNames: Map<String, String>) = ExpenseRowUiModel(
     id = id,
     description = description,
-    payerName = participantNames[paidByParticipantId] ?: "Alguém",
+    payerName = participantNames[paidByParticipantId] ?: "Someone",
     dateLabel = formatInstantAsShortDate(createdAt),
     amountCents = amountCents,
     splitTypeLabel = splits.splitTypeLabel(),
@@ -250,21 +253,21 @@ private fun Expense.toRowUiModel(participantNames: Map<String, String>) = Expens
 
 private fun Settlement.toRowUiModel(participantNames: Map<String, String>) = SettlementRowUiModel(
     id = id,
-    payerName = participantNames[payerId] ?: "Alguém",
-    receiverName = participantNames[receiverId] ?: "Alguém",
+    payerName = participantNames[payerId] ?: "Someone",
+    receiverName = participantNames[receiverId] ?: "Someone",
     dateLabel = formatInstantAsShortDate(createdAt),
     amountCents = amount.cents,
 )
 
-/** "dividido igual" / "dividido por %" / "valor fixo por pessoa" — mesmo texto de `tipoLabel()` em `grupo.html`. */
+/** "split equally" / "split by %" / "fixed amount per person" — the same text as `tipoLabel()` in `group.html`. */
 private fun List<ExpenseSplit>.splitTypeLabel(): String = when (firstOrNull()) {
-    is ExpenseSplit.Equal -> "dividido igual"
-    is ExpenseSplit.Weight -> "dividido por %"
-    is ExpenseSplit.FixedAmount -> "valor fixo por pessoa"
+    is ExpenseSplit.Equal -> "split equally"
+    is ExpenseSplit.Weight -> "split by %"
+    is ExpenseSplit.FixedAmount -> "fixed amount per person"
     null -> ""
 }
 
-/** Grupo já sincronizado ou usuário deslogado: ação escondida (mesma regra de T19). */
+/** An already-synced group or a signed-out user: the action is hidden (the same rule as T19). */
 private fun Group.syncActionFor(
     isAuthenticated: Boolean,
     override: GroupSyncActionUiState?,

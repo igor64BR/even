@@ -4,11 +4,11 @@ import java.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-/** Espelha `case-01-simples` de `algorithm-spec.md` (A deve, B recebe) no shape do tipo. */
+/** Mirrors `case-01-simple` from `algorithm-spec.md` (A owes, B receives) in the type's shape. */
 class SettlementTest {
 
     @Test
-    fun `Settlement guarda pagador, recebedor e valor`() {
+    fun `Settlement stores payer, receiver and amount`() {
         val settlement = Settlement(
             id = "s1",
             groupId = "g1",

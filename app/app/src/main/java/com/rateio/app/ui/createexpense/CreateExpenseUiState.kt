@@ -4,28 +4,30 @@ import com.rateio.domain.model.Participant
 import java.time.LocalDate
 
 /**
- * Estado do formulário "Nova despesa" (T24.1/T24.2, estendido em T26 para os três modos de
- * divisão). [splitMode] é a aba ativa em "Como dividir"
- * ([com.rateio.app.ui.createexpense.SplitTypeTabs]) — Igual (T24), Percentual (T26.1) e Valor fixo
- * (T26.2), todas habilitadas.
+ * State of the "New expense" form (T24.1/T24.2, extended in T26 for the three split modes).
+ * [splitMode] is the active tab in "How to split"
+ * ([com.rateio.app.ui.createexpense.SplitTypeTabs]) — Equal (T24), Percentage (T26.1) and Fixed
+ * amount (T26.2), all enabled.
  *
- * [participants] alimenta o seletor de "Quem pagou" (reaproveita [Participant] de `:domain`
- * direto, sem UI model próprio — não há nada a adaptar além do nome). [splitRows] nasce com todos
- * os participantes marcados (mesma regra do protótipo, `prototype/nova-despesa.html`:
- * `incluidos = new Set(group.participantes.map(p => p.id))`), com [ExpenseSplitRowUiModel
- * .amountCents] recalculado ao vivo pro modo Igual e [ExpenseSplitRowUiModel.percentageInput]
- * semeado com o percentual padrão (`Math.round(100 / n)`) — ver [CreateExpenseViewModel].
+ * [participants] feeds the "Who paid" selector (reuses [Participant] from `:domain` directly, no
+ * dedicated UI model — there's nothing to adapt besides the name). [splitRows] starts with every
+ * participant checked (the same rule as the prototype, `prototype/new-expense.html`:
+ * `incluidos = new Set(group.participantes.map(p => p.id))`), with
+ * [ExpenseSplitRowUiModel.amountCents] recalculated live for the Equal mode and
+ * [ExpenseSplitRowUiModel.percentageInput] seeded with the default percentage
+ * (`Math.round(100 / n)`) — see [CreateExpenseViewModel].
  *
- * [participantsError] cobre só o modo Igual ("selecione pelo menos 1 participante" — igual antes
- * de T26). Percentual/Valor fixo não têm um flag de erro próprio: a soma é sempre visível ao vivo
- * nas listas daquelas abas ([PercentageSplitList]/[FixedAmountSplitList], mesmo `#split-sum`
- * sempre-ligado do protótipo), e `onSaveClick` bloqueia sem persistir quando a soma não fecha
- * (ver [CreateExpenseViewModel.validate]).
+ * [participantsError] only covers the Equal mode ("select at least 1 participant" — same as
+ * before T26). Percentage/Fixed amount have no error flag of their own: the sum is always visible
+ * live in those tabs' lists ([PercentageSplitList]/[FixedAmountSplitList], the same always-on
+ * `#split-sum` from the prototype), and `onSaveClick` blocks without persisting when the sum
+ * doesn't add up (see [CreateExpenseViewModel.validate]).
  *
- * [expenseId] é `null` em modo criação (T24) e o id da despesa sendo editada em modo edição (T29)
- * — mesmo formulário para os dois modos ("edição é estado, não tela nova", T29-app-editar-excluir-
- * despesa.md), só troca o que `onSaveClick` faz com o resultado (insert vs. update) e o texto que
- * [com.rateio.app.ui.createexpense.CreateExpenseScreen]/[CreateExpenseTopBar] mostram.
+ * [expenseId] is `null` in create mode (T24) and the id of the expense being edited in edit mode
+ * (T29) — the same form for both modes ("editing is state, not a new screen",
+ * T29-app-editar-excluir-despesa.md), only what `onSaveClick` does with the result changes (insert
+ * vs. update) and the text [com.rateio.app.ui.createexpense.CreateExpenseScreen]/
+ * [CreateExpenseTopBar] show.
  */
 data class CreateExpenseUiState(
     val description: String = "",
@@ -41,17 +43,17 @@ data class CreateExpenseUiState(
     val isSaving: Boolean = false,
     val expenseId: String? = null,
 ) {
-    /** `true` só quando o formulário está pré-carregado com uma despesa existente (T29.1). */
+    /** `true` only when the form is pre-filled with an existing expense (T29.1). */
     val isEditMode: Boolean get() = expenseId != null
 }
 
 /**
- * Uma linha de `#split-area`, com os campos dos três modos coexistindo (só um é mostrado por vez,
- * de acordo com [CreateExpenseUiState.splitMode]): [isIncluded]/[amountCents] pro modo Igual (T24),
- * [percentageInput] pro modo Percentual (T26.1), [fixedAmountInput] pro modo Valor fixo (T26.2).
- * Guardar os três juntos (em vez de um estado por aba) evita perder o que o usuário já digitou
- * numa aba ao só espiar outra — mesmo comportamento do protótipo (`percentuais`/`fixos` são mapas
- * que sobrevivem à troca de aba).
+ * A row of `#split-area`, with the fields of all three modes coexisting (only one is shown at a
+ * time, based on [CreateExpenseUiState.splitMode]): [isIncluded]/[amountCents] for Equal mode
+ * (T24), [percentageInput] for Percentage mode (T26.1), [fixedAmountInput] for Fixed amount mode
+ * (T26.2). Keeping all three together (instead of one state per tab) avoids losing what the user
+ * already typed in a tab just by peeking at another — the same behavior as the prototype
+ * (`percentuais`/`fixos` are maps that survive tab switching).
  */
 data class ExpenseSplitRowUiModel(
     val participantId: String,
@@ -64,9 +66,9 @@ data class ExpenseSplitRowUiModel(
 )
 
 /**
- * Evento de navegação, emitido depois que a despesa é persistida no Room — mesmo evento para
- * criação (T24) e edição (T29), já que os dois voltam pra "Detalhes do grupo" do mesmo jeito e o
- * saldo recalculado chega lá via `Flow` reativo (não precisa carregar dado nenhum no evento).
+ * A navigation event, emitted after the expense is persisted to Room — the same event for both
+ * creation (T24) and editing (T29), since both go back to "Group details" the same way and the
+ * recomputed balance gets there via a reactive `Flow` (no data needs to be carried in the event).
  */
 sealed interface CreateExpenseEvent {
     data object Saved : CreateExpenseEvent

@@ -10,7 +10,7 @@
 .cxx/
 .kotlin/
 
-# Artefatos de Eclipse/Buildship (não são módulos reais — ver settings.gradle.kts)
+# Eclipse/Buildship artifacts (not real modules — see settings.gradle.kts)
 .project
 .classpath
 .settings/

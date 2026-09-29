@@ -7,10 +7,10 @@ import com.rateio.app.ui.theme.RateioTheme
 import com.rateio.domain.model.AuthenticatedUser
 
 /**
- * Validação visual de T12.1 sem emulador (mesmo racional de `GroupListScreenPreviews.kt`, T8):
- * os três estados de [AuthUiState] nos dois temas, comparados contra `prototype/login.html`.
+ * Visual validation of T12.1 with no emulator (same rationale as `GroupListScreenPreviews.kt`,
+ * T8): the three [AuthUiState] states in both themes, compared against `prototype/login.html`.
  */
-@Preview(name = "Deslogado — claro", showBackground = true)
+@Preview(name = "Signed out — light", showBackground = true)
 @Composable
 private fun LoginScreenSignedOutLightPreview() {
     RateioTheme(darkTheme = false) {
@@ -24,7 +24,7 @@ private fun LoginScreenSignedOutLightPreview() {
     }
 }
 
-@Preview(name = "Deslogado — escuro", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "Signed out — dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun LoginScreenSignedOutDarkPreview() {
     RateioTheme(darkTheme = true) {
@@ -38,12 +38,12 @@ private fun LoginScreenSignedOutDarkPreview() {
     }
 }
 
-@Preview(name = "Deslogado — com erro", showBackground = true)
+@Preview(name = "Signed out — with error", showBackground = true)
 @Composable
 private fun LoginScreenSignedOutErrorPreview() {
     RateioTheme(darkTheme = false) {
         LoginScreen(
-            uiState = AuthUiState.SignedOut(errorMessage = "O Google não confirmou essa conta."),
+            uiState = AuthUiState.SignedOut(errorMessage = "Google didn't confirm that account."),
             onBackClick = {},
             onSignInClick = {},
             onSignOutClick = {},
@@ -52,7 +52,7 @@ private fun LoginScreenSignedOutErrorPreview() {
     }
 }
 
-@Preview(name = "Conectando", showBackground = true)
+@Preview(name = "Connecting", showBackground = true)
 @Composable
 private fun LoginScreenConnectingPreview() {
     RateioTheme(darkTheme = false) {
@@ -66,12 +66,12 @@ private fun LoginScreenConnectingPreview() {
     }
 }
 
-@Preview(name = "Sua conta — claro", showBackground = true)
+@Preview(name = "Your account — light", showBackground = true)
 @Composable
 private fun LoginScreenSignedInLightPreview() {
     RateioTheme(darkTheme = false) {
         LoginScreen(
-            uiState = AuthUiState.SignedIn(AuthenticatedUser(name = "Você", email = "voce@gmail.com")),
+            uiState = AuthUiState.SignedIn(AuthenticatedUser(name = "You", email = "you@gmail.com")),
             onBackClick = {},
             onSignInClick = {},
             onSignOutClick = {},
@@ -80,12 +80,12 @@ private fun LoginScreenSignedInLightPreview() {
     }
 }
 
-@Preview(name = "Sua conta — escuro", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "Your account — dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun LoginScreenSignedInDarkPreview() {
     RateioTheme(darkTheme = true) {
         LoginScreen(
-            uiState = AuthUiState.SignedIn(AuthenticatedUser(name = "Você", email = "voce@gmail.com")),
+            uiState = AuthUiState.SignedIn(AuthenticatedUser(name = "You", email = "you@gmail.com")),
             onBackClick = {},
             onSignInClick = {},
             onSignOutClick = {},

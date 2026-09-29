@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rateio.app.ui.theme.LocalRateioColors
 
-/** `#field-desc` do protótipo: descrição da despesa + erro "Descreve a despesa." quando vazia. */
+/** The prototype's `#field-desc`: the expense's description + the "Describe the expense." error when empty. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DescriptionField(
@@ -25,10 +25,10 @@ fun DescriptionField(
         value = description,
         onValueChange = onDescriptionChange,
         modifier = modifier.fillMaxWidth(),
-        label = { Text(text = "Descrição") },
-        placeholder = { Text(text = "Ex.: Jantar de sexta") },
+        label = { Text(text = "Description") },
+        placeholder = { Text(text = "E.g.: Friday dinner") },
         isError = isError,
-        supportingText = errorTextOrNull(isError, "Descreve a despesa."),
+        supportingText = errorTextOrNull(isError, "Describe the expense."),
         singleLine = true,
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(

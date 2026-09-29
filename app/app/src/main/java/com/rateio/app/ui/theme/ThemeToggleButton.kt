@@ -8,14 +8,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 
 /**
- * Botão sol/lua do `TopAppBar` — componente global (mesma função em toda tela, ver
- * `prototype/app.js`'s `initThemeToggle`, chamada de todo `.topbar` do protótipo). O ícone mostra
- * sempre a AÇÃO do toque, nunca o estado atual: sol visível = "toque pra clarear" (tema escuro
- * ativo), lua visível = "toque pra escurecer" (tema claro ativo) — nunca o contrário.
+ * Sun/moon button for the `TopAppBar` — a global component (same behavior on every screen, see
+ * `prototype/app.js`'s `initThemeToggle`, called from every `.topbar` in the prototype). The icon
+ * always shows the ACTION the tap performs, never the current state: sun visible = "tap to
+ * lighten" (dark theme active), moon visible = "tap to darken" (light theme active) — never the
+ * other way around.
  */
 @Composable
 fun ThemeToggleButton(isDarkTheme: Boolean, onToggleClick: () -> Unit) {
-    val label = if (isDarkTheme) "Mudar para tema claro" else "Mudar para tema escuro"
+    val label = if (isDarkTheme) "Switch to light theme" else "Switch to dark theme"
     IconButton(onClick = onToggleClick) {
         Icon(
             imageVector = if (isDarkTheme) Icons.Filled.LightMode else Icons.Filled.DarkMode,

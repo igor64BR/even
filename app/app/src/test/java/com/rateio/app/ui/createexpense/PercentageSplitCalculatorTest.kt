@@ -7,9 +7,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Cobre T26.1: soma de percentuais que não fecha 100% bloqueia [isPercentageSplitComplete] (e,
- * por extensão, `onSaveClick` em [CreateExpenseViewModel]). JUnit puro, sem Robolectric — mesma
- * convenção de [EqualSplitCalculatorTest].
+ * Covers T26.1: a percentage sum that doesn't add up to 100% blocks [isPercentageSplitComplete]
+ * (and, by extension, `onSaveClick` in [CreateExpenseViewModel]). Plain JUnit, no Robolectric —
+ * same convention as [EqualSplitCalculatorTest].
  */
 class PercentageSplitCalculatorTest {
 
@@ -22,13 +22,13 @@ class PercentageSplitCalculatorTest {
     )
 
     @Test
-    fun `parsePercentageInput aceita inteiro nao negativo`() {
+    fun `parsePercentageInput accepts a non-negative integer`() {
         assertEquals(30L, parsePercentageInput("30"))
         assertEquals(0L, parsePercentageInput("0"))
     }
 
     @Test
-    fun `parsePercentageInput rejeita vazio, negativo e nao numerico`() {
+    fun `parsePercentageInput rejects empty, negative and non-numeric input`() {
         assertNull(parsePercentageInput(""))
         assertNull(parsePercentageInput("  "))
         assertNull(parsePercentageInput("-5"))
@@ -36,14 +36,14 @@ class PercentageSplitCalculatorTest {
     }
 
     @Test
-    fun `defaultPercentage arredonda 100 dividido pelo numero de participantes`() {
+    fun `defaultPercentage rounds 100 divided by the number of participants`() {
         assertEquals(33L, defaultPercentage(3))
         assertEquals(50L, defaultPercentage(2))
         assertEquals(0L, defaultPercentage(0))
     }
 
     @Test
-    fun `soma 100 por cento fecha a divisao`() {
+    fun `a sum of 100 percent completes the split`() {
         val rows = listOf(row("p1", "40"), row("p2", "35"), row("p3", "25"))
 
         assertEquals(100L, sumPercentages(rows))
@@ -51,7 +51,7 @@ class PercentageSplitCalculatorTest {
     }
 
     @Test
-    fun `soma diferente de 100 por cento bloqueia a divisao`() {
+    fun `a sum other than 100 percent blocks the split`() {
         val rows = listOf(row("p1", "40"), row("p2", "35"), row("p3", "20"))
 
         assertEquals(95L, sumPercentages(rows))
@@ -59,7 +59,7 @@ class PercentageSplitCalculatorTest {
     }
 
     @Test
-    fun `entrada vazia ou invalida conta como zero na soma`() {
+    fun `an empty or invalid input counts as zero in the sum`() {
         val rows = listOf(row("p1", "100"), row("p2", ""), row("p3", "abc"))
 
         assertEquals(100L, sumPercentages(rows))

@@ -6,12 +6,13 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Mapeamento de persistência de uma quitação (`Settlement` em `:domain`, T42.1) — quem pagou,
- * quem recebeu, quanto, em qual grupo. Schema novo (v4, ver [com.rateio.data.persistence.RateioDatabase]):
- * antes de T42.1 este tipo só existia em `:domain`, sem DAO/entidade Room.
+ * Persistence mapping for a settlement (`Settlement` in `:domain`, T42.1) — who paid, who
+ * received, how much, in which group. New schema (v4, see
+ * [com.rateio.data.persistence.RateioDatabase]): before T42.1 this type only existed in `:domain`,
+ * with no DAO/Room entity.
  *
- * [amountCents] guarda o valor em centavos (Long), mesma convenção de [ExpenseEntity.amountCents]
- * — nunca decimal cru na coluna.
+ * [amountCents] holds the amount in cents (Long), the same convention as
+ * [ExpenseEntity.amountCents] — never raw decimal in the column.
  */
 @Entity(
     tableName = "settlements",

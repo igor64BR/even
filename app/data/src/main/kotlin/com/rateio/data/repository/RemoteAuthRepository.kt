@@ -15,10 +15,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import retrofit2.HttpException
 
 /**
- * Implementação de [AuthRepository] sobre [AuthApi] (`POST /auth/google`, T11; `POST
- * /auth/logout`, T14.1) + [TokenStorage] (T12.2). Traduz falhas de Retrofit/OkHttp para
- * [AuthenticationFailedException] — `AuthViewModel` nunca vê um tipo de rede, só a mensagem já
- * pronta pra tela.
+ * Implementation of [AuthRepository] on top of [AuthApi] (`POST /auth/google`, T11; `POST
+ * /auth/logout`, T14.1) + [TokenStorage] (T12.2). Translates Retrofit/OkHttp failures into
+ * [AuthenticationFailedException] — `AuthViewModel` never sees a network type, only the message
+ * already ready for the screen.
  */
 class RemoteAuthRepository(
     private val authApi: AuthApi,
@@ -37,9 +37,9 @@ class RemoteAuthRepository(
     }
 
     /**
-     * T14.2: revoga a sessão no backend quando há uma pra revogar, mas a sessão local é SEMPRE
-     * limpa, mesmo se a chamada de rede falhar — o usuário não pode ficar preso logado no aparelho
-     * por falta de conexão. Logout local tem prioridade sobre o de servidor.
+     * T14.2: revokes the session on the backend when there's one to revoke, but the local session
+     * is ALWAYS cleared, even if the network call fails — the user can't be stuck signed in on the
+     * device just because there's no connection. Local logout takes priority over the server one.
      */
     override suspend fun signOut() {
         revokeSessionOnServer()
@@ -51,25 +51,25 @@ class RemoteAuthRepository(
         try {
             return authApi.loginWithGoogle(GoogleLoginRequestDto(googleIdToken)).toDomain()
         } catch (error: HttpException) {
-            throw AuthenticationFailedException("O Google não confirmou essa conta.", error)
+            throw AuthenticationFailedException("Google didn't confirm that account.", error)
         } catch (error: IOException) {
-            throw AuthenticationFailedException("Sem conexão com o servidor do Rateio.", error)
+            throw AuthenticationFailedException("No connection to the Rateio server.", error)
         }
     }
 
     /**
-     * Best-effort: sem sessão atual, nada a revogar. Com sessão, tenta revogar mas engole
-     * qualquer falha de rede/servidor — quem chama (`signOut`) segue e limpa o local de qualquer
-     * jeito (ver doc de `signOut`).
+     * Best-effort: with no current session, there's nothing to revoke. With a session, it tries to
+     * revoke but swallows any network/server failure — the caller (`signOut`) proceeds and clears
+     * the local session anyway (see `signOut`'s doc).
      */
     private suspend fun revokeSessionOnServer() {
         val refreshToken = sessionState.value?.refreshToken ?: return
         try {
             authApi.logout(LogoutRequestDto(refreshToken))
         } catch (error: HttpException) {
-            // Servidor recusou (ex.: sessão já revogada) — irrelevante pro logout local.
+            // Server refused (e.g. session already revoked) — irrelevant to the local logout.
         } catch (error: IOException) {
-            // Sem conexão com o servidor do Rateio — logout local segue tendo prioridade.
+            // No connection to the Rateio server — local logout still takes priority.
         }
     }
 }
@@ -77,5 +77,5 @@ class RemoteAuthRepository(
 private fun GoogleLoginResponseDto.toDomain() = AuthSession(
     accessToken = accessToken,
     refreshToken = refreshToken,
-    user = AuthenticatedUser(name = user.nome, email = user.email),
+    user = AuthenticatedUser(name = user.name, email = user.email),
 )

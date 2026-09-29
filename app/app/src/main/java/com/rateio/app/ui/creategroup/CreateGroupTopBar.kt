@@ -13,16 +13,16 @@ import androidx.compose.ui.text.font.FontWeight
 import com.rateio.app.ui.theme.LocalRateioColors
 import com.rateio.app.ui.theme.ThemeToggleButton
 
-/** `.topbar` com `.back` de `criar-grupo.html` — volta pra "Seus grupos" sem salvar. */
+/** `create-group.html`'s `.topbar` with `.back` — goes back to "Your groups" without saving. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateGroupTopBar(onBackClick: () -> Unit, isDarkTheme: Boolean, onToggleTheme: () -> Unit) {
     val colors = LocalRateioColors.current
     TopAppBar(
-        title = { Text(text = "Novo grupo", fontWeight = FontWeight.Bold) },
+        title = { Text(text = "New group", fontWeight = FontWeight.Bold) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         },
         actions = { ThemeToggleButton(isDarkTheme = isDarkTheme, onToggleClick = onToggleTheme) },

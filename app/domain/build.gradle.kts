@@ -1,7 +1,7 @@
-// Módulo :domain — Kotlin puro (plugin "jvm", não "android"): não pode depender de nada do
-// Android SDK. É aqui que entra o motor de simplificação de dívidas (T33) e as interfaces de
-// repositório que :data implementa (Dependency Inversion) — :domain nunca depende de :app nem
-// de :data.
+// :domain module — pure Kotlin (the "jvm" plugin, not "android"): cannot depend on anything
+// from the Android SDK. This is where the debt-simplification engine (T33) and the repository
+// interfaces that :data implements (Dependency Inversion) live — :domain never depends on :app
+// or :data.
 plugins {
     alias(libs.plugins.kotlin.jvm)
 }
@@ -11,9 +11,9 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-// Alvo de bytecode 17 sem pinar um toolchain específico — a máquina só tem JDK 21 instalado e
-// não há repositório de auto-provisionamento de toolchain configurado (precisaria de rede). O
-// mesmo padrão é usado em :app e :data via kotlinOptions.jvmTarget.
+// Targets bytecode 17 without pinning a specific toolchain — this machine only has JDK 21
+// installed and there's no toolchain auto-provisioning repository configured (would need
+// network access). The same pattern is used in :app and :data via kotlinOptions.jvmTarget.
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
@@ -21,8 +21,8 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 dependencies {
-    // Flow é o único tipo do coroutines que os contratos de repositório expõem — kotlinx-coroutines-core
-    // é uma lib Kotlin pura (sem Android), então não quebra a regra de :domain não depender do Android SDK.
+    // Flow is the only coroutines type the repository contracts expose — kotlinx-coroutines-core
+    // is a pure Kotlin lib (no Android), so it doesn't break the rule that :domain can't depend on the Android SDK.
     implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.junit.jupiter)

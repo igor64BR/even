@@ -17,9 +17,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * Tela "Seus grupos" (RF40/RF41), ponto de entrada do app. `factory` injeta o
- * [GroupListViewModel] pela composição manual de [com.rateio.app.di.AppContainer] (sem
- * framework de DI ainda) — a Composable em si não sabe de onde vem o estado.
+ * "Your groups" screen (RF40/RF41), the app's entry point. `factory` injects the
+ * [GroupListViewModel] through the manual composition of [com.rateio.app.di.AppContainer] (no DI
+ * framework yet) — the Composable itself doesn't know where the state comes from.
  */
 @Composable
 fun GroupListRoute(
@@ -52,9 +52,9 @@ fun GroupListRoute(
 }
 
 /**
- * Composable fina: só orquestra [GroupListTopBar], corpo (lista/vazio/carregando),
- * [CreateGroupFab] e [RateioBottomBar] — nenhuma delas sabe de onde vem o estado (Object
- * Calisthenics: uma responsabilidade por Composable, nomeada pelo que apresenta).
+ * Thin composable: only orchestrates [GroupListTopBar], the body (list/empty/loading),
+ * [CreateGroupFab] and [RateioBottomBar] — none of them know where the state comes from (Object
+ * Calisthenics: one responsibility per Composable, named after what it presents).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,17 +80,17 @@ fun GroupListScreen(
         floatingActionButtonPosition = FabPosition.End,
         bottomBar = {
             RateioBottomBar(
-                selectedTab = RateioBottomTab.GRUPOS,
+                selectedTab = RateioBottomTab.GROUPS,
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
-                    // T12/T41 — "Perfil" é o equivalente ao auth-slot do protótipo (ver
-                    // prototype/app.js, renderHeaderAuth); "Avisos" abre a central de notificações
-                    // (T41.1). "Grupos" é a própria tela, não navega.
+                    // T12/T41 — "Profile" is the equivalent of the prototype's auth-slot (see
+                    // prototype/app.js, renderHeaderAuth); "Notifications" opens the notification
+                    // center (T41.1). "Groups" is the current screen, it doesn't navigate.
                     when (tab) {
-                        RateioBottomTab.GRUPOS -> Unit
-                        RateioBottomTab.AVISOS -> onNotificationsClick()
-                        RateioBottomTab.PERFIL -> onProfileClick()
+                        RateioBottomTab.GROUPS -> Unit
+                        RateioBottomTab.NOTIFICATIONS -> onNotificationsClick()
+                        RateioBottomTab.PROFILE -> onProfileClick()
                     }
                 },
             )
@@ -107,10 +107,10 @@ fun GroupListScreen(
 }
 
 /**
- * Estado de carregamento não tem tratamento visual próprio no protótipo (é só localStorage
- * síncrono lá); aqui, enquanto o primeiro valor do Room não chega, a tela fica em branco por um
- * instante — aceitável para esta task, um spinner dedicado fica para quando houver necessidade
- * real (ex.: sincronização, que é assíncrona de verdade).
+ * The loading state has no dedicated visual treatment in the prototype (it's just synchronous
+ * localStorage there); here, while the first Room value hasn't arrived yet, the screen stays
+ * blank for an instant — acceptable for this task, a dedicated spinner is left for when there's a
+ * real need for one (e.g. sync, which is actually asynchronous).
  */
 @Composable
 private fun GroupListBody(

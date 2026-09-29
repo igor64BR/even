@@ -4,8 +4,8 @@ import com.rateio.domain.model.Participant
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Contrato de persistência de participantes de um grupo. `:domain` declara, `:data` implementa
- * com Room (Dependency Inversion).
+ * Contract for persisting a group's participants. `:domain` declares it, `:data` implements it
+ * with Room (Dependency Inversion).
  */
 interface ParticipantRepository {
     fun getParticipantsFlow(groupId: String): Flow<List<Participant>>

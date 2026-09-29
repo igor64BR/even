@@ -23,18 +23,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rateio.app.ui.theme.LocalRateioColors
 
-/** As três abas de `.bottombar`. */
-enum class RateioBottomTab { AVISOS, GRUPOS, PERFIL }
+/** The three tabs of `.bottombar`. */
+enum class RateioBottomTab { NOTIFICATIONS, GROUPS, PROFILE }
 
 /**
- * `.bottombar` do protótipo — Avisos/Grupos/Perfil, aba ativa em `--ink` cheio, inativas em
- * `--ink-soft`. [unreadNotificationsCount] > 0 desenha o `.badge-dot` do sino (T41.2, mesma cor
- * `--owed` do protótipo) — ver `com.rateio.app.ui.notifications`, fonte da contagem.
+ * The prototype's `.bottombar` — Notifications/Groups/Profile, the active tab in full `--ink`,
+ * inactive ones in `--ink-soft`. [unreadNotificationsCount] > 0 draws the bell's `.badge-dot`
+ * (T41.2, the same `--owed` color as the prototype) — see `com.rateio.app.ui.notifications`, the
+ * source of the count.
  *
- * [authenticatedUserName] espelha `renderHeaderAuth` de `prototype/app.js`: `null` (deslogado)
- * desenha "Entrar" + ícone genérico; não-nulo (logado) desenha "Perfil" + avatar com iniciais,
- * mesmo par label/ícone que `auth-slot` troca dinamicamente no protótipo — nunca um rótulo
- * "Perfil" fixo independente da sessão.
+ * [authenticatedUserName] mirrors `renderHeaderAuth` from `prototype/app.js`: `null` (signed out)
+ * draws "Sign in" + a generic icon; non-null (signed in) draws "Profile" + an initials avatar, the
+ * same label/icon pair `auth-slot` swaps dynamically in the prototype — never a fixed "Profile"
+ * label regardless of session.
  */
 @Composable
 fun RateioBottomBar(
@@ -54,30 +55,30 @@ fun RateioBottomBar(
 
     NavigationBar(containerColor = colors.paper, contentColor = colors.inkSoft) {
         NavigationBarItem(
-            selected = selectedTab == RateioBottomTab.AVISOS,
-            onClick = { onTabSelected(RateioBottomTab.AVISOS) },
+            selected = selectedTab == RateioBottomTab.NOTIFICATIONS,
+            onClick = { onTabSelected(RateioBottomTab.NOTIFICATIONS) },
             icon = { NotificationsBellIcon(unreadCount = unreadNotificationsCount) },
-            label = { Text("Avisos") },
+            label = { Text("Notifications") },
             colors = itemColors,
         )
         NavigationBarItem(
-            selected = selectedTab == RateioBottomTab.GRUPOS,
-            onClick = { onTabSelected(RateioBottomTab.GRUPOS) },
+            selected = selectedTab == RateioBottomTab.GROUPS,
+            onClick = { onTabSelected(RateioBottomTab.GROUPS) },
             icon = { Icon(Icons.Filled.Home, contentDescription = null) },
-            label = { Text("Grupos") },
+            label = { Text("Groups") },
             colors = itemColors,
         )
         NavigationBarItem(
-            selected = selectedTab == RateioBottomTab.PERFIL,
-            onClick = { onTabSelected(RateioBottomTab.PERFIL) },
+            selected = selectedTab == RateioBottomTab.PROFILE,
+            onClick = { onTabSelected(RateioBottomTab.PROFILE) },
             icon = { ProfileTabIcon(authenticatedUserName = authenticatedUserName) },
-            label = { Text(if (authenticatedUserName != null) "Perfil" else "Entrar") },
+            label = { Text(if (authenticatedUserName != null) "Profile" else "Sign in") },
             colors = itemColors,
         )
     }
 }
 
-/** Avatar com iniciais (logado) ou ícone genérico (deslogado) — mesma troca de `renderHeaderAuth`. */
+/** An initials avatar (signed in) or a generic icon (signed out) — the same swap as `renderHeaderAuth`. */
 @Composable
 private fun ProfileTabIcon(authenticatedUserName: String?) {
     if (authenticatedUserName == null) {
@@ -98,7 +99,7 @@ private fun ProfileTabIcon(authenticatedUserName: String?) {
     }
 }
 
-/** Mesma heurística de `initials()` em `prototype/app.js`: até duas iniciais, maiúsculas. */
+/** Same heuristic as `initials()` in `prototype/app.js`: up to two initials, uppercase. */
 private fun initialsOfProfileName(name: String): String =
     name.split(" ")
         .filter { word -> word.isNotBlank() }
@@ -106,7 +107,7 @@ private fun initialsOfProfileName(name: String): String =
         .mapNotNull { word -> word.firstOrNull()?.uppercaseChar() }
         .joinToString(separator = "")
 
-/** `.badge-dot` sobre o sino — mesma cor `--owed` do protótipo, só desenhado quando há não lida. */
+/** `.badge-dot` over the bell — the same `--owed` color as the prototype, only drawn when there's an unread one. */
 @Composable
 private fun NotificationsBellIcon(unreadCount: Int) {
     val colors = LocalRateioColors.current

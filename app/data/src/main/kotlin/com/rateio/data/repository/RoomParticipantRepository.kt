@@ -7,7 +7,7 @@ import com.rateio.domain.repository.ParticipantRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/** Implementação de [ParticipantRepository] sobre [ParticipantDao] (Room). */
+/** Implementation of [ParticipantRepository] on top of [ParticipantDao] (Room). */
 class RoomParticipantRepository(private val participantDao: ParticipantDao) : ParticipantRepository {
 
     override fun getParticipantsFlow(groupId: String): Flow<List<Participant>> =

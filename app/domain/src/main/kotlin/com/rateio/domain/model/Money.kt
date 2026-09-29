@@ -1,17 +1,18 @@
 package com.rateio.domain.model
 
 /**
- * Valor monetário usado no domínio Android: um inteiro de centavos (`Long`) wrapped, nunca cru —
- * espelha `Dinheiro` (`backend/src/Rateio.Domain/Dinheiro.cs`) e a decisão registrada em
- * "Dinheiro: representação e arredondamento" em `algorithm-spec.md`: dentro do domínio não existe
- * `Float`/`Double`/`BigDecimal`, só aritmética inteira de centavos — reproduzível bit a bit com a
- * contraparte C#, pré-requisito pra T33 (motor de simplificação em Kotlin) bater com T31 (C#) na
- * mesma entrada. `Float`/`Double`/formatação de string só aparecem na borda de UI (ver
- * `com.rateio.app.ui.format.MoneyFormat`), nunca aqui.
+ * Monetary amount used in the Android domain: a wrapped integer of cents (`Long`), never raw —
+ * mirrors `Money` (`backend/src/Rateio.Domain/Money.cs`) and the decision recorded in "Money:
+ * representation and rounding" in `algorithm-spec.md`: inside the domain there's no
+ * `Float`/`Double`/`BigDecimal`, only integer cent arithmetic — bit-for-bit reproducible with the
+ * C# counterpart, a prerequisite for T33 (the Kotlin simplification engine) to match T31 (C#) on
+ * the same input. `Float`/`Double`/string formatting only appear at the UI boundary (see
+ * `com.rateio.app.ui.format.MoneyFormat`), never here.
  *
- * `value class` é o wrap de Object Calisthenics ("wrap all primitives") sem custo de alocação em
- * runtime — equivalente Kotlin do `readonly record struct` que `Dinheiro.cs` usa em C#: construtor
- * privado + fábricas nomeadas (`ofCents`, `ZERO`) em vez de expor `Long` cru no construtor público.
+ * `value class` is the Object Calisthenics wrap ("wrap all primitives") with no runtime allocation
+ * cost — the Kotlin equivalent of the `readonly record struct` `Money.cs` uses in C#: a private
+ * constructor + named factories (`ofCents`, `ZERO`) instead of exposing a raw `Long` in the public
+ * constructor.
  */
 @JvmInline
 value class Money private constructor(val cents: Long) : Comparable<Money> {

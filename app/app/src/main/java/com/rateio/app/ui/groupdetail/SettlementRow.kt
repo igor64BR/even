@@ -23,9 +23,9 @@ import com.rateio.app.ui.format.formatCentsAsBrl
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * Uma linha de "Histórico de quitações" (T37, RF31/RF33) — mesmo layout de [ExpenseRow] (ícone +
- * texto + valor), mas puramente informativa: uma quitação já aconteceu e não pode ser editada nem
- * excluída daqui, então não há `onClick`/ação nenhuma, diferente de [ExpenseRow].
+ * A row in "Settlement history" (T37, RF31/RF33) — the same layout as [ExpenseRow] (icon + text +
+ * amount), but purely informational: a settlement already happened and can't be edited or deleted
+ * from here, so there's no `onClick`/action at all, unlike [ExpenseRow].
  */
 @Composable
 fun SettlementRow(settlement: SettlementRowUiModel, modifier: Modifier = Modifier) {
@@ -45,7 +45,7 @@ fun SettlementRow(settlement: SettlementRowUiModel, modifier: Modifier = Modifie
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "${settlement.payerName} pagou ${settlement.receiverName}",
+                text = "${settlement.payerName} paid ${settlement.receiverName}",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.5.sp,
                 color = colors.ink,

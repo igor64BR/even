@@ -16,10 +16,10 @@ interface NotificationDao {
     fun getUnreadCountFlow(): Flow<Int>
 
     /**
-     * IGNORE (não REPLACE, diferente de [com.rateio.data.persistence.dao.SettlementDao.insert]):
-     * o mesmo evento pode chegar duas vezes com o mesmo [NotificationEntity.id] (tempo real +
-     * pull de reconexão, T40.2) — a segunda gravação não pode reverter `isRead` de volta pra
-     * `false` caso o usuário já tenha aberto a tela de notificações entre as duas.
+     * IGNORE (not REPLACE, unlike [com.rateio.data.persistence.dao.SettlementDao.insert]): the
+     * same event can arrive twice with the same [NotificationEntity.id] (live + reconnect pull,
+     * T40.2) — the second write must not revert `isRead` back to `false` if the user already
+     * opened the notifications screen between the two.
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(notification: NotificationEntity)

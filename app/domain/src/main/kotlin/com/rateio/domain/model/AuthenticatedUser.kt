@@ -1,9 +1,9 @@
 package com.rateio.domain.model
 
 /**
- * Usuário autenticado via Google (constitution.md, princípio 2 — única forma de autenticação,
- * sem senha própria). Espelha `UsuarioResponse` de `POST /auth/google` (T11); só os dois campos
- * que a resposta do backend carrega, nada de token aqui — isso é [AuthSession].
+ * User authenticated via Google (constitution.md, principle 2 — the only authentication method,
+ * no self-managed password). Mirrors `UserResponse` from `POST /auth/google` (T11); just the two
+ * fields the backend response carries, no token here — that's [AuthSession].
  */
 data class AuthenticatedUser(
     val name: String,

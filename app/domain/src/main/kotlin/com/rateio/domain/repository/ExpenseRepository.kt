@@ -4,13 +4,13 @@ import com.rateio.domain.model.Expense
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Contrato de persistência de despesas de um grupo. `:domain` declara, `:data` implementa com
+ * Contract for persisting a group's expenses. `:domain` declares it, `:data` implements it with
  * Room (Dependency Inversion).
  */
 interface ExpenseRepository {
     fun getExpensesFlow(groupId: String): Flow<List<Expense>>
 
-    /** Leitura pontual de uma despesa por id (T29.1: pré-carregar o formulário de edição). `null` se não existir mais. */
+    /** One-off read of an expense by id (T29.1: pre-filling the edit form). `null` if it no longer exists. */
     suspend fun getExpenseById(expenseId: String): Expense?
     suspend fun insertExpense(expense: Expense)
     suspend fun deleteExpense(expenseId: String)

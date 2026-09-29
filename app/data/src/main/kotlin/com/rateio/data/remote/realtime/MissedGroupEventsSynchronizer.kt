@@ -9,27 +9,28 @@ import java.time.format.DateTimeFormatter
 import retrofit2.HttpException
 
 /**
- * T39 (fallback de pull, RF35/RF36; constitution.md princípio 3 — sem push de terceiros): busca
- * eventos perdidos desde a última notificação local conhecida e grava cada um via
- * [GroupEventRecorder]. [SignalRGroupRealtimeGateway] chama [sync] tanto na primeira conexão bem-
- * sucedida quanto em toda reconexão — cobre "rede caiu e voltou" (T40.2) e também "app foi fechado
- * e reaberto" (sem esse segundo caso, um evento perdido enquanto o app estava totalmente fechado
- * nunca apareceria: não há reconexão nenhuma pra disparar o pull nesse cenário — mesma limitação
- * de kill-state que constitution.md princípio 3 já documenta como trade-off aceito).
+ * T39 (pull fallback, RF35/RF36; constitution.md principle 3 — no third-party push): fetches
+ * events missed since the last known local notification and records each one via
+ * [GroupEventRecorder]. [SignalRGroupRealtimeGateway] calls [sync] both on the first successful
+ * connection and on every reconnection — covering "network dropped and came back" (T40.2) as well
+ * as "app was killed and reopened" (without this second case, an event missed while the app was
+ * fully closed would never show up: there's no reconnection to trigger the pull in that scenario —
+ * the same kill-state limitation constitution.md principle 3 already documents as an accepted
+ * trade-off).
  *
- * Extraída de [SignalRGroupRealtimeGateway] pra ser testável sem `HubConnection` nenhum
- * (`MissedGroupEventsSynchronizerTest`, com um [GroupEventsApi] dublê — mesmo padrão de
- * `RemoteGroupSyncRepositoryTest`): [SignalRGroupRealtimeGateway] só decide QUANDO chamar isso,
- * esta classe decide O QUE fazer quando chamada.
+ * Extracted from [SignalRGroupRealtimeGateway] to be testable without any `HubConnection`
+ * (`MissedGroupEventsSynchronizerTest`, with a test double [GroupEventsApi] — same pattern as
+ * `RemoteGroupSyncRepositoryTest`): [SignalRGroupRealtimeGateway] only decides WHEN to call this,
+ * this class decides WHAT to do when called.
  *
- * [since]: `GruposController.ObterEventos` (T39.1, já mergeado — `[FromQuery] DateTimeOffset
- * desde` sem default) exige o parâmetro sempre presente, então nunca omitimos `desde` — sem
- * nenhuma notificação local ainda ([NotificationRepository.getLastEventTimestamp] `null`), pedimos
- * desde [Instant.EPOCH] (equivalente a "todo o histórico"), nunca omitindo o parâmetro (isso
- * daria 400 do model binding do ASP.NET Core antes até de chegar no use case).
+ * [since]: `GroupsController.GetEvents` (T39.1, already merged — `[FromQuery] DateTimeOffset
+ * since` with no default) requires the parameter to always be present, so we never omit `since` —
+ * with no local notification yet ([NotificationRepository.getLastEventTimestamp] `null`), we ask
+ * since [Instant.EPOCH] (equivalent to "the whole history"), never omitting the parameter (that
+ * would give a 400 from ASP.NET Core's model binding before it even reaches the use case).
  *
- * Nunca propaga falha pro chamador: falha de rede não pode derrubar a conexão em tempo real por
- * causa disso.
+ * Never propagates failure to the caller: a network failure can't bring down the realtime
+ * connection because of this.
  */
 internal class MissedGroupEventsSynchronizer(
     private val groupEventsApi: GroupEventsApi,
@@ -51,10 +52,10 @@ internal class MissedGroupEventsSynchronizer(
                 eventRecorder.record(localGroupId, event)
             }
         } catch (error: IOException) {
-            // Sem conexão com o backend — a próxima reconexão bem-sucedida tenta de novo.
+            // No connection to the backend — the next successful reconnection tries again.
         } catch (error: HttpException) {
-            // RNF07 negou acesso (403) ou o grupo não existe mais no servidor (404) — mesmo
-            // racional: nunca derruba a conexão em tempo real por causa disso.
+            // RNF07 denied access (403) or the group no longer exists on the server (404) — same
+            // rationale: never bring down the realtime connection because of this.
         }
     }
 

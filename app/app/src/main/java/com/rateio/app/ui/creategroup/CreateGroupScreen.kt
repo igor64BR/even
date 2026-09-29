@@ -25,15 +25,15 @@ import com.rateio.app.ui.groups.RateioBottomTab
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * Tela "Novo grupo" (T16), aberta a partir do FAB de "Seus grupos" (T8/[com.rateio.app.ui.groups.CreateGroupFab]).
- * `factory` injeta o [CreateGroupViewModel] pela composição manual de
- * [com.rateio.app.di.AppContainer] — mesmo padrão de
+ * The "New group" screen (T16), opened from "Your groups"'s FAB
+ * (T8/[com.rateio.app.ui.groups.CreateGroupFab]). `factory` injects the [CreateGroupViewModel]
+ * through [com.rateio.app.di.AppContainer]'s manual composition — the same pattern as
  * [com.rateio.app.ui.groups.GroupListRoute].
  *
- * [key] identifica esta visita à tela pro `viewModel()` do Compose (ver KDoc de
- * `RateioDestination.CreateGroup.instanceId` em `MainActivity`) — sem ela, reabrir "Novo grupo"
- * reaproveitava o `ViewModel` da visita anterior, com o formulário e `isSaving` da última
- * submissão ainda presos.
+ * [key] identifies this visit to the screen for Compose's `viewModel()` (see the KDoc of
+ * `RateioDestination.CreateGroup.instanceId` in `MainActivity`) — without it, reopening "New group"
+ * would reuse the previous visit's `ViewModel`, with the form and `isSaving` from the last
+ * submission still stuck.
  */
 @Composable
 fun CreateGroupRoute(
@@ -82,8 +82,8 @@ fun CreateGroupRoute(
 }
 
 /**
- * Composable fina: só orquestra topbar + campos + botão — nenhuma sabe de onde vem o estado
- * nem faz validação/persistência (mesmo Object Calisthenics de
+ * A thin Composable: only orchestrates the topbar + fields + button — none of them know where the
+ * state comes from or do validation/persistence (same Object Calisthenics as
  * [com.rateio.app.ui.groups.GroupListScreen]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -116,14 +116,14 @@ fun CreateGroupScreen(
         },
         bottomBar = {
             RateioBottomBar(
-                selectedTab = RateioBottomTab.GRUPOS,
+                selectedTab = RateioBottomTab.GROUPS,
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
                     when (tab) {
-                        RateioBottomTab.GRUPOS -> onGroupsClick()
-                        RateioBottomTab.AVISOS -> onNotificationsClick()
-                        RateioBottomTab.PERFIL -> onProfileClick()
+                        RateioBottomTab.GROUPS -> onGroupsClick()
+                        RateioBottomTab.NOTIFICATIONS -> onNotificationsClick()
+                        RateioBottomTab.PROFILE -> onProfileClick()
                     }
                 },
             )
@@ -168,7 +168,7 @@ fun CreateGroupScreen(
                     .fillMaxWidth()
                     .padding(bottom = 24.dp),
             ) {
-                Text(text = "Criar grupo", fontWeight = FontWeight.SemiBold)
+                Text(text = "Create group", fontWeight = FontWeight.SemiBold)
             }
         }
     }

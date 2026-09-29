@@ -16,10 +16,10 @@ import com.rateio.app.ui.format.formatCentsAsBrl
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `#split-area` do protótipo na aba Igual: uma linha por participante, checkbox de inclusão +
- * valor calculado ao vivo ([ExpenseSplitRowUiModel.amountCents], já fechado pela regra de maiores
- * restos — ver [calculateEqualSplit]). Nenhum cálculo mora aqui, só apresentação (T24, Object
- * Calisthenics/Clean Code).
+ * The prototype's `#split-area` in the Equal tab: one row per participant, an inclusion checkbox +
+ * the live-calculated amount ([ExpenseSplitRowUiModel.amountCents], already closed out by the
+ * largest-remainder rule — see [calculateEqualSplit]). No calculation lives here, only
+ * presentation (T24, Object Calisthenics/Clean Code).
  */
 @Composable
 fun ParticipantSplitList(
@@ -35,7 +35,7 @@ fun ParticipantSplitList(
         }
         if (isError) {
             Text(
-                text = "Selecione pelo menos 1 participante.",
+                text = "Select at least 1 participant.",
                 color = colors.danger,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 4.dp),
@@ -56,7 +56,7 @@ private fun ParticipantSplitRow(row: ExpenseSplitRowUiModel, onToggle: () -> Uni
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = row.isIncluded, onCheckedChange = { onToggle() })
-            Text(text = if (row.isYou) "${row.name} (você)" else row.name)
+            Text(text = if (row.isYou) "${row.name} (you)" else row.name)
         }
         Text(
             text = if (row.isIncluded) formatCentsAsBrl(row.amountCents) else "—",

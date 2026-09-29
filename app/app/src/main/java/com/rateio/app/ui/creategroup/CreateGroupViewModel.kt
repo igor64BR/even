@@ -18,9 +18,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Estado + validação + persistência do formulário "Novo grupo" (T16). Persistência é sempre
- * local via [GroupRepository]/[ParticipantRepository] (Room, T7) — zero chamada de rede
- * (constitution.md, princípio 1); sincronizar é ação separada e futura (T19).
+ * State + validation + persistence for the "New group" form (T16). Persistence is always local
+ * via [GroupRepository]/[ParticipantRepository] (Room, T7) — zero network calls (constitution.md,
+ * principle 1); syncing is a separate, future action (T19).
  */
 class CreateGroupViewModel(
     private val groupRepository: GroupRepository,
@@ -45,7 +45,7 @@ class CreateGroupViewModel(
         _uiState.update { it.copy(newParticipantName = name) }
     }
 
-    /** Enter no campo de participante (`#novo-participante` do protótipo) adiciona um chip. */
+    /** Pressing Enter in the participant field (the prototype's `#novo-participante`) adds a chip. */
     fun onAddParticipant() {
         val name = _uiState.value.newParticipantName.trim()
         if (name.isEmpty()) return
@@ -59,7 +59,7 @@ class CreateGroupViewModel(
         }
     }
 
-    /** "Você" nunca é removido — mesma regra do protótipo ([ParticipantChipUiModel.isYou]). */
+    /** "You" is never removed — the same rule as the prototype ([ParticipantChipUiModel.isYou]). */
     fun onRemoveParticipant(participantId: String) {
         _uiState.update { state ->
             state.copy(participants = state.participants.filterNot { it.matchesRemovalTarget(participantId) })
@@ -81,14 +81,15 @@ class CreateGroupViewModel(
             try {
                 saveGroup(state)
             } finally {
-                // Sem isso, `isSaving` ficava `true` pra sempre — inofensivo enquanto a tela
-                // desmontava ao navegar pra "Seus grupos" logo após o evento abaixo, mas virava bug
-                // visível (botão "Criar grupo" travado desabilitado) assim que o mesmo ViewModel
-                // era reaproveitado numa visita seguinte a esta tela (ver key em CreateGroupRoute).
-                // Reseta ANTES de emitir o evento (não depois, num `finally` só em volta do emit
-                // também): "salvando" termina quando o grupo é persistido, não quando alguém reage
-                // à notificação de navegação — e só assim quem observa [events] já vê `isSaving
-                // = false` no mesmo instante em que o evento chega.
+                // Without this, `isSaving` would stay `true` forever — harmless while the screen
+                // unmounted when navigating to "Your groups" right after the event below, but it
+                // turned into a visible bug (a permanently disabled "Create group" button) as soon
+                // as the same ViewModel was reused on a subsequent visit to this screen (see the
+                // key in CreateGroupRoute). Resets BEFORE emitting the event (not after, in a
+                // `finally` only around the emit either): "saving" ends when the group is
+                // persisted, not when someone reacts to the navigation notification — and only this
+                // way does whoever observes [events] already see `isSaving = false` at the same
+                // instant the event arrives.
                 _uiState.update { it.copy(isSaving = false) }
             }
             _events.emit(CreateGroupEvent.GroupCreated)
@@ -96,9 +97,9 @@ class CreateGroupViewModel(
     }
 
     /**
-     * [GroupCategory] escolhida no formulário não é persistida aqui: `Group` (`:domain`, T7B)
-     * não tem campo de categoria, e adicioná-lo é mudança de schema fora do escopo de T16
-     * (restrita a `app/app/`). Reportado como lacuna conhecida, não inventado.
+     * The [GroupCategory] chosen in the form isn't persisted here: `Group` (`:domain`, T7B) has no
+     * category field, and adding one is a schema change out of scope for T16 (restricted to
+     * `app/app/`). Reported as a known gap, not invented.
      */
     private suspend fun saveGroup(state: CreateGroupUiState) {
         val groupId = UUID.randomUUID().toString()

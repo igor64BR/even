@@ -15,21 +15,21 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Cobre T40.1: "evento recebido via Hub grava notificação local" — no nível do colaborador que de
- * fato faz isso, [GroupEventRecorder], sem SignalR/Room nenhum (dublês simples de
- * [GroupRepository]/[ParticipantRepository]/[NotificationRepository], mesmo padrão de
- * `RemoteGroupSyncRepositoryTest` em `:data`).
+ * Covers T40.1: "event received via Hub records a local notification" — at the level of the
+ * collaborator that actually does this, [GroupEventRecorder], with no SignalR/Room at all (simple
+ * test doubles for [GroupRepository]/[ParticipantRepository]/[NotificationRepository], same pattern
+ * as `RemoteGroupSyncRepositoryTest` in `:data`).
  */
 class GroupEventRecorderTest {
 
-    private val group = Group(id = "g1", name = "Viagem pra praia", createdAt = Instant.EPOCH)
+    private val group = Group(id = "g1", name = "Beach trip", createdAt = Instant.EPOCH)
     private val participants = listOf(
-        Participant(id = "p1", groupId = "g1", name = "Você", isYou = true),
+        Participant(id = "p1", groupId = "g1", name = "You", isYou = true),
         Participant(id = "p2", groupId = "g1", name = "Duda"),
     )
 
     @Test
-    fun `record grava uma notificacao local a partir do evento`() = runTest {
+    fun `record saves a local notification from the event`() = runTest {
         val notificationRepository = FakeNotificationRepository()
         val recorder = GroupEventRecorder(
             notificationRepository = notificationRepository,
@@ -39,7 +39,7 @@ class GroupEventRecorderTest {
         )
         val event = GroupRealtimeEvent.ExpenseCreated(
             expenseId = "e1",
-            description = "Mercado",
+            description = "Groceries",
             amountTotalCents = 3_000,
             payerId = "p2",
         )
@@ -47,13 +47,13 @@ class GroupEventRecorderTest {
         recorder.record("g1", event)
 
         val saved = notificationRepository.inserted.single()
-        assertEquals("despesa:e1", saved.id)
+        assertEquals("expense:e1", saved.id)
         assertEquals("g1", saved.groupId)
-        assertTrue(saved.message.contains("Duda lançou \"Mercado\""))
+        assertTrue(saved.message.contains("Duda logged \"Groceries\""))
     }
 
     @Test
-    fun `record nao grava nada se o grupo local nao existe mais`() = runTest {
+    fun `record saves nothing if the local group no longer exists`() = runTest {
         val notificationRepository = FakeNotificationRepository()
         val recorder = GroupEventRecorder(
             notificationRepository = notificationRepository,
@@ -68,25 +68,25 @@ class GroupEventRecorderTest {
             amountCents = 1_000,
         )
 
-        recorder.record("grupo-apagado", event)
+        recorder.record("deleted-group", event)
 
-        assertTrue("grupo local apagado nao pode gerar notificacao orfa", notificationRepository.inserted.isEmpty())
+        assertTrue("a deleted local group must not generate an orphan notification", notificationRepository.inserted.isEmpty())
     }
 
     private class FakeGroupRepository(private val group: Group?) : GroupRepository {
-        override fun getGroupsFlow(): Flow<List<Group>> = throw UnsupportedOperationException("não usado neste teste")
+        override fun getGroupsFlow(): Flow<List<Group>> = throw UnsupportedOperationException("not used in this test")
         override suspend fun getGroupById(groupId: String): Group? = group
-        override suspend fun insertGroup(group: Group) = throw UnsupportedOperationException("não usado neste teste")
-        override suspend fun deleteGroup(groupId: String) = throw UnsupportedOperationException("não usado neste teste")
+        override suspend fun insertGroup(group: Group) = throw UnsupportedOperationException("not used in this test")
+        override suspend fun deleteGroup(groupId: String) = throw UnsupportedOperationException("not used in this test")
     }
 
     private class FakeParticipantRepository(private val participants: List<Participant>) : ParticipantRepository {
         override fun getParticipantsFlow(groupId: String): Flow<List<Participant>> = MutableStateFlow(participants)
         override suspend fun insertParticipant(participant: Participant) =
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
 
         override suspend fun deleteParticipant(participantId: String) =
-            throw UnsupportedOperationException("não usado neste teste")
+            throw UnsupportedOperationException("not used in this test")
     }
 
     private class FakeNotificationRepository : NotificationRepository {
@@ -98,7 +98,7 @@ class GroupEventRecorderTest {
             inserted += notification
         }
 
-        override suspend fun markAllAsRead() = throw UnsupportedOperationException("não usado neste teste")
+        override suspend fun markAllAsRead() = throw UnsupportedOperationException("not used in this test")
         override suspend fun getLastEventTimestamp(): Instant? = inserted.maxOfOrNull { it.occurredAt }
     }
 }

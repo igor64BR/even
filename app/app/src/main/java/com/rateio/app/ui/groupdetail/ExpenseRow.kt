@@ -26,15 +26,15 @@ import com.rateio.app.ui.format.formatCentsAsBrl
 import com.rateio.app.ui.theme.LocalRateioColors
 
 /**
- * `.expense-row` de `grupo.html`: ícone, descrição + "quem pagou · data · tipo de divisão", valor
- * total à direita. Puramente apresentação — [expense] já vem com tudo formatado
+ * `group.html`'s `.expense-row`: an icon, description + "who paid · date · split type", the total
+ * amount on the right. Purely presentational — [expense] already comes with everything formatted
  * ([GroupDetailViewModel]).
  *
- * T29.1: dois gestos, escolhidos pelo mais simples/discoverable pra cada ação (o protótipo não
- * detalha esse fluxo, ver T29-app-editar-excluir-despesa.md) — tocar em qualquer parte da linha
- * chama [onClick] (abre "Editar despesa" pré-preenchida, T24/T26 reaproveitado em modo edição);
- * o ícone de lixeira chama [onDeleteClick], que só *pede* confirmação — [GroupDetailScreen] é
- * quem decide excluir de fato depois do diálogo, [ExpenseRow] nunca exclui nada sozinho.
+ * T29.1: two gestures, chosen as the simplest/most discoverable for each action (the prototype
+ * doesn't detail this flow, see T29-app-editar-excluir-despesa.md) — tapping anywhere on the row
+ * calls [onClick] (opens "Edit expense" pre-filled, T24/T26 reused in edit mode); the trash icon
+ * calls [onDeleteClick], which only *asks* for confirmation — [GroupDetailScreen] is the one that
+ * decides to actually delete after the dialog, [ExpenseRow] never deletes anything on its own.
  */
 @Composable
 fun ExpenseRow(
@@ -63,7 +63,7 @@ fun ExpenseRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = expense.description, fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp, color = colors.ink)
             Text(
-                text = "${expense.payerName} pagou · ${expense.dateLabel} · ${expense.splitTypeLabel}",
+                text = "${expense.payerName} paid · ${expense.dateLabel} · ${expense.splitTypeLabel}",
                 fontSize = 12.sp,
                 color = colors.inkSoft,
             )
@@ -77,7 +77,7 @@ fun ExpenseRow(
         IconButton(onClick = onDeleteClick) {
             Icon(
                 imageVector = Icons.Filled.DeleteOutline,
-                contentDescription = "Excluir despesa",
+                contentDescription = "Delete expense",
                 tint = colors.inkSoft,
             )
         }

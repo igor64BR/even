@@ -9,16 +9,16 @@ import com.rateio.domain.repository.ParticipantRepository
 import com.rateio.domain.repository.RemoteExpenseRepository
 
 /**
- * Sem framework de DI no projeto ainda — fábrica manual que injeta os repositórios de
- * [com.rateio.app.di.AppContainer] no [CreateExpenseViewModel]. Mesmo padrão de
- * [com.rateio.app.ui.creategroup.CreateGroupViewModelFactory] (T16), com [groupId] adicional
- * porque, diferente de "Novo grupo", este formulário sempre pertence a um grupo já existente.
+ * No DI framework in the project yet — a manual factory that injects
+ * [com.rateio.app.di.AppContainer]'s repositories into the [CreateExpenseViewModel]. Same pattern
+ * as [com.rateio.app.ui.creategroup.CreateGroupViewModelFactory] (T16), with an additional
+ * [groupId] because, unlike "New group", this form always belongs to an already-existing group.
  *
- * [expenseId] (T29) é `null` pra "Nova despesa" e o id da despesa sendo editada pra "Editar
- * despesa" — [groupRepository]/[remoteExpenseRepository] só são efetivamente usados no modo
- * edição (propagar a mudança pro backend quando o grupo já está sincronizado), mas entram na
- * fábrica pros dois modos porque é o mesmo [CreateExpenseViewModel] pros dois (T29, "edição é
- * estado, não tela nova").
+ * [expenseId] (T29) is `null` for "New expense" and the id of the expense being edited for "Edit
+ * expense" — [groupRepository]/[remoteExpenseRepository] are only actually used in edit mode
+ * (propagating the change to the backend when the group is already synced), but they're part of
+ * the factory for both modes because it's the same [CreateExpenseViewModel] for both (T29,
+ * "editing is state, not a new screen").
  */
 class CreateExpenseViewModelFactory(
     private val groupId: String,
@@ -32,7 +32,7 @@ class CreateExpenseViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         require(modelClass.isAssignableFrom(CreateExpenseViewModel::class.java)) {
-            "CreateExpenseViewModelFactory só sabe criar CreateExpenseViewModel, pediram $modelClass"
+            "CreateExpenseViewModelFactory only knows how to create CreateExpenseViewModel, got $modelClass"
         }
         return CreateExpenseViewModel(
             groupId = groupId,

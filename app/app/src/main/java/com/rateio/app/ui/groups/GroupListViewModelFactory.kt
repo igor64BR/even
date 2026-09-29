@@ -8,11 +8,11 @@ import com.rateio.domain.repository.NotificationRepository
 import com.rateio.domain.repository.ParticipantRepository
 
 /**
- * Sem framework de DI no projeto ainda — fábrica manual que injeta os repositórios de
- * [com.rateio.app.di.AppContainer] no [GroupListViewModel]. Até T19 recebia também
- * `authRepository`/`remoteGroupRepository`/`expenseRepository` pra ação "Sincronizar este grupo";
- * T42.4 move essa ação pra [com.rateio.app.ui.groupdetail.GroupDetailViewModelFactory]. T41.2
- * acrescenta [notificationRepository] pro badge da aba "Avisos".
+ * No DI framework in the project yet — manual factory that injects the repositories from
+ * [com.rateio.app.di.AppContainer] into [GroupListViewModel]. Up until T19 it also received
+ * `authRepository`/`remoteGroupRepository`/`expenseRepository` for the "Sync this group" action;
+ * T42.4 moves that action to [com.rateio.app.ui.groupdetail.GroupDetailViewModelFactory]. T41.2
+ * adds [notificationRepository] for the "Notifications" tab badge.
  */
 class GroupListViewModelFactory(
     private val groupRepository: GroupRepository,
@@ -23,7 +23,7 @@ class GroupListViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
         require(modelClass.isAssignableFrom(GroupListViewModel::class.java)) {
-            "GroupListViewModelFactory só sabe criar GroupListViewModel, pediram $modelClass"
+            "GroupListViewModelFactory only knows how to create GroupListViewModel, got $modelClass"
         }
         return GroupListViewModel(
             groupRepository = groupRepository,
