@@ -1,13 +1,13 @@
 namespace Rateio.Infrastructure.Auth;
 
 /// <summary>
-/// Config de emissão do JWT próprio da aplicação. <see cref="SigningKey"/> em
-/// <c>appsettings.Development.json</c> é um segredo só de desenvolvimento local — em produção deve
-/// vir de uma fonte segura (user-secrets/variável de ambiente/cofre), nunca commitado.
+/// Config for issuing the application's own JWT. <see cref="SigningKey"/> in
+/// <c>appsettings.Development.json</c> is a local-development-only secret — in production it must
+/// come from a secure source (user-secrets/environment variable/vault), never committed.
 /// </summary>
 public sealed class JwtOptions
 {
-    public const string SecaoConfiguracao = "Jwt";
+    public const string ConfigurationSection = "Jwt";
 
     public required string SigningKey { get; init; }
 
@@ -15,8 +15,8 @@ public sealed class JwtOptions
 
     public required string Audience { get; init; }
 
-    /// <summary>RNF06: access token expira em ≤ 15 min.</summary>
-    public required int AccessTokenMinutos { get; init; }
+    /// <summary>RNF06: access token expires in &lt;= 15 min.</summary>
+    public required int AccessTokenMinutes { get; init; }
 
-    public required int RefreshTokenDias { get; init; }
+    public required int RefreshTokenDays { get; init; }
 }

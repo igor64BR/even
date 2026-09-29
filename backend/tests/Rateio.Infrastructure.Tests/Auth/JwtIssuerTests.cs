@@ -6,98 +6,99 @@ using Rateio.Infrastructure.Auth;
 namespace Rateio.Infrastructure.Tests.Auth;
 
 /// <summary>
-/// Cobre a emissão de tokens de <see cref="JwtIssuer"/> (T11.2). Não depende de ID token real do
-/// Google nem de banco — <see cref="IJwtIssuer"/> é puro (recebe um <see cref="Usuario"/> já
-/// resolvido, devolve tokens), por isso dá pra testar isolado com um <see cref="RelogioFixo"/>.
+/// Covers <see cref="JwtIssuer"/>'s token issuance (T11.2). Doesn't depend on a real Google ID
+/// token or a database — <see cref="IJwtIssuer"/> is pure (takes an already-resolved
+/// <see cref="User"/>, returns tokens), so it can be tested in isolation with a
+/// <see cref="FixedClock"/>.
 /// </summary>
 public class JwtIssuerTests
 {
-    private static readonly DateTimeOffset Agora = new(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset Now = new(2026, 9, 19, 12, 0, 0, TimeSpan.Zero);
 
-    private static readonly Usuario UsuarioDeTeste = new(
+    private static readonly User TestUser = new(
         Guid.Parse("11111111-1111-1111-1111-111111111111"),
         GoogleSubjectId: "google-sub-123",
-        Nome: "Igor Baiocco",
+        Name: "Igor Baiocco",
         Email: "igor@example.com");
 
     [Fact]
-    public void Emitir_AccessToken_ExpiraExatamenteNoLimiteConfigurado()
+    public void Issue_AccessToken_ExpiresExactlyAtTheConfiguredLimit()
     {
-        var issuer = CriarIssuer(accessTokenMinutos: 15);
+        var issuer = CreateIssuer(accessTokenMinutes: 15);
 
-        var tokens = issuer.Emitir(UsuarioDeTeste);
+        var tokens = issuer.Issue(TestUser);
 
-        Assert.Equal(Agora.AddMinutes(15), tokens.AccessTokenExpiraEm);
+        Assert.Equal(Now.AddMinutes(15), tokens.AccessTokenExpiresAt);
     }
 
     [Fact]
-    public void Emitir_AccessToken_RespeitaRnf06DeNoMaximo15Minutos()
+    public void Issue_AccessToken_RespectsRnf06OfAtMost15Minutes()
     {
-        var issuer = CriarIssuer(accessTokenMinutos: 15);
+        var issuer = CreateIssuer(accessTokenMinutes: 15);
 
-        var tokens = issuer.Emitir(UsuarioDeTeste);
+        var tokens = issuer.Issue(TestUser);
 
-        var duracao = tokens.AccessTokenExpiraEm - Agora;
-        Assert.True(duracao <= TimeSpan.FromMinutes(15), $"Access token expira em {duracao}, viola RNF06.");
+        var duration = tokens.AccessTokenExpiresAt - Now;
+        Assert.True(duration <= TimeSpan.FromMinutes(15), $"Access token expires in {duration}, violating RNF06.");
     }
 
     [Fact]
-    public void Emitir_AccessToken_CarregaClaimsDoUsuarioSemExpoTokenGoogle()
+    public void Issue_AccessToken_CarriesUserClaimsWithoutExposingTheGoogleToken()
     {
-        var issuer = CriarIssuer(accessTokenMinutos: 15);
+        var issuer = CreateIssuer(accessTokenMinutes: 15);
 
-        var tokens = issuer.Emitir(UsuarioDeTeste);
+        var tokens = issuer.Issue(TestUser);
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(tokens.AccessToken);
 
-        Assert.Equal(UsuarioDeTeste.Id.ToString(), jwt.Subject);
-        Assert.Equal(UsuarioDeTeste.Email, jwt.Claims.Single(c => c.Type == JwtRegisteredClaimNames.Email).Value);
+        Assert.Equal(TestUser.Id.ToString(), jwt.Subject);
+        Assert.Equal(TestUser.Email, jwt.Claims.Single(c => c.Type == JwtRegisteredClaimNames.Email).Value);
         Assert.Equal("Rateio.Api", jwt.Issuer);
         Assert.Contains("Rateio.App", jwt.Audiences);
     }
 
     [Fact]
-    public void Emitir_RefreshToken_EhDiferenteDoAccessTokenENaoEUmJwt()
+    public void Issue_RefreshToken_IsDifferentFromTheAccessTokenAndIsNotAJwt()
     {
-        var issuer = CriarIssuer(accessTokenMinutos: 15);
+        var issuer = CreateIssuer(accessTokenMinutes: 15);
 
-        var tokens = issuer.Emitir(UsuarioDeTeste);
+        var tokens = issuer.Issue(TestUser);
 
         Assert.NotEqual(tokens.AccessToken, tokens.RefreshToken);
-        Assert.False(tokens.RefreshToken.Contains('.'), "Refresh token deveria ser opaco, não um JWT.");
+        Assert.False(tokens.RefreshToken.Contains('.'), "Refresh token should be opaque, not a JWT.");
     }
 
     [Fact]
-    public void Emitir_RefreshToken_ExpiraDeAcordoComConfiguracao()
+    public void Issue_RefreshToken_ExpiresAccordingToConfiguration()
     {
-        var issuer = CriarIssuer(accessTokenMinutos: 15, refreshTokenDias: 30);
+        var issuer = CreateIssuer(accessTokenMinutes: 15, refreshTokenDays: 30);
 
-        var tokens = issuer.Emitir(UsuarioDeTeste);
+        var tokens = issuer.Issue(TestUser);
 
-        Assert.Equal(Agora.AddDays(30), tokens.RefreshTokenExpiraEm);
+        Assert.Equal(Now.AddDays(30), tokens.RefreshTokenExpiresAt);
     }
 
     [Fact]
-    public void Emitir_ChamadasSucessivas_GeramRefreshTokensDistintos()
+    public void Issue_SuccessiveCalls_GenerateDistinctRefreshTokens()
     {
-        var issuer = CriarIssuer(accessTokenMinutos: 15);
+        var issuer = CreateIssuer(accessTokenMinutes: 15);
 
-        var primeiro = issuer.Emitir(UsuarioDeTeste);
-        var segundo = issuer.Emitir(UsuarioDeTeste);
+        var first = issuer.Issue(TestUser);
+        var second = issuer.Issue(TestUser);
 
-        Assert.NotEqual(primeiro.RefreshToken, segundo.RefreshToken);
+        Assert.NotEqual(first.RefreshToken, second.RefreshToken);
     }
 
-    private static JwtIssuer CriarIssuer(int accessTokenMinutos, int refreshTokenDias = 30)
+    private static JwtIssuer CreateIssuer(int accessTokenMinutes, int refreshTokenDays = 30)
     {
-        var opcoes = Options.Create(new JwtOptions
+        var options = Options.Create(new JwtOptions
         {
-            SigningKey = "chave-de-teste-com-tamanho-suficiente-para-hmac-sha256",
+            SigningKey = "test-signing-key-long-enough-for-hmac-sha256",
             Issuer = "Rateio.Api",
             Audience = "Rateio.App",
-            AccessTokenMinutos = accessTokenMinutos,
-            RefreshTokenDias = refreshTokenDias,
+            AccessTokenMinutes = accessTokenMinutes,
+            RefreshTokenDays = refreshTokenDays,
         });
 
-        return new JwtIssuer(opcoes, new RelogioFixo(Agora));
+        return new JwtIssuer(options, new FixedClock(Now));
     }
 }

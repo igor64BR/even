@@ -5,18 +5,18 @@ using Microsoft.Extensions.Configuration;
 namespace Rateio.Infrastructure.Persistence;
 
 /// <summary>
-/// Fábrica usada só pelas ferramentas de design-time do EF Core (<c>dotnet ef migrations add</c>,
-/// <c>dotnet ef database update</c>). Lê a connection string de
-/// <c>Rateio.Api/appsettings.Development.json</c> (nunca hardcoded) sem depender de DI de runtime
-/// — registrar <see cref="AppDbContext"/> no container da aplicação é escopo de T3.
+/// Factory used only by EF Core's design-time tools (<c>dotnet ef migrations add</c>,
+/// <c>dotnet ef database update</c>). Reads the connection string from
+/// <c>Rateio.Api/appsettings.Development.json</c> (never hardcoded) without relying on runtime
+/// DI — registering <see cref="AppDbContext"/> in the application container is T3's scope.
 /// </summary>
 public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
-    private const string NomeArquivoConfiguracao = "appsettings.Development.json";
+    private const string ConfigurationFileName = "appsettings.Development.json";
 
     public AppDbContext CreateDbContext(string[] args)
     {
-        var connectionString = LerConnectionString();
+        var connectionString = ReadConnectionString();
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.UseNpgsql(connectionString);
@@ -24,34 +24,34 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
         return new AppDbContext(optionsBuilder.Options);
     }
 
-    private static string LerConnectionString()
+    private static string ReadConnectionString()
     {
-        var diretorioApi = ResolverDiretorioProjetoApi();
+        var apiDirectory = ResolveApiProjectDirectory();
 
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(diretorioApi)
-            .AddJsonFile(NomeArquivoConfiguracao, optional: false)
+            .SetBasePath(apiDirectory)
+            .AddJsonFile(ConfigurationFileName, optional: false)
             .Build();
 
         return configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException(
-                $"ConnectionStrings:Default não encontrada em {Path.Combine(diretorioApi, NomeArquivoConfiguracao)}.");
+                $"ConnectionStrings:Default not found in {Path.Combine(apiDirectory, ConfigurationFileName)}.");
     }
 
-    private static string ResolverDiretorioProjetoApi()
+    private static string ResolveApiProjectDirectory()
     {
-        string[] candidatos =
+        string[] candidates =
         [
             Path.Combine(Directory.GetCurrentDirectory(), "src", "Rateio.Api"),
             Path.Combine(Directory.GetCurrentDirectory(), "..", "Rateio.Api"),
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Rateio.Api"),
         ];
 
-        var encontrado = candidatos.FirstOrDefault(
-            candidato => File.Exists(Path.Combine(candidato, NomeArquivoConfiguracao)));
+        var found = candidates.FirstOrDefault(
+            candidate => File.Exists(Path.Combine(candidate, ConfigurationFileName)));
 
-        return encontrado
+        return found
             ?? throw new InvalidOperationException(
-                $"Não encontrei {NomeArquivoConfiguracao} de Rateio.Api a partir de nenhum caminho candidato.");
+                $"Could not find {ConfigurationFileName} for Rateio.Api from any candidate path.");
     }
 }

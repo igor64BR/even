@@ -5,48 +5,48 @@ using Rateio.Application.Auth;
 namespace Rateio.Infrastructure.Auth;
 
 /// <summary>
-/// Implementação de <see cref="IGoogleTokenValidator"/> via Google.Apis.Auth
-/// (<see cref="GoogleJsonWebSignature.ValidateAsync"/>): verifica assinatura, emissor e audience
-/// contra os servidores do Google. Nunca loga o token recebido nem o payload decodificado.
+/// Implementation of <see cref="IGoogleTokenValidator"/> via Google.Apis.Auth
+/// (<see cref="GoogleJsonWebSignature.ValidateAsync"/>): checks signature, issuer, and audience
+/// against Google's servers. Never logs the received token nor the decoded payload.
 /// </summary>
-public sealed class GoogleTokenValidator(IOptions<GoogleAuthOptions> opcoes) : IGoogleTokenValidator
+public sealed class GoogleTokenValidator(IOptions<GoogleAuthOptions> options) : IGoogleTokenValidator
 {
-    private readonly GoogleAuthOptions _opcoes = opcoes.Value;
+    private readonly GoogleAuthOptions _options = options.Value;
 
-    public async Task<GoogleUserInfo> ValidarAsync(string idToken, CancellationToken cancellationToken = default)
+    public async Task<GoogleUserInfo> ValidateAsync(string idToken, CancellationToken cancellationToken = default)
     {
-        var payload = await ValidarAssinaturaEAudienceAsync(idToken);
+        var payload = await ValidateSignatureAndAudienceAsync(idToken);
 
-        GarantirEmailVerificado(payload);
+        EnsureEmailVerified(payload);
 
-        return new GoogleUserInfo(payload.Subject, NomeOuEmail(payload), payload.Email);
+        return new GoogleUserInfo(payload.Subject, NameOrEmail(payload), payload.Email);
     }
 
-    private async Task<GoogleJsonWebSignature.Payload> ValidarAssinaturaEAudienceAsync(string idToken)
+    private async Task<GoogleJsonWebSignature.Payload> ValidateSignatureAndAudienceAsync(string idToken)
     {
-        var configuracaoValidacao = new GoogleJsonWebSignature.ValidationSettings
+        var validationSettings = new GoogleJsonWebSignature.ValidationSettings
         {
-            Audience = [_opcoes.ClientId],
+            Audience = [_options.ClientId],
         };
 
         try
         {
-            return await GoogleJsonWebSignature.ValidateAsync(idToken, configuracaoValidacao);
+            return await GoogleJsonWebSignature.ValidateAsync(idToken, validationSettings);
         }
-        catch (InvalidJwtException erro)
+        catch (InvalidJwtException error)
         {
-            throw new GoogleTokenInvalidoException("ID token do Google rejeitado: " + erro.Message);
+            throw new InvalidGoogleTokenException("Google ID token rejected: " + error.Message);
         }
     }
 
-    private static void GarantirEmailVerificado(GoogleJsonWebSignature.Payload payload)
+    private static void EnsureEmailVerified(GoogleJsonWebSignature.Payload payload)
     {
         if (!payload.EmailVerified)
         {
-            throw new GoogleTokenInvalidoException("ID token do Google tem e-mail não verificado.");
+            throw new InvalidGoogleTokenException("Google ID token has an unverified e-mail.");
         }
     }
 
-    private static string NomeOuEmail(GoogleJsonWebSignature.Payload payload) =>
+    private static string NameOrEmail(GoogleJsonWebSignature.Payload payload) =>
         string.IsNullOrWhiteSpace(payload.Name) ? payload.Email : payload.Name;
 }

@@ -4,26 +4,26 @@ using Rateio.Infrastructure.Persistence.Entities;
 namespace Rateio.Infrastructure.Persistence;
 
 /// <summary>
-/// Contexto EF Core do Rateio. Vive em Rateio.Infrastructure — Rateio.Domain nunca referencia
-/// EF Core (constitution/T2: Domain não sabe que EF Core existe).
+/// Rateio's EF Core context. Lives in Rateio.Infrastructure — Rateio.Domain never references
+/// EF Core (constitution/T2: Domain doesn't know EF Core exists).
 /// </summary>
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<GrupoEntity> Grupos => Set<GrupoEntity>();
+    public DbSet<GroupEntity> Groups => Set<GroupEntity>();
 
-    public DbSet<ParticipanteEntity> Participantes => Set<ParticipanteEntity>();
+    public DbSet<ParticipantEntity> Participants => Set<ParticipantEntity>();
 
-    public DbSet<DespesaEntity> Despesas => Set<DespesaEntity>();
+    public DbSet<ExpenseEntity> Expenses => Set<ExpenseEntity>();
 
-    public DbSet<ParticipacaoDespesaEntity> ParticipacoesDeDespesa => Set<ParticipacaoDespesaEntity>();
+    public DbSet<ExpenseSplitEntity> ExpenseSplits => Set<ExpenseSplitEntity>();
 
-    public DbSet<QuitacaoEntity> Quitacoes => Set<QuitacaoEntity>();
+    public DbSet<SettlementEntity> Settlements => Set<SettlementEntity>();
 
-    public DbSet<UsuarioEntity> Usuarios => Set<UsuarioEntity>();
+    public DbSet<UserEntity> Users => Set<UserEntity>();
 
     public DbSet<RefreshTokenEntity> RefreshTokens => Set<RefreshTokenEntity>();
 
-    public DbSet<CodigoConviteEntity> CodigosConvite => Set<CodigoConviteEntity>();
+    public DbSet<InviteCodeEntity> InviteCodes => Set<InviteCodeEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

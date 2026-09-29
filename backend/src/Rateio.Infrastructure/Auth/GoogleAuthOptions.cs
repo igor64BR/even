@@ -1,15 +1,15 @@
 namespace Rateio.Infrastructure.Auth;
 
 /// <summary>
-/// Config de validação do ID token do Google. <see cref="ClientId"/> é a audience esperada — o
-/// client id OAuth do projeto no Google Cloud Console. Em <c>appsettings.Development.json</c> hoje
-/// é um placeholder; precisa ser trocado pelo client id real assim que o projeto Google Cloud
-/// existir (configuração externa, fora do escopo de T11 — ver T11 para detalhes de como testar
-/// manualmente depois disso).
+/// Config for validating the Google ID token. <see cref="ClientId"/> is the expected audience —
+/// the project's OAuth client id in the Google Cloud Console. In
+/// <c>appsettings.Development.json</c> today it's a placeholder; it needs to be swapped for the
+/// real client id as soon as the Google Cloud project exists (external configuration, out of
+/// scope for T11 — see T11 for details on how to test this manually afterwards).
 /// </summary>
 public sealed class GoogleAuthOptions
 {
-    public const string SecaoConfiguracao = "GoogleAuth";
+    public const string ConfigurationSection = "GoogleAuth";
 
     public required string ClientId { get; init; }
 }

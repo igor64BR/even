@@ -2,13 +2,13 @@ using Rateio.Application.Auth;
 
 namespace Rateio.Api.Contracts;
 
-/// <summary>Resposta de sucesso de <c>POST /auth/google</c>.</summary>
-public sealed record GoogleLoginResponse(string AccessToken, string RefreshToken, UsuarioResponse User)
+/// <summary>Success response of <c>POST /auth/google</c>.</summary>
+public sealed record GoogleLoginResponse(string AccessToken, string RefreshToken, UserResponse User)
 {
-    public static GoogleLoginResponse De(ResultadoAutenticacao resultado) => new(
-        resultado.AccessToken,
-        resultado.RefreshToken,
-        new UsuarioResponse(resultado.Usuario.Nome, resultado.Usuario.Email));
+    public static GoogleLoginResponse From(AuthenticationResult result) => new(
+        result.AccessToken,
+        result.RefreshToken,
+        new UserResponse(result.User.Name, result.User.Email));
 }
 
-public sealed record UsuarioResponse(string Nome, string Email);
+public sealed record UserResponse(string Name, string Email);

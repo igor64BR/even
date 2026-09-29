@@ -1,19 +1,19 @@
 using Rateio.Api.Hubs;
 using Rateio.Api.Middleware;
 using Rateio.Application;
-using Rateio.Application.Notificacoes;
+using Rateio.Application.Notifications;
 using Rateio.Infrastructure;
-using Rateio.Infrastructure.Notificacoes;
+using Rateio.Infrastructure.Notifications;
 using Serilog;
 using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog substitui os providers de log padrão do ASP.NET Core (RNF11: log estruturado em JSON
-// por requisição). CompactJsonFormatter emite um objeto JSON por linha, pronto para um
-// agregador de logs. `ReadFrom.Configuration` permite ajustar níveis via appsettings sem redeploy;
-// `Enrich.FromLogContext()` é o que faz o CorrelationIdMiddleware conseguir anexar o correlation
-// id a cada evento de log emitido durante a requisição.
+// Serilog replaces ASP.NET Core's default log providers (RNF11: structured JSON logging per
+// request). CompactJsonFormatter emits one JSON object per line, ready for a log aggregator.
+// `ReadFrom.Configuration` allows adjusting levels via appsettings without a redeploy;
+// `Enrich.FromLogContext()` is what lets CorrelationIdMiddleware attach the correlation id to every
+// log event emitted during the request.
 builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)
@@ -29,12 +29,12 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// T38.1: RateioHub (RF35/RF36) — a implementação real de INotificadorDeEventoDeGrupo (Application)
-// vive aqui, em Rateio.Api, porque é onde IHubContext<RateioHub> existe; registrada no composition
-// root em vez de em Rateio.Infrastructure.DependencyInjection.AddInfrastructure porque Infrastructure
-// não referencia Rateio.Api (RateioHub vive na camada mais externa).
+// T38.1: RateioHub (RF35/RF36) — the real implementation of IGroupEventNotifier (Application) lives
+// here, in Rateio.Api, because that's where IHubContext<RateioHub> exists; registered in the
+// composition root instead of in Rateio.Infrastructure.DependencyInjection.AddInfrastructure
+// because Infrastructure doesn't reference Rateio.Api (RateioHub lives in the outermost layer).
 builder.Services.AddSignalR();
-builder.Services.AddScoped<INotificadorDeEventoDeGrupo, NotificadorDeEventoDeGrupoSignalR>();
+builder.Services.AddScoped<IGroupEventNotifier, SignalRGroupEventNotifier>();
 
 var app = builder.Build();
 
@@ -45,27 +45,28 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Correlation id primeiro: precisa estar ativo antes do log de request/response do Serilog (e de
-// qualquer outro middleware) para que aquele log já carregue o id.
+// Correlation id first: it needs to be active before Serilog's request/response log (and any other
+// middleware) so that log already carries the id.
 app.UseCorrelationId();
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
-// T18: primeiro endpoint protegido do projeto (`POST /groups/sync`) — UseAuthentication precisa
-// rodar antes de UseAuthorization pra popular HttpContext.User a partir do JWT antes do
-// [Authorize] decidir se deixa passar.
+// T18: the project's first protected endpoint (`POST /groups/sync`) — UseAuthentication needs to
+// run before UseAuthorization so HttpContext.User is populated from the JWT before [Authorize]
+// decides whether to let the request through.
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// T38.1: mesma rota que Rateio.Infrastructure.DependencyInjection.AddAutenticacaoJwt usa pra saber
-// que uma requisição é handshake de Hub (e ler o JWT da query string em vez do header Authorization).
-app.MapHub<RateioHub>(RotaDoHubDeNotificacoes.Caminho);
+// T38.1: same route that Rateio.Infrastructure.DependencyInjection.AddJwtAuthentication uses to
+// know a request is a Hub handshake (and to read the JWT from the query string instead of the
+// Authorization header).
+app.MapHub<RateioHub>(NotificationHubRoute.Path);
 
-// RNF08: 200 quando as dependências (hoje: DB) estão saudáveis, 503 caso contrário.
-// Checks registrados em Rateio.Infrastructure.DependencyInjection.AddInfrastructure.
+// RNF08: 200 when dependencies (today: the DB) are healthy, 503 otherwise. Checks registered in
+// Rateio.Infrastructure.DependencyInjection.AddInfrastructure.
 app.MapHealthChecks("/health");
 
 app.Run();

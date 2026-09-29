@@ -1,41 +1,43 @@
 using Microsoft.Extensions.DependencyInjection;
 using Rateio.Application.Auth;
-using Rateio.Application.Despesas;
-using Rateio.Application.Grupos;
-using Rateio.Application.Notificacoes;
-using Rateio.Application.Quitacoes;
-using Rateio.Application.Simplificacao;
+using Rateio.Application.Expenses;
+using Rateio.Application.Groups;
+using Rateio.Application.Notifications;
+using Rateio.Application.Settlements;
+using Rateio.Application.Simplification;
 using Rateio.Domain;
 
 namespace Rateio.Application;
 
 /// <summary>
-/// Ponto de registro de DI da camada de Application. Registra casos de uso — nunca implementações
-/// concretas de Infrastructure, que se registram em <c>Rateio.Infrastructure.DependencyInjection</c>.
+/// DI registration point for the Application layer. Registers use cases — never concrete
+/// Infrastructure implementations, which are registered in
+/// <c>Rateio.Infrastructure.DependencyInjection</c>.
 /// </summary>
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddScoped<AutenticarComGoogleUseCase>();
-        services.AddScoped<RevogarSessaoUseCase>();
-        services.AddScoped<SincronizarGrupoUseCase>();
-        services.AddScoped<CriarDespesaUseCase>();
-        services.AddScoped<EditarDespesaUseCase>();
-        services.AddScoped<ExcluirDespesaUseCase>();
-        services.AddScoped<GerarCodigoConviteUseCase>();
-        services.AddScoped<EntrarNoGrupoViaConviteUseCase>();
-        services.AddScoped<ObterGrupoUseCase>();
-        services.AddScoped<ObterSimplificacaoDeDividasUseCase>();
-        services.AddScoped<RegistrarQuitacaoUseCase>();
-        services.AddScoped<ObterEventosDeGrupoUseCase>();
+        services.AddScoped<AuthenticateWithGoogleUseCase>();
+        services.AddScoped<RevokeSessionUseCase>();
+        services.AddScoped<SyncGroupUseCase>();
+        services.AddScoped<CreateExpenseUseCase>();
+        services.AddScoped<EditExpenseUseCase>();
+        services.AddScoped<DeleteExpenseUseCase>();
+        services.AddScoped<GenerateInviteCodeUseCase>();
+        services.AddScoped<JoinGroupViaInviteUseCase>();
+        services.AddScoped<GetGroupUseCase>();
+        services.AddScoped<GetDebtSimplificationUseCase>();
+        services.AddScoped<RegisterSettlementUseCase>();
+        services.AddScoped<GetGroupEventsUseCase>();
 
-        // T32: o motor de simplificação (Rateio.Domain, T31) não tem estado — Singleton evita uma
-        // instância nova por requisição sem ganhar nada em troca. Registrado aqui (Application,
-        // não Infrastructure) porque é o motor do domínio, não um detalhe de infraestrutura; e não
-        // em Rateio.Domain porque esse projeto não depende de Microsoft.Extensions.DependencyInjection
-        // (Domain sem dependências externas é decisão estrutural do projeto).
-        services.AddSingleton<IMotorDeSimplificacaoDeDividas, MotorDeSimplificacaoDeDividas>();
+        // T32: the simplification engine (Rateio.Domain, T31) has no state — Singleton avoids a
+        // new instance per request for no benefit in return. Registered here (Application, not
+        // Infrastructure) because it's the domain's engine, not an infrastructure detail; and not
+        // in Rateio.Domain because that project doesn't depend on
+        // Microsoft.Extensions.DependencyInjection (Domain having no external dependencies is a
+        // structural decision of the project).
+        services.AddSingleton<IDebtSimplificationEngine, DebtSimplificationEngine>();
 
         return services;
     }

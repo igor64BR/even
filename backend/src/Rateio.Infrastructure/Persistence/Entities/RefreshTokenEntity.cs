@@ -1,24 +1,24 @@
 namespace Rateio.Infrastructure.Persistence.Entities;
 
 /// <summary>
-/// Sessão de refresh emitida para um usuário (T11). Guarda só o hash do refresh token — nunca o
-/// valor em texto puro — pra que um vazamento do banco não exponha tokens de sessão utilizáveis.
-/// <see cref="RevogadoEm"/> existe desde já (mesmo sem nada que o preencha ainda) pra T14 (logout)
-/// não precisar de outra migration só pra isso.
+/// A refresh session issued for a user (T11). Stores only the refresh token's hash — never the
+/// plain-text value — so that a database leak doesn't expose usable session tokens.
+/// <see cref="RevokedAt"/> already exists (even with nothing filling it in yet) so T14 (logout)
+/// doesn't need another migration just for that.
 /// </summary>
 public class RefreshTokenEntity
 {
     public Guid Id { get; set; }
 
-    public Guid UsuarioId { get; set; }
+    public Guid UserId { get; set; }
 
     public string TokenHash { get; set; } = string.Empty;
 
-    public DateTimeOffset CriadoEm { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 
-    public DateTimeOffset ExpiraEm { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
 
-    public DateTimeOffset? RevogadoEm { get; set; }
+    public DateTimeOffset? RevokedAt { get; set; }
 
-    public UsuarioEntity? Usuario { get; set; }
+    public UserEntity? User { get; set; }
 }

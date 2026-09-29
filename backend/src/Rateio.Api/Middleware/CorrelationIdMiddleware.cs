@@ -3,18 +3,19 @@ using Serilog.Context;
 namespace Rateio.Api.Middleware;
 
 /// <summary>
-/// Garante um identificador de correlação por requisição (RNF11 — observabilidade). Lê o header
-/// <c>X-Correlation-Id</c> de entrada; se ausente, gera um novo. O valor é publicado no
-/// <see cref="LogContext"/> do Serilog para que todo log estruturado emitido durante a requisição
-/// (inclusive o log de request/response do <c>UseSerilogRequestLogging</c>) carregue o mesmo id, e
-/// é devolvido no header de resposta para permitir correlacionar cliente, API e logs.
+/// Ensures a per-request correlation identifier (RNF11 — observability). Reads the incoming
+/// <c>X-Correlation-Id</c> header; if absent, generates a new one. The value is published to
+/// Serilog's <see cref="LogContext"/> so that every structured log emitted during the request
+/// (including the request/response log from <c>UseSerilogRequestLogging</c>) carries the same id,
+/// and it's returned in the response header to allow correlating client, API, and logs.
 /// </summary>
 /// <remarks>
-/// Fica em <c>Rateio.Api</c>, não em <c>Rateio.Infrastructure</c>: é um middleware do pipeline
-/// HTTP do ASP.NET Core (opera sobre <see cref="HttpContext"/>), não uma integração com um serviço
-/// externo. O projeto Infrastructure hoje nem referencia o SDK Web (só <c>Microsoft.NET.Sdk</c>) —
-/// movê-lo para lá exigiria puxar dependências de ASP.NET Core para uma camada que deveria
-/// permanecer agnóstica de transporte HTTP, só para reexportar algo que só o composition root usa.
+/// Lives in <c>Rateio.Api</c>, not <c>Rateio.Infrastructure</c>: it's an ASP.NET Core HTTP pipeline
+/// middleware (operates on <see cref="HttpContext"/>), not an integration with an external service.
+/// The Infrastructure project today doesn't even reference the Web SDK (only
+/// <c>Microsoft.NET.Sdk</c>) — moving it there would require pulling ASP.NET Core dependencies into
+/// a layer that should stay agnostic of HTTP transport, just to re-export something only the
+/// composition root uses.
 /// </remarks>
 public sealed class CorrelationIdMiddleware
 {
@@ -62,8 +63,8 @@ public sealed class CorrelationIdMiddleware
 public static class CorrelationIdMiddlewareExtensions
 {
     /// <summary>
-    /// Registra o <see cref="CorrelationIdMiddleware"/> no pipeline. Deve vir antes de
-    /// <c>UseSerilogRequestLogging</c> para que o log de conclusão da requisição já carregue o
+    /// Registers <see cref="CorrelationIdMiddleware"/> in the pipeline. Must come before
+    /// <c>UseSerilogRequestLogging</c> so the request-completion log already carries the
     /// correlation id.
     /// </summary>
     public static IApplicationBuilder UseCorrelationId(this IApplicationBuilder app)

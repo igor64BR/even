@@ -4,9 +4,9 @@ using System.Text;
 namespace Rateio.Infrastructure.Auth;
 
 /// <summary>
-/// SHA-256 do refresh token, em hex. Existe pra que nunca precisemos guardar (nem comparar) o
-/// refresh token em texto puro no banco — se o banco vazar, os hashes sozinhos não permitem
-/// reconstruir sessões válidas.
+/// SHA-256 of the refresh token, in hex. This exists so we never need to store (or compare) the
+/// refresh token in plain text in the database — if the database leaks, the hashes alone don't
+/// allow reconstructing valid sessions.
 /// </summary>
 internal static class RefreshTokenHasher
 {

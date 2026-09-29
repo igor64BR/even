@@ -16,15 +16,15 @@ public class RefreshTokenEntityConfiguration : IEntityTypeConfiguration<RefreshT
             .HasMaxLength(128)
             .IsRequired();
 
-        // Único: dois refresh tokens nunca colidem no mesmo hash (SHA-256 hex), e o índice também
-        // acelera a busca por token no momento do refresh (T14).
+        // Unique: two refresh tokens never collide on the same hash (SHA-256 hex), and the index
+        // also speeds up looking up a token at refresh time (T14).
         builder.HasIndex(refreshToken => refreshToken.TokenHash)
             .IsUnique();
 
-        builder.Property(refreshToken => refreshToken.CriadoEm)
+        builder.Property(refreshToken => refreshToken.CreatedAt)
             .IsRequired();
 
-        builder.Property(refreshToken => refreshToken.ExpiraEm)
+        builder.Property(refreshToken => refreshToken.ExpiresAt)
             .IsRequired();
     }
 }

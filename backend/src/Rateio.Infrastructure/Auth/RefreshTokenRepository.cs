@@ -6,49 +6,50 @@ using Rateio.Infrastructure.Persistence.Entities;
 namespace Rateio.Infrastructure.Auth;
 
 /// <summary>
-/// Implementação de <see cref="IRefreshTokenRepository"/> via EF Core / <see cref="AppDbContext"/>.
-/// Guarda só o hash do refresh token — nunca o valor recebido (ver <see cref="RefreshTokenHasher"/>).
+/// Implementation of <see cref="IRefreshTokenRepository"/> via EF Core / <see cref="AppDbContext"/>.
+/// Stores only the refresh token's hash — never the received value (see
+/// <see cref="RefreshTokenHasher"/>).
 /// </summary>
 public sealed class RefreshTokenRepository(AppDbContext dbContext) : IRefreshTokenRepository
 {
-    public async Task SalvarAsync(
-        Guid usuarioId,
+    public async Task SaveAsync(
+        Guid userId,
         string refreshToken,
-        DateTimeOffset expiraEm,
+        DateTimeOffset expiresAt,
         CancellationToken cancellationToken = default)
     {
-        var entidade = new RefreshTokenEntity
+        var entity = new RefreshTokenEntity
         {
             Id = Guid.NewGuid(),
-            UsuarioId = usuarioId,
+            UserId = userId,
             TokenHash = RefreshTokenHasher.Hash(refreshToken),
-            CriadoEm = DateTimeOffset.UtcNow,
-            ExpiraEm = expiraEm,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ExpiresAt = expiresAt,
         };
 
-        dbContext.RefreshTokens.Add(entidade);
+        dbContext.RefreshTokens.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RevogarAsync(
+    public async Task RevokeAsync(
         string refreshToken,
         CancellationToken cancellationToken = default)
     {
         var tokenHash = RefreshTokenHasher.Hash(refreshToken);
 
-        // Busca pelo hash (índice único, ver RefreshTokenEntityConfiguration) — o valor em texto
-        // puro do refresh token nunca é usado em where/log, só pra derivar o hash acima.
-        var entidade = await dbContext.RefreshTokens
+        // Look up by hash (unique index, see RefreshTokenEntityConfiguration) — the refresh
+        // token's plain-text value is never used in a where/log, only to derive the hash above.
+        var entity = await dbContext.RefreshTokens
             .SingleOrDefaultAsync(refreshTokenEntity => refreshTokenEntity.TokenHash == tokenHash, cancellationToken);
 
-        if (entidade is null || entidade.RevogadoEm is not null)
+        if (entity is null || entity.RevokedAt is not null)
         {
-            // Token desconhecido ou já revogado: idempotente, não é erro (ver doc de
-            // IRefreshTokenRepository.RevogarAsync).
+            // Unknown or already-revoked token: idempotent, not an error (see
+            // IRefreshTokenRepository.RevokeAsync's doc).
             return;
         }
 
-        entidade.RevogadoEm = DateTimeOffset.UtcNow;
+        entity.RevokedAt = DateTimeOffset.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

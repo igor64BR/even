@@ -1,8 +1,8 @@
 namespace Rateio.Application.Auth;
 
 /// <summary>
-/// Dados extraídos do ID token do Google depois que a assinatura e a audience já foram validadas.
-/// Não carrega nenhum segredo (nunca o token em si) — só o que o backend precisa pra
-/// identificar/criar o usuário local.
+/// Data extracted from the Google ID token after the signature and audience have already been
+/// validated. Carries no secret (never the token itself) — only what the backend needs to
+/// identify/create the local user.
 /// </summary>
-public sealed record GoogleUserInfo(string GoogleSubjectId, string Nome, string Email);
+public sealed record GoogleUserInfo(string GoogleSubjectId, string Name, string Email);

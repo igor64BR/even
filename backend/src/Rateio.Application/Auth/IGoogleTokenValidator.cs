@@ -1,19 +1,19 @@
 namespace Rateio.Application.Auth;
 
 /// <summary>
-/// Abstrai a validação do ID token do Google (assinatura, emissor e audience). A implementação
-/// concreta (Google.Apis.Auth) vive em Rateio.Infrastructure — Application não referencia a
-/// biblioteca do Google, só esta interface (Dependency Inversion: facilita testar o resto do fluxo
-/// sem token real e trocar de provedor sem tocar em casos de uso ou controller).
+/// Abstracts validation of the Google ID token (signature, issuer, and audience). The concrete
+/// implementation (Google.Apis.Auth) lives in Rateio.Infrastructure — Application never
+/// references the Google library, only this interface (Dependency Inversion: makes it easy to
+/// test the rest of the flow without a real token and to swap providers without touching use
+/// cases or the controller).
 /// </summary>
 public interface IGoogleTokenValidator
 {
     /// <summary>
-    /// Valida o ID token e extrai a identidade do usuário.
+    /// Validates the ID token and extracts the user's identity.
     /// </summary>
-    /// <exception cref="GoogleTokenInvalidoException">
-    /// Token com assinatura inválida, audience/emissor incorretos, expirado, ou e-mail não
-    /// verificado.
+    /// <exception cref="InvalidGoogleTokenException">
+    /// Token with invalid signature, wrong audience/issuer, expired, or unverified e-mail.
     /// </exception>
-    Task<GoogleUserInfo> ValidarAsync(string idToken, CancellationToken cancellationToken = default);
+    Task<GoogleUserInfo> ValidateAsync(string idToken, CancellationToken cancellationToken = default);
 }

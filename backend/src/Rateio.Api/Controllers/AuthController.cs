@@ -5,64 +5,64 @@ using Rateio.Application.Auth;
 namespace Rateio.Api.Controllers;
 
 /// <summary>
-/// T11: troca de ID token do Google por um JWT próprio. Sem lógica de validação/emissão de token
-/// aqui — o controller só recebe a requisição, chama <see cref="AutenticarComGoogleUseCase"/> e
-/// traduz o resultado (ou a falha) pra HTTP.
+/// T11: exchanges a Google ID token for our own JWT. No token validation/issuance logic here — the
+/// controller only receives the request, calls <see cref="AuthenticateWithGoogleUseCase"/>, and
+/// translates the result (or failure) to HTTP.
 /// </summary>
 [ApiController]
 [Route("auth")]
 public class AuthController(
-    AutenticarComGoogleUseCase autenticarComGoogle,
-    RevogarSessaoUseCase revogarSessao) : ControllerBase
+    AuthenticateWithGoogleUseCase authenticateWithGoogle,
+    RevokeSessionUseCase revokeSession) : ControllerBase
 {
     [HttpPost("google")]
     public async Task<ActionResult<GoogleLoginResponse>> Google(
-        [FromBody] GoogleLoginRequest requisicao,
+        [FromBody] GoogleLoginRequest request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(requisicao.IdToken))
+        if (string.IsNullOrWhiteSpace(request.IdToken))
         {
             return Problem(
-                title: "idToken é obrigatório.",
+                title: "idToken is required.",
                 statusCode: StatusCodes.Status400BadRequest);
         }
 
         try
         {
-            var resultado = await autenticarComGoogle.ExecutarAsync(requisicao.IdToken, cancellationToken);
+            var result = await authenticateWithGoogle.ExecuteAsync(request.IdToken, cancellationToken);
 
-            return Ok(GoogleLoginResponse.De(resultado));
+            return Ok(GoogleLoginResponse.From(result));
         }
-        catch (GoogleTokenInvalidoException erro)
+        catch (InvalidGoogleTokenException error)
         {
-            // Mensagem da exceção já vem sem o token (ver GoogleTokenValidator) — segura de
-            // devolver ao cliente e de deixar o Serilog logar via UseSerilogRequestLogging.
+            // The exception message already comes without the token (see GoogleTokenValidator) —
+            // safe to return to the client and to let Serilog log it via UseSerilogRequestLogging.
             return Problem(
-                title: "ID token do Google inválido.",
-                detail: erro.Message,
+                title: "Invalid Google ID token.",
+                detail: error.Message,
                 statusCode: StatusCodes.Status401Unauthorized);
         }
     }
 
     /// <summary>
-    /// T14.1: revoga a sessão do refresh token informado (ver <see cref="LogoutRequest"/> pra
-    /// justificativa de por que ele vem no corpo, não no header Authorization). Sempre 204,
-    /// mesmo se o token já estava revogado ou não existia — <see cref="RevogarSessaoUseCase"/> é
-    /// idempotente de propósito, pra não expor ao cliente se um dado token chegou a existir.
+    /// T14.1: revokes the session for the given refresh token (see <see cref="LogoutRequest"/> for
+    /// why it comes in the body, not the Authorization header). Always 204, even if the token was
+    /// already revoked or never existed — <see cref="RevokeSessionUseCase"/> is deliberately
+    /// idempotent, so as not to expose to the client whether a given token ever existed.
     /// </summary>
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(
-        [FromBody] LogoutRequest requisicao,
+        [FromBody] LogoutRequest request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(requisicao.RefreshToken))
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
         {
             return Problem(
-                title: "refreshToken é obrigatório.",
+                title: "refreshToken is required.",
                 statusCode: StatusCodes.Status400BadRequest);
         }
 
-        await revogarSessao.ExecutarAsync(requisicao.RefreshToken, cancellationToken);
+        await revokeSession.ExecuteAsync(request.RefreshToken, cancellationToken);
 
         return NoContent();
     }

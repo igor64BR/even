@@ -1,17 +1,17 @@
 namespace Rateio.Application.Auth;
 
 /// <summary>
-/// Abstrai a emissão do par de tokens da aplicação. A implementação concreta (assinatura JWT,
-/// geração do refresh token opaco) vive em Rateio.Infrastructure — Application só conhece esta
-/// interface, o que permite testar a emissão (expiração, distinção entre tokens) sem subir banco
-/// nem validar um ID token real do Google.
+/// Abstracts issuing the application's token pair. The concrete implementation (JWT signing,
+/// opaque refresh token generation) lives in Rateio.Infrastructure — Application only knows this
+/// interface, which allows testing issuance (expiration, distinction between tokens) without
+/// spinning up a database or validating a real Google ID token.
 /// </summary>
 public interface IJwtIssuer
 {
     /// <summary>
-    /// Emite um novo access token (curto, RNF06: ≤ 15 min) e um novo refresh token (opaco) para o
-    /// usuário informado. Não persiste nada — a persistência do refresh token (pra permitir
-    /// revogação) é responsabilidade de <see cref="IRefreshTokenRepository"/>.
+    /// Issues a new access token (short-lived, RNF06: &lt;= 15 min) and a new (opaque) refresh
+    /// token for the given user. Persists nothing — persisting the refresh token (to allow
+    /// revocation) is <see cref="IRefreshTokenRepository"/>'s responsibility.
     /// </summary>
-    ParDeTokens Emitir(Usuario usuario);
+    TokenPair Issue(User user);
 }

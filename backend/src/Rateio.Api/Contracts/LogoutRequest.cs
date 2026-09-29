@@ -1,10 +1,10 @@
 namespace Rateio.Api.Contracts;
 
 /// <summary>
-/// Corpo de <c>POST /auth/logout</c>. O refresh token vai no corpo — não lido do header
-/// <c>Authorization</c> — porque é ele, e não o access token, quem identifica a sessão a revogar
-/// (é o que <see cref="Rateio.Application.Auth.IRefreshTokenRepository"/> guarda o hash de). Isso
-/// também deixa o logout funcionar mesmo com o access token já expirado (RNF06: até 15 min),
-/// exatamente o caso comum de "usuário abriu o app depois de um tempo e quer sair".
+/// Body of <c>POST /auth/logout</c>. The refresh token goes in the body — not read from the
+/// <c>Authorization</c> header — because it, not the access token, is what identifies the session
+/// to revoke (it's what <see cref="Rateio.Application.Auth.IRefreshTokenRepository"/> stores the
+/// hash of). This also lets logout work even with an already-expired access token (RNF06: up to 15
+/// min), exactly the common case of "user opened the app after a while and wants to sign out".
 /// </summary>
 public sealed record LogoutRequest(string RefreshToken);

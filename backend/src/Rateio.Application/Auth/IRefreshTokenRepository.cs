@@ -1,23 +1,24 @@
 namespace Rateio.Application.Auth;
 
 /// <summary>
-/// Persistência das sessões (refresh tokens) emitidas, pra permitir revogação futura (T14). A
-/// implementação concreta nunca guarda o refresh token em texto puro — só um hash dele.
+/// Persistence of issued sessions (refresh tokens), to allow future revocation (T14). The
+/// concrete implementation never stores the refresh token in plain text — only a hash of it.
 /// </summary>
 public interface IRefreshTokenRepository
 {
-    Task SalvarAsync(
-        Guid usuarioId,
+    Task SaveAsync(
+        Guid userId,
         string refreshToken,
-        DateTimeOffset expiraEm,
+        DateTimeOffset expiresAt,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Marca <c>RevogadoEm</c> na sessão correspondente a <paramref name="refreshToken"/> (T14).
-    /// Idempotente: token já revogado ou desconhecido não é erro, só não faz nada — evita expor ao
-    /// chamador se um dado token chegou a existir.
+    /// Marks the corresponding session's revocation timestamp for
+    /// <paramref name="refreshToken"/> (T14). Idempotent: an already-revoked or unknown token is
+    /// not an error, it just does nothing — this avoids exposing to the caller whether a given
+    /// token ever existed.
     /// </summary>
-    Task RevogarAsync(
+    Task RevokeAsync(
         string refreshToken,
         CancellationToken cancellationToken = default);
 }

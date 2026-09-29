@@ -22,169 +22,141 @@ namespace Rateio.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.CodigoConviteEntity", b =>
-                {
-                    b.Property<string>("Codigo")
-                        .HasMaxLength(12)
-                        .HasColumnType("character varying(12)");
-
-                    b.Property<DateTimeOffset>("CriadoEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("ExpiraEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GrupoId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Codigo");
-
-                    b.HasIndex("GrupoId");
-
-                    b.ToTable("codigos_convite", (string)null);
-                });
-
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.DespesaEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ExpenseEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CriadoEm")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateOnly>("Data")
+                    b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
-                    b.Property<string>("Descricao")
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid>("GrupoId")
+                    b.Property<Guid>("GroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("PagadorId")
+                    b.Property<Guid>("PayerId")
                         .HasColumnType("uuid");
 
-                    b.Property<long>("ValorTotalCentavos")
+                    b.Property<long>("TotalAmountCents")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GrupoId");
+                    b.HasIndex("GroupId");
 
-                    b.ToTable("despesas", (string)null);
+                    b.ToTable("expenses", (string)null);
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.GrupoEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ExpenseSplitEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Categoria")
-                        .HasColumnType("integer");
+                    b.Property<long?>("AmountCents")
+                        .HasColumnType("bigint");
 
-                    b.Property<DateTimeOffset>("CriadoEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("DonoUsuarioId")
+                    b.Property<Guid>("ExpenseId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Nome")
+                    b.Property<Guid>("ParticipantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("Weight")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpenseId");
+
+                    b.ToTable("expense_splits", (string)null);
+                });
+
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.GroupEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
-                    b.Property<bool>("Sincronizado")
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Synced")
                         .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DonoUsuarioId");
+                    b.HasIndex("OwnerUserId");
 
-                    b.ToTable("grupos", (string)null);
+                    b.ToTable("groups", (string)null);
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ParticipacaoDespesaEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.InviteCodeEntity", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("GroupId");
+
+                    b.ToTable("invite_codes", (string)null);
+                });
+
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ParticipantEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("DespesaId")
+                    b.Property<Guid>("GroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ParticipanteId")
-                        .HasColumnType("uuid");
-
-                    b.Property<long?>("Peso")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Tipo")
-                        .HasColumnType("integer");
-
-                    b.Property<long?>("ValorCentavos")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DespesaId");
-
-                    b.ToTable("participacoes_despesa", (string)null);
-                });
-
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ParticipanteEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("EhConvidado")
+                    b.Property<bool>("IsGuest")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid>("GrupoId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Nome")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GrupoId");
+                    b.HasIndex("GroupId");
 
-                    b.ToTable("participantes", (string)null);
-                });
-
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.QuitacaoEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CriadoEm")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GrupoId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("PagadorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RecebedorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("ValorCentavos")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GrupoId");
-
-                    b.ToTable("quitacoes", (string)null);
+                    b.ToTable("participants", (string)null);
                 });
 
             modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.RefreshTokenEntity", b =>
@@ -193,13 +165,13 @@ namespace Rateio.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CriadoEm")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTimeOffset>("ExpiraEm")
+                    b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTimeOffset?>("RevogadoEm")
+                    b.Property<DateTimeOffset?>("RevokedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("TokenHash")
@@ -207,7 +179,7 @@ namespace Rateio.Infrastructure.Persistence.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
-                    b.Property<Guid>("UsuarioId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -215,18 +187,46 @@ namespace Rateio.Infrastructure.Persistence.Migrations
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
-                    b.HasIndex("UsuarioId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("refresh_tokens", (string)null);
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.UsuarioEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.SettlementEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CriadoEm")
+                    b.Property<long>("AmountCents")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PayeeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PayerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.ToTable("settlements", (string)null);
+                });
+
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.UserEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
@@ -239,7 +239,7 @@ namespace Rateio.Infrastructure.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -252,99 +252,99 @@ namespace Rateio.Infrastructure.Persistence.Migrations
                     b.HasIndex("GoogleSubjectId")
                         .IsUnique();
 
-                    b.ToTable("usuarios", (string)null);
+                    b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.CodigoConviteEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ExpenseEntity", b =>
                 {
-                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.GrupoEntity", "Grupo")
-                        .WithMany()
-                        .HasForeignKey("GrupoId")
+                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.GroupEntity", "Group")
+                        .WithMany("Expenses")
+                        .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Grupo");
+                    b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.DespesaEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ExpenseSplitEntity", b =>
                 {
-                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.GrupoEntity", "Grupo")
-                        .WithMany("Despesas")
-                        .HasForeignKey("GrupoId")
+                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.ExpenseEntity", "Expense")
+                        .WithMany("Splits")
+                        .HasForeignKey("ExpenseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Grupo");
+                    b.Navigation("Expense");
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.GrupoEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.GroupEntity", b =>
                 {
-                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.UsuarioEntity", "Dono")
+                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.UserEntity", "Owner")
                         .WithMany()
-                        .HasForeignKey("DonoUsuarioId")
+                        .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Dono");
+                    b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ParticipacaoDespesaEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.InviteCodeEntity", b =>
                 {
-                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.DespesaEntity", "Despesa")
-                        .WithMany("Participacoes")
-                        .HasForeignKey("DespesaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Despesa");
-                });
-
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ParticipanteEntity", b =>
-                {
-                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.GrupoEntity", "Grupo")
-                        .WithMany("Participantes")
-                        .HasForeignKey("GrupoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Grupo");
-                });
-
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.QuitacaoEntity", b =>
-                {
-                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.GrupoEntity", "Grupo")
+                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.GroupEntity", "Group")
                         .WithMany()
-                        .HasForeignKey("GrupoId")
+                        .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Grupo");
+                    b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ParticipantEntity", b =>
+                {
+                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.GroupEntity", "Group")
+                        .WithMany("Participants")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
                 });
 
             modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.RefreshTokenEntity", b =>
                 {
-                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.UsuarioEntity", "Usuario")
+                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.UserEntity", "User")
                         .WithMany("RefreshTokens")
-                        .HasForeignKey("UsuarioId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Usuario");
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.DespesaEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.SettlementEntity", b =>
                 {
-                    b.Navigation("Participacoes");
+                    b.HasOne("Rateio.Infrastructure.Persistence.Entities.GroupEntity", "Group")
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.GrupoEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.ExpenseEntity", b =>
                 {
-                    b.Navigation("Despesas");
-
-                    b.Navigation("Participantes");
+                    b.Navigation("Splits");
                 });
 
-            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.UsuarioEntity", b =>
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.GroupEntity", b =>
+                {
+                    b.Navigation("Expenses");
+
+                    b.Navigation("Participants");
+                });
+
+            modelBuilder.Entity("Rateio.Infrastructure.Persistence.Entities.UserEntity", b =>
                 {
                     b.Navigation("RefreshTokens");
                 });
