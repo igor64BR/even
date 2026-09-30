@@ -7,12 +7,12 @@ using Tally.Domain;
 namespace Tally.Application.Tests.Expenses;
 
 /// <summary>
-/// Covers T23.2 with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/> (same
-/// pattern as <c>SyncGroupUseCaseTests</c>): no test here touches EF/Postgres. The three rules of
-/// the task's deliverable — a valid expense persists, a nonexistent group becomes
+/// Covers this use case with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/> (same
+/// pattern as <c>SyncGroupUseCaseTests</c>): no test here touches EF/Postgres. Key behaviors —
+/// a valid expense persists, a nonexistent group becomes
 /// <see cref="GroupNotFoundException"/> (the controller maps it to 404), a user without access
 /// becomes <see cref="AccessDeniedException"/> (controller maps it to 403) — each has its own test.
-/// T38.2 adds coverage of <see cref="IGroupEventNotifier"/>: mocked here (no real Hub), with its
+/// This also covers <see cref="IGroupEventNotifier"/>: mocked here (no real Hub), with its
 /// own test confirming the right event fires after persisting.
 /// </summary>
 public class CreateExpenseUseCaseTests

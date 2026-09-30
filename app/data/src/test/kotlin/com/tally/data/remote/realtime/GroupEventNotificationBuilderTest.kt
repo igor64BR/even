@@ -6,7 +6,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Covers T40/T41: the human-readable text built by [GroupEventNotificationBuilder] matches
+ * Confirms the human-readable text built by [GroupEventNotificationBuilder] matches
  * `prototype/notifications.html` ("Alice logged 'Description' — $X — in 'Group name'."/"Alice
  * settled $X with Bob in 'Group name'."), including the substitution with "You"/"you" for the
  * local participant, and the dedupe id ("expense:"/"settlement:" + the server id). Pure — no

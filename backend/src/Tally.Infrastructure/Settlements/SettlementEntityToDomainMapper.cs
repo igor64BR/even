@@ -4,7 +4,7 @@ using Tally.Infrastructure.Persistence.Entities;
 namespace Tally.Infrastructure.Settlements;
 
 /// <summary>
-/// EF-to-domain mapping of a settlement (T32) — mirrors
+/// EF-to-domain mapping of a settlement — mirrors
 /// <see cref="Expenses.ExpenseEntityToDomainMapper"/> on the settlement side. With no
 /// subtypes/discriminator to reconstruct (unlike <see cref="Domain.ExpenseSplit"/>), the
 /// translation is direct enough to not need private per-step methods.

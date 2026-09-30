@@ -17,7 +17,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tally.app.ui.theme.LocalTallyColors
 
 /**
- * "Your groups" screen (RF40/RF41), the app's entry point. `factory` injects the
+ * "Your groups" screen, the app's entry point. `factory` injects the
  * [GroupListViewModel] through the manual composition of [com.tally.app.di.AppContainer] (no DI
  * framework yet) — the Composable itself doesn't know where the state comes from.
  */
@@ -84,9 +84,9 @@ fun GroupListScreen(
                 unreadNotificationsCount = unreadNotificationsCount,
                 authenticatedUserName = authenticatedUserName,
                 onTabSelected = { tab ->
-                    // T12/T41 — "Profile" is the equivalent of the prototype's auth-slot (see
+                    // "Profile" is the equivalent of the prototype's auth-slot (see
                     // prototype/app.js, renderHeaderAuth); "Notifications" opens the notification
-                    // center (T41.1). "Groups" is the current screen, it doesn't navigate.
+                    // center. "Groups" is the current screen, it doesn't navigate.
                     when (tab) {
                         TallyBottomTab.GROUPS -> Unit
                         TallyBottomTab.NOTIFICATIONS -> onNotificationsClick()

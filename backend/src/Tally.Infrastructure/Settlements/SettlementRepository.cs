@@ -6,8 +6,8 @@ using Tally.Infrastructure.Persistence;
 namespace Tally.Infrastructure.Settlements;
 
 /// <summary>
-/// Implementation of <see cref="ISettlementRepository"/> via EF Core / <see cref="AppDbContext"/>
-/// (T32/T35) — same pattern as <c>Tally.Infrastructure.Expenses.ExpenseRepository</c>:
+/// Implementation of <see cref="ISettlementRepository"/> via EF Core / <see cref="AppDbContext"/> —
+/// same pattern as <c>Tally.Infrastructure.Expenses.ExpenseRepository</c>:
 /// <c>AsNoTracking</c> (read-only) read, filtered by <c>GroupId</c>, whose access was already
 /// validated by the caller (<c>GetDebtSimplificationUseCase</c>/<c>RegisterSettlementUseCase</c>)
 /// before any of these methods is invoked.
@@ -26,9 +26,9 @@ public sealed class SettlementRepository(AppDbContext dbContext) : ISettlementRe
     }
 
     /// <summary>
-    /// T35: inserts the settlement directly via the FK (<c>SettlementEntity.GroupId</c>), without
+    /// Inserts the settlement directly via the FK (<c>SettlementEntity.GroupId</c>), without
     /// loading the entire <c>GroupEntity</c> just to attach one more row — same decision as
-    /// <c>ExpenseRepository.AddAsync</c> (T23), for the same reason: the group has already been
+    /// <c>ExpenseRepository.AddAsync</c>, for the same reason: the group has already been
     /// confirmed to exist by <c>IGroupRepository.GetAccessAsync</c> before this method is called.
     /// </summary>
     public async Task AddAsync(Guid groupId, Settlement settlement, CancellationToken cancellationToken = default)
@@ -41,7 +41,7 @@ public sealed class SettlementRepository(AppDbContext dbContext) : ISettlementRe
     }
 
     /// <summary>
-    /// T39.1: same pattern as <c>ExpenseRepository.GetOccurredSinceAsync</c> — <c>AsNoTracking</c>
+    /// Same pattern as <c>ExpenseRepository.GetOccurredSinceAsync</c> — <c>AsNoTracking</c>
     /// read projected directly in the query, filtered by group and by <c>CreatedAt</c> after
     /// <paramref name="since"/>. Access to the group was already validated by the caller
     /// (<c>Notifications.GetGroupEventsUseCase</c>).

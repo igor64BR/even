@@ -6,8 +6,8 @@ namespace Tally.Infrastructure.Expenses;
 
 /// <summary>
 /// Domain-to-EF mapping of an expense, extracted from
-/// <c>Tally.Infrastructure.Groups.GroupRepository</c> (T18.1) to be reused by T23
-/// (<see cref="ExpenseRepository"/>), which persists a single new expense in a group that already
+/// <c>Tally.Infrastructure.Groups.GroupRepository</c> to be reused by
+/// <see cref="ExpenseRepository"/>, which persists a single new expense in a group that already
 /// exists instead of an entire group graph. Mirrors
 /// <c>Tally.Application.Expenses.ExpenseMapper</c> on the opposite side of the translation (Object
 /// Calisthenics: small, named methods, one per step).

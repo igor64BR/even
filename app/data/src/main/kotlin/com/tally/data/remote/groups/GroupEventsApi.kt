@@ -7,12 +7,8 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Mirrors `GET /groups/{id}/events?since=` (T39.1 — pull fallback, RF35/RF36; constitution.md
- * principle 3: no third-party push, this is the real way to recover what the realtime connection
- * missed). T39 ran in parallel with T40/T41; this client was written against the contract
- * documented in its task before the endpoint actually existed, then checked line by line against
- * `GroupsController.GetEvents`/`GetGroupEventsUseCase` (T39.1, already merged into `master`,
- * commit "feat(api): pull fallback endpoint for events (T39.1)") — no adjustment needed: the
+ * Mirrors `GET /groups/{id}/events?since=` — the pull fallback that recovers what the realtime
+ * connection missed, since there's no third-party push. The
  * backend returns `IReadOnlyList<object>.Cast<object>()` built from concrete
  * `ExpenseCreatedEvent`/`DebtSettledEvent` instances (not the `IGroupEvent` interface, precisely so
  * `System.Text.Json` serializes each type's own fields, not just the interface's) — each list item
@@ -26,7 +22,7 @@ import retrofit2.http.Query
  * setup in the client. `type` serializes as `Int` (same enum convention already documented in
  * `RemoteGroupSyncRepository`, since there's no `JsonStringEnumConverter`).
  *
- * **Real gap, confirmed in the backend code** (no longer just a guess): neither
+ * **Real gap, confirmed in the backend code**: neither
  * `ExpenseCreatedEvent` nor `DebtSettledEvent` carries a timestamp — `GetGroupEventsUseCase` uses
  * `CreatedAt` only to sort/filter server-side and discards the field before building the response
  * event (`.Select(item => item.Event)`). `com.tally.data.remote.realtime.MissedGroupEventsSynchronizer`

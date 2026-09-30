@@ -5,19 +5,18 @@ using Tally.Application.Settlements;
 namespace Tally.Application.Notifications;
 
 /// <summary>
-/// T39.1: <c>GET /groups/{id}/events?since={iso8601Timestamp}</c> — pull fallback
-/// (constitution.md principle 3: no third-party push, the app only receives events in real time
-/// while the SignalR connection (T38) is active; on reconnecting, it needs to recover what it
-/// missed). There's no events table: expenses and settlements already have a server timestamp
-/// (<c>CreatedAt</c>) good enough to reconstruct "what happened in this group since X" — this use
-/// case just queries both, each through its own read projection
+/// <c>GET /groups/{id}/events?since={iso8601Timestamp}</c> — pull fallback: the app only receives
+/// events in real time while the SignalR connection is active; on reconnecting, it needs to
+/// recover what it missed. There's no events table: expenses and settlements already have a
+/// server timestamp (<c>CreatedAt</c>) good enough to reconstruct "what happened in this group
+/// since X" — this use case just queries both, each through its own read projection
 /// (<see cref="ExpenseOccurred"/>/<see cref="SettlementOccurred"/>, exposed by the already-existing
-/// repositories), builds the same event type T38 already uses in real time
+/// repositories), builds the same event type used in real time
 /// (<see cref="ExpenseCreatedEvent"/>/<see cref="DebtSettledEvent"/>) and returns everything
 /// interleaved, sorted by <c>CreatedAt</c> ascending.
 ///
-/// Same access pattern as <c>Simplification.GetDebtSimplificationUseCase</c> (T32) and
-/// <c>Settlements.RegisterSettlementUseCase</c> (T35): validates RNF07 via
+/// Same access pattern as <c>Simplification.GetDebtSimplificationUseCase</c> and
+/// <c>Settlements.RegisterSettlementUseCase</c>: validates access via
 /// <see cref="GroupAccessVerification"/> before any read —
 /// <see cref="GroupNotFoundException"/> if the group doesn't exist (404, mapped in the controller),
 /// <see cref="AccessDeniedException"/> if it exists but the authenticated user doesn't have access

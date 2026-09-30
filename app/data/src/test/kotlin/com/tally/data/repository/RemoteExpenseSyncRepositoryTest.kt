@@ -24,10 +24,10 @@ import retrofit2.HttpException
 import retrofit2.Response
 
 /**
- * Covers T29 (app: edit/delete expense) against T28 (backend, `PUT`/`DELETE
- * /groups/{id}/expenses/{expenseId}`, running in parallel — see the documented pending item in
- * [com.tally.domain.repository.RemoteExpenseRepository]). Same simple test-double pattern as
- * [RemoteGroupSyncRepositoryTest] (T19.1): no mocking framework, reusing [FakeGroupsApi]/
+ * Covers edit/delete expense against the backend (`PUT`/`DELETE
+ * /groups/{id}/expenses/{expenseId}`) — see the documented pending item in
+ * [com.tally.domain.repository.RemoteExpenseRepository]. Same simple test-double pattern as
+ * [RemoteGroupSyncRepositoryTest]: no mocking framework, reusing [FakeGroupsApi]/
  * [FakeTokenStorage] already used there.
  */
 class RemoteExpenseSyncRepositoryTest {

@@ -28,12 +28,10 @@ import com.tally.domain.model.Money
 import java.time.LocalDate
 
 /**
- * The "New expense" screen (T24), opened from the "+" button in "Group details" (T42.2/RF42) —
- * until T42.4 it opened directly from [com.tally.app.ui.groups.GroupCard] in the group list, a
- * temporary shortcut because the detail screen didn't exist yet. `factory` injects the
+ * The "New expense" screen, opened from the "+" button in "Group details". `factory` injects the
  * [CreateExpenseViewModel] through [com.tally.app.di.AppContainer]'s manual composition, the same
  * pattern as [com.tally.app.ui.creategroup.CreateGroupRoute]. A non-null `factory.expenseId`
- * (T29) is the only trigger for edit mode — neither this Route nor [CreateExpenseScreen] decide
+ * is the only trigger for edit mode — neither this Route nor [CreateExpenseScreen] decide
  * that, they just pass along [CreateExpenseUiState.isEditMode] to paint the title/button.
  *
  * [key] identifies this visit to the screen for Compose's `viewModel()` (see the KDoc of

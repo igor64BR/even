@@ -13,16 +13,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * State for the "join group via link" flow (T22.1/T22.2). The source of truth for "is signed in?"
+ * State for the "join group via link" flow. The source of truth for "is signed in?"
  * is [AuthRepository.getSessionFlow], same MVVM pattern as [com.tally.app.ui.auth.AuthViewModel]
- * (T12) and [com.tally.app.ui.groupdetail.GroupDetailViewModel] (T19/T42.4): `combine` + `stateIn`,
+ * and [com.tally.app.ui.groupdetail.GroupDetailViewModel]: `combine` + `stateIn`,
  * no network logic in the Composable.
  *
  * This ViewModel only decides *what to show*; it never navigates on its own. When there's no
  * session, [uiState] becomes [JoinGroupUiState.NeedsLogin] and whoever observes it (`JoinGroupRoute`)
  * is responsible for navigating to the login screen and coming back here afterwards — the same
- * [inviteCode] instance is reused to resume (T22, "keep the intent... after a successful login,
- * automatically resume the flow").
+ * [inviteCode] instance is reused to resume the flow automatically after a successful login.
  */
 class JoinGroupViewModel(
     private val inviteCode: String,

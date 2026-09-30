@@ -2,11 +2,10 @@ package com.tally.domain.model
 
 /**
  * Monetary amount used in the Android domain: a wrapped integer of cents (`Long`), never raw —
- * mirrors `Money` (`backend/src/Tally.Domain/Money.cs`) and the decision recorded in "Money:
- * representation and rounding" in `algorithm-spec.md`: inside the domain there's no
+ * mirrors `Money` (`backend/src/Tally.Domain/Money.cs`): inside the domain there's no
  * `Float`/`Double`/`BigDecimal`, only integer cent arithmetic — bit-for-bit reproducible with the
- * C# counterpart, a prerequisite for T33 (the Kotlin simplification engine) to match T31 (C#) on
- * the same input. `Float`/`Double`/string formatting only appear at the UI boundary (see
+ * C# counterpart, a prerequisite for the Kotlin simplification engine to match the C# one on the
+ * same input. `Float`/`Double`/string formatting only appear at the UI boundary (see
  * `com.tally.app.ui.format.MoneyFormat`), never here.
  *
  * `value class` is the Object Calisthenics wrap ("wrap all primitives") with no runtime allocation

@@ -11,12 +11,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * One test per case in the "Test cases" table in
- * `specs/001-mvp-expense-splitting/algorithm-spec.md`, named with each case's stable id (e.g.
- * `case-01-simple` -> [case01Simple]). The five `case-*` cases are the minimum floor required by
- * the spec and by T33; the extra tests at the end of the file (sum invariant, weighted split,
- * fixed-amount split) mirror the same extra tests in `DebtSimplificationEngineTests.cs` (T31), to
- * prove the two ports of the engine haven't diverged in any split mode.
+ * One test per algorithm test case, named with each case's stable id (e.g. `case-01-simple` ->
+ * [case01Simple]). The extra tests at the end of the file (sum invariant, weighted split,
+ * fixed-amount split) mirror the same extra tests in `DebtSimplificationEngineTests.cs`, to prove
+ * the two ports of the engine haven't diverged in any split mode.
  *
  * The numeric values here need to match, number for number, with
  * `backend/tests/Tally.Domain.Tests/DebtSimplificationEngineTests.cs`.

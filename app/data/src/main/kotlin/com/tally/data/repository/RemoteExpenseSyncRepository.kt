@@ -10,8 +10,8 @@ import retrofit2.HttpException
 
 /**
  * Implementation of [RemoteExpenseRepository] on top of [GroupsApi] (`PUT`/`DELETE
- * /groups/{id}/expenses/{expenseId}`, T28/T29) + [TokenStorage] (T12.2, reading the access token) —
- * same pattern as [RemoteGroupSyncRepository] (T19.1): no network type leaks into `:domain`, every
+ * /groups/{id}/expenses/{expenseId}`) + [TokenStorage] (reading the access token) —
+ * same pattern as [RemoteGroupSyncRepository]: no network type leaks into `:domain`, every
  * session/network/HTTP failure becomes a [GroupSyncException] with a message ready for the screen.
  * [Expense.toSyncDto] (`ExpenseSyncMapper.kt`) is the same translation [RemoteGroupSyncRepository]
  * uses in the bulk `POST /groups/sync`.

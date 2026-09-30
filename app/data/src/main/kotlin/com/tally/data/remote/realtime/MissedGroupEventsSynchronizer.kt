@@ -9,21 +9,20 @@ import java.time.format.DateTimeFormatter
 import retrofit2.HttpException
 
 /**
- * T39 (pull fallback, RF35/RF36; constitution.md principle 3 — no third-party push): fetches
+ * Pull fallback (no third-party push): fetches
  * events missed since the last known local notification and records each one via
  * [GroupEventRecorder]. [SignalRGroupRealtimeGateway] calls [sync] both on the first successful
- * connection and on every reconnection — covering "network dropped and came back" (T40.2) as well
+ * connection and on every reconnection — covering "network dropped and came back" as well
  * as "app was killed and reopened" (without this second case, an event missed while the app was
  * fully closed would never show up: there's no reconnection to trigger the pull in that scenario —
- * the same kill-state limitation constitution.md principle 3 already documents as an accepted
- * trade-off).
+ * an accepted kill-state limitation trade-off).
  *
  * Extracted from [SignalRGroupRealtimeGateway] to be testable without any `HubConnection`
  * (`MissedGroupEventsSynchronizerTest`, with a test double [GroupEventsApi] — same pattern as
  * `RemoteGroupSyncRepositoryTest`): [SignalRGroupRealtimeGateway] only decides WHEN to call this,
  * this class decides WHAT to do when called.
  *
- * [since]: `GroupsController.GetEvents` (T39.1, already merged — `[FromQuery] DateTimeOffset
+ * [since]: `GroupsController.GetEvents` (`[FromQuery] DateTimeOffset
  * since` with no default) requires the parameter to always be present, so we never omit `since` —
  * with no local notification yet ([NotificationRepository.getLastEventTimestamp] `null`), we ask
  * since [Instant.EPOCH] (equivalent to "the whole history"), never omitting the parameter (that
@@ -54,7 +53,7 @@ internal class MissedGroupEventsSynchronizer(
         } catch (error: IOException) {
             // No connection to the backend — the next successful reconnection tries again.
         } catch (error: HttpException) {
-            // RNF07 denied access (403) or the group no longer exists on the server (404) — same
+            // Denied access (403) or the group no longer exists on the server (404) — same
             // rationale: never bring down the realtime connection because of this.
         }
     }

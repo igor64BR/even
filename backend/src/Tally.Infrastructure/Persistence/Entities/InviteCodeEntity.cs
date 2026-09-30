@@ -1,7 +1,7 @@
 namespace Tally.Infrastructure.Persistence.Entities;
 
 /// <summary>
-/// Persistence mapping of an invite code (T21.1). The primary key is the <see cref="Code"/> itself
+/// Persistence mapping of an invite code. The primary key is the <see cref="Code"/> itself
 /// (not a synthetic <see cref="Guid"/>): it already needs to be globally unique for
 /// <c>POST /groups/join/{code}</c> to resolve unambiguously, so a separate id would only duplicate
 /// that guarantee. It has its own table (not a loose column on <c>groups</c>) because the history of

@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tally.app.ui.theme.LocalTallyColors
 
-/** `.empty-state` from `settle.html` when `transactions` is empty — "group settled up" (RF44). */
+/** `.empty-state` from `settle.html` when `transactions` is empty — "group settled up". */
 @Composable
 fun SettledUpState(groupName: String, modifier: Modifier = Modifier) {
     val colors = LocalTallyColors.current

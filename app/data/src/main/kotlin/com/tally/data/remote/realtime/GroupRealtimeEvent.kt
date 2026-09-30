@@ -6,7 +6,7 @@ import com.tally.data.remote.groups.GroupEventDto
 
 /**
  * Transport-independent internal representation of a group event — the same type serves both the
- * payload received live over SignalR ([ExpenseCreatedPayload]/[DebtSettledPayload]) and the T39
+ * payload received live over SignalR ([ExpenseCreatedPayload]/[DebtSettledPayload]) and the
  * pull-fallback DTO ([GroupEventDto]), so [GroupEventRecorder]/[GroupEventNotificationBuilder]
  * don't need to know where the event came from.
  */

@@ -1,7 +1,7 @@
 namespace Tally.Application.Auth;
 
 /// <summary>
-/// Orchestrates Google login (T11): validates the ID token, makes sure a matching local user
+/// Orchestrates Google login: validates the ID token, makes sure a matching local user
 /// exists, issues the application's token pair, and persists the refresh token so it can be
 /// revoked later. This is where — not in the controller — the step sequence and the "new vs.
 /// existing user" rules live, keeping the controller a pure HTTP orchestrator.

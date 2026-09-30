@@ -16,7 +16,7 @@ class GroupTest {
 
     @Test
     fun `marking as synced is a copy with isSynced=true, without mutating the original`() {
-        // Group is an immutable data class (T7) -- unlike Group.cs (an aggregate with a private
+        // Group is an immutable data class -- unlike Group.cs (an aggregate with a private
         // setter + MarkAsSynced()), the transition here is the copy() the data class already
         // gives for free, with no need for a new method that would just delegate to copy() anyway.
         val local = Group(id = "g1", name = "Barbecue", createdAt = Instant.EPOCH)
@@ -29,7 +29,7 @@ class GroupTest {
 
     @Test
     fun `a new group starts with no remoteId, syncing fills in both fields together`() {
-        // T19.2: isSynced and remoteId always travel together -- never one filled without the other.
+        // isSynced and remoteId always travel together -- never one filled without the other.
         val local = Group(id = "g1", name = "Barbecue", createdAt = Instant.EPOCH)
 
         assertTrue(local.remoteId == null)

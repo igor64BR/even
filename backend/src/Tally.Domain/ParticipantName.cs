@@ -2,7 +2,7 @@ namespace Tally.Domain;
 
 /// <summary>
 /// Name of a <see cref="Participant"/>, wrapped instead of a raw <see cref="string"/> (Object
-/// Calisthenics: "wrap all primitives and strings"). For a guest participant (RF06 — spec.md)
+/// Calisthenics: "wrap all primitives and strings"). For a guest participant
 /// the name is the only data that exists, so validating that it's never empty here protects the
 /// only information that identifies that person within the group.
 /// </summary>

@@ -5,9 +5,9 @@ using Tally.Application.Groups;
 namespace Tally.Application.Tests.Expenses;
 
 /// <summary>
-/// Covers T28.2 with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/> (same
-/// pattern as <c>EditExpenseUseCaseTests</c>): no test here touches EF/Postgres. Task deliverable:
-/// deletion respects RNF07 (404 nonexistent group, 403 without access) and an expense that doesn't
+/// Covers this use case with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/> (same
+/// pattern as <c>EditExpenseUseCaseTests</c>): no test here touches EF/Postgres. Key behaviors:
+/// deletion respects access rules (404 nonexistent group, 403 without access) and an expense that doesn't
 /// exist in that group becomes 404 via <see cref="ExpenseNotFoundException"/>.
 /// </summary>
 public class DeleteExpenseUseCaseTests

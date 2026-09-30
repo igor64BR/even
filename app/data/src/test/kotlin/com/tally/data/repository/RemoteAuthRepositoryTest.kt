@@ -20,8 +20,8 @@ import retrofit2.HttpException
 import retrofit2.Response
 
 /**
- * Covers T14.2: `RemoteAuthRepository.signOut` always clears the local session — even when the
- * backend revocation (`POST /auth/logout`, T14.1) fails due to no network or an HTTP error —
+ * Covers `RemoteAuthRepository.signOut` always clears the local session — even when the
+ * backend revocation (`POST /auth/logout`) fails due to no network or an HTTP error —
  * because the user can't be stuck signed in on the device due to a network failure (local logout
  * takes priority over the server one, see `RemoteAuthRepository.signOut`'s doc).
  *

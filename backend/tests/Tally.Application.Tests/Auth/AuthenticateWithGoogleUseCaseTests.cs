@@ -4,7 +4,7 @@ using Tally.Application.Auth;
 namespace Tally.Application.Tests.Auth;
 
 /// <summary>
-/// Covers the orchestration of <see cref="AuthenticateWithGoogleUseCase"/> (T11) entirely with
+/// Covers the orchestration of <see cref="AuthenticateWithGoogleUseCase"/> entirely with
 /// doubles — no test here needs a real Google ID token or a database. The "invalid/expired token"
 /// path is simulated by making the mocked <see cref="IGoogleTokenValidator"/> throw
 /// <see cref="InvalidGoogleTokenException"/>, exactly like the real implementation would.

@@ -8,7 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Covers T26.2: a fixed-amount sum that doesn't match the total blocks
+ * A fixed-amount sum that doesn't match the total blocks
  * [isFixedAmountSplitComplete] (and, by extension, `onSaveClick` in [CreateExpenseViewModel]).
  * Plain JUnit, no Robolectric — same convention as [EqualSplitCalculatorTest].
  */

@@ -9,8 +9,8 @@ using Tally.Infrastructure.Persistence.Entities;
 namespace Tally.Infrastructure.Groups;
 
 /// <summary>
-/// Implementation of <see cref="IGroupRepository"/> via EF Core / <see cref="AppDbContext"/>
-/// (T18.1, T23.2). Domain-to-EF mapping in small, named methods, mirroring
+/// Implementation of <see cref="IGroupRepository"/> via EF Core / <see cref="AppDbContext"/>.
+/// Domain-to-EF mapping in small, named methods, mirroring
 /// <c>SyncedGroupBuilder</c> (Application) on the opposite side of the translation. Doesn't
 /// manually set <c>GroupId</c>/<c>ExpenseId</c> on child entities — EF resolves that via
 /// relationship fixup from the navigation collections, the same way the configurations in
@@ -29,7 +29,7 @@ public sealed class GroupRepository(AppDbContext dbContext) : IGroupRepository
     }
 
     /// <summary>
-    /// T23.2: minimal read (no participants/expenses) just to validate existence + RNF07 before
+    /// Minimal read (no participants/expenses) just to validate existence and access before
     /// adding a new expense — <c>AsNoTracking</c> because it's read-only.
     /// </summary>
     public Task<GroupAccess?> GetAccessAsync(Guid groupId, CancellationToken cancellationToken = default) =>
@@ -40,7 +40,7 @@ public sealed class GroupRepository(AppDbContext dbContext) : IGroupRepository
             .FirstOrDefaultAsync(cancellationToken);
 
     /// <summary>
-    /// T21.2: minimal read (name/category/participants, no expenses) for
+    /// Minimal read (name/category/participants, no expenses) for
     /// <c>JoinGroupViaInviteUseCase</c> to reconstruct the domain aggregate before calling
     /// <c>Group.AddParticipant</c> — <c>AsNoTracking</c> because it's read-only, the actual insert
     /// happens in <see cref="AddParticipantAsync"/>.
@@ -56,9 +56,9 @@ public sealed class GroupRepository(AppDbContext dbContext) : IGroupRepository
     }
 
     /// <summary>
-    /// T21.2: inserts the participant directly via the FK (<c>GroupId</c>), without reloading the
+    /// Inserts the participant directly via the FK (<c>GroupId</c>), without reloading the
     /// whole <see cref="GroupEntity"/> — same pattern as
-    /// <c>Tally.Infrastructure.Expenses.ExpenseRepository.AddAsync</c> (T23.2).
+    /// <c>Tally.Infrastructure.Expenses.ExpenseRepository.AddAsync</c>.
     /// </summary>
     public Task AddParticipantAsync(Guid groupId, Participant participant, CancellationToken cancellationToken = default)
     {
@@ -111,8 +111,8 @@ public sealed class GroupRepository(AppDbContext dbContext) : IGroupRepository
         IsGuest = participant.IsGuest,
     };
 
-    // T23 extracted building the ExpenseEntity itself (including splits) into
-    // Tally.Infrastructure.Expenses.ExpenseEntityMapper — reused here and by the new
+    // Building the ExpenseEntity itself (including splits) lives in
+    // Tally.Infrastructure.Expenses.ExpenseEntityMapper — reused here and by
     // ExpenseRepository, instead of duplicated.
     private static List<ExpenseEntity> BuildExpenseEntities(IReadOnlyList<ExpenseToPersist> expenses) =>
         expenses.Select(ExpenseEntityMapper.Build).ToList();

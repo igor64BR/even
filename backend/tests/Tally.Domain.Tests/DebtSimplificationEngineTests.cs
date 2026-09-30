@@ -3,13 +3,10 @@ using Tally.Domain;
 namespace Tally.Domain.Tests;
 
 /// <summary>
-/// One test per case in the "Casos de teste" table in
-/// specs/001-mvp-expense-splitting/algorithm-spec.md, named after each case's stable id
+/// One test per debt-simplification case, named after each case's stable id
 /// (e.g. <c>case-01-simples</c> -&gt; <see cref="Case01Simple_OneDebtBetweenTwoPeople"/>).
-/// The five <c>case-*</c> cases are the minimum floor required by the spec and by T31; the extra
-/// tests at the end of the file (weighted split and fixed-amount split) cover the other two split
-/// modes described in the spec, which T31 also exercises but that don't have their own stable
-/// case id.
+/// The extra tests at the end of the file (weighted split and fixed-amount split) cover the other
+/// two split modes, which don't have their own stable case id.
 /// </summary>
 public class DebtSimplificationEngineTests
 {

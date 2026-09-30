@@ -11,14 +11,14 @@ import com.tally.domain.repository.RemoteExpenseRepository
 /**
  * No DI framework in the project yet — a manual factory that injects
  * [com.tally.app.di.AppContainer]'s repositories into the [CreateExpenseViewModel]. Same pattern
- * as [com.tally.app.ui.creategroup.CreateGroupViewModelFactory] (T16), with an additional
+ * as [com.tally.app.ui.creategroup.CreateGroupViewModelFactory], with an additional
  * [groupId] because, unlike "New group", this form always belongs to an already-existing group.
  *
- * [expenseId] (T29) is `null` for "New expense" and the id of the expense being edited for "Edit
+ * [expenseId] is `null` for "New expense" and the id of the expense being edited for "Edit
  * expense" — [groupRepository]/[remoteExpenseRepository] are only actually used in edit mode
  * (propagating the change to the backend when the group is already synced), but they're part of
- * the factory for both modes because it's the same [CreateExpenseViewModel] for both (T29,
- * "editing is state, not a new screen").
+ * the factory for both modes because it's the same [CreateExpenseViewModel] for both
+ * ("editing is state, not a new screen").
  */
 class CreateExpenseViewModelFactory(
     private val groupId: String,

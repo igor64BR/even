@@ -3,9 +3,9 @@ using Tally.Domain;
 namespace Tally.Application.Groups;
 
 /// <summary>
-/// Payload of <c>POST /groups/sync</c> (T18.1): the full local state of a group (Room, app) that
+/// Payload of <c>POST /groups/sync</c>: the full local state of a group (Room, app) that
 /// has never touched the backend yet. Carries no "owner"/"user" field at all — whoever syncs is
-/// always the authenticated user from the JWT itself (RNF07), never a value received in the
+/// always the authenticated user from the JWT itself, never a value received in the
 /// request body, so there's no way for one user to sync on behalf of another here.
 ///
 /// Lives in Application (not Api.Contracts) because it's consumed directly by
@@ -41,7 +41,7 @@ public sealed record SyncedExpenseRequest(
     SplitTypeRequest SplitType,
     IReadOnlyList<SyncedExpenseSplitRequest> Splits);
 
-/// <summary>Mirrors the three concrete subtypes of <see cref="ExpenseSplit"/> (RF17/18/19).</summary>
+/// <summary>Mirrors the three concrete subtypes of <see cref="ExpenseSplit"/>.</summary>
 public enum SplitTypeRequest
 {
     Equal,

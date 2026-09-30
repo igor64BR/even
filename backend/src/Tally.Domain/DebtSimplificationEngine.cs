@@ -1,8 +1,7 @@
 namespace Tally.Domain;
 
 /// <summary>
-/// Reference implementation of <see cref="IDebtSimplificationEngine"/>, a line-by-line
-/// translation of the pseudocode in algorithm-spec.md.
+/// Reference implementation of <see cref="IDebtSimplificationEngine"/>.
 /// </summary>
 public sealed class DebtSimplificationEngine : IDebtSimplificationEngine
 {
@@ -155,7 +154,7 @@ public sealed class DebtSimplificationEngine : IDebtSimplificationEngine
     /// <summary>
     /// Finds and removes the largest remaining balance from the list: amount desc, tie broken by
     /// ParticipantId asc. Re-selecting the largest on every call (instead of sorting once and
-    /// walking with pointers) is intentional — see algorithm-spec.md, computeSettlement section.
+    /// walking with pointers) is intentional.
     /// </summary>
     private static ParticipantWithBalance RemoveLargest(List<ParticipantWithBalance> participants)
     {

@@ -23,8 +23,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Covers T16.2 (client-side validation) and T16.3 (local persistence via Room). Same Robolectric
- * pattern as `GroupListViewModelTest` (T8): an in-memory Room database, no emulator, real DAOs
+ * Covers client-side validation and local persistence via Room. Same Robolectric
+ * pattern as `GroupListViewModelTest`: an in-memory Room database, no emulator, real DAOs
  * behind [RoomGroupRepository]/[RoomParticipantRepository].
  */
 @OptIn(ExperimentalCoroutinesApi::class)

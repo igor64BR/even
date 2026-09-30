@@ -5,13 +5,13 @@ using Tally.Domain;
 namespace Tally.Application.Tests.Groups;
 
 /// <summary>
-/// Covers T18.1/T18.2 entirely with a mocked <see cref="IGroupRepository"/> (same pattern as
+/// Covers this use case entirely with a mocked <see cref="IGroupRepository"/> (same pattern as
 /// <c>AuthenticateWithGoogleUseCaseTests</c>): no test here touches EF/Postgres. The central part —
-/// "a group with expenses syncs correctly, balance matches T31's engine" — is verified by capturing
-/// the <see cref="GroupToSync"/> the use case passed to the repository and feeding the mapped
-/// expenses into the real <see cref="DebtSimplificationEngine"/>: if the DTO-to-domain mapping
-/// (<see cref="SyncedGroupBuilder"/>) is right, the recomputed balance matches the value expected
-/// by hand.
+/// a group with expenses syncs correctly and the balance matches the engine's result — is verified
+/// by capturing the <see cref="GroupToSync"/> the use case passed to the repository and feeding the
+/// mapped expenses into the real <see cref="DebtSimplificationEngine"/>: if the DTO-to-domain
+/// mapping (<see cref="SyncedGroupBuilder"/>) is right, the recomputed balance matches the value
+/// expected by hand.
 /// </summary>
 public class SyncGroupUseCaseTests
 {
@@ -40,7 +40,7 @@ public class SyncGroupUseCaseTests
         Assert.Equal(AuthenticatedUserId, captured!.OwnerUserId);
         Assert.Equal(request.Name, captured.Group.Name.Value);
         Assert.Equal(request.Category, captured.Group.Category);
-        Assert.True(captured.Group.Synced, "T18.2: a synced group needs to become the source of truth.");
+        Assert.True(captured.Group.Synced, "A synced group needs to become the source of truth.");
         Assert.Equal(2, captured.Group.Participants.Count);
         Assert.Single(captured.Expenses);
     }
@@ -72,7 +72,7 @@ public class SyncGroupUseCaseTests
 
         var useCase = CreateUseCase();
         // Ana pays 1000 cents, split equally between Ana and Bruno: each ends up with half —
-        // exactly the engine's "case-01-simples" (algorithm-spec.md), just built from the payload
+        // the same scenario as the engine's simplest case, just built from the payload
         // instead of a hand-built Expense.
         var request = RequestWithOneEqualSplitExpense(out var anaId, out var brunoId);
 
@@ -148,7 +148,7 @@ public class SyncGroupUseCaseTests
         var balances = _engine.ComputeBalances(mappedExpenses, settlements: []);
 
         // The sum of every balance is always zero, regardless of the split-type mix (engine
-        // invariant, T31).
+        // invariant).
         Assert.Equal(0, balances.Values.Sum(v => v.Cents));
 
         var lodging = mappedExpenses.Single(d => d.TotalAmount == Money.FromCents(3000));

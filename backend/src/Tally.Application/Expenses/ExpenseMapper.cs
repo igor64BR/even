@@ -5,8 +5,8 @@ namespace Tally.Application.Expenses;
 
 /// <summary>
 /// DTO-to-domain mapping of an expense, extracted from
-/// <c>Tally.Application.Groups.SyncedGroupBuilder</c> (T18.1) to be reused by T23
-/// (<c>POST /groups/{id}/expenses</c>, a single new expense) without duplicating logic that
+/// <c>Tally.Application.Groups.SyncedGroupBuilder</c> to be reused by
+/// <c>POST /groups/{id}/expenses</c> (a single new expense) without duplicating logic that
 /// already existed for the bulk sync case. Still reuses the expense DTOs from
 /// <see cref="Tally.Application.Groups"/> (<see cref="SyncedExpenseRequest"/> and friends) instead
 /// of creating a second set of types with the same shape — the payload of "one new expense" is
@@ -14,7 +14,7 @@ namespace Tally.Application.Expenses;
 ///
 /// One named method per step, with no single method doing the whole translation at once (Object
 /// Calisthenics) — and without bypassing domain validation: whoever validates the
-/// <see cref="ExpenseSplit"/> subtypes is still T31's constructors.
+/// <see cref="ExpenseSplit"/> subtypes is still the domain constructors.
 /// </summary>
 internal static class ExpenseMapper
 {

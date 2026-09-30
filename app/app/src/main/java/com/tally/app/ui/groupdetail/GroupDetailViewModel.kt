@@ -35,21 +35,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * State of the "Group details" screen (T42.2, RF42) — the actual UI consumer of
- * [DebtSimplificationEngine] (T33): before this task the engine was ready and tested, but no
- * screen called [DebtSimplificationEngine.computeBalances]. The balance is always recomputed from
- * scratch from the current history of expenses + settlements (`algorithm-spec.md`,
- * `computeBalances`'s "Business rules" section) — never an incremental counter.
+ * State of the "Group details" screen — the actual UI consumer of [DebtSimplificationEngine]. The
+ * balance is always recomputed from scratch from the current history of expenses + settlements —
+ * never an incremental counter.
  *
  * Sources: [GroupRepository] (the group's name/isSynced, filtered from
- * [GroupRepository.getGroupsFlow] because there's no reactive "single group" version — the same
- * approach [Group]-by-id already lacked before T42), [ParticipantRepository], [ExpenseRepository]
- * and, since T42.1, [SettlementRepository] — all four in Room, zero network (constitution.md,
- * principle 1).
+ * [GroupRepository.getGroupsFlow] because there's no reactive "single group" version),
+ * [ParticipantRepository], [ExpenseRepository] and [SettlementRepository] — all four in Room, zero
+ * network.
  *
- * [AuthRepository]/[RemoteGroupRepository] only come in for the "Sync this group" action (T19),
- * which T42.4 moves here from the list card — the same logic [GroupListViewModel] had before
- * T42.4, now scoped to a single `groupId` instead of every group at once.
+ * [AuthRepository]/[RemoteGroupRepository] only come in for the "Sync this group" action — the
+ * same logic [GroupListViewModel] had, now scoped to a single `groupId` instead of every group at
+ * once.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupDetailViewModel(
@@ -85,7 +82,7 @@ class GroupDetailViewModel(
     )
 
     /**
-     * T19.1/T19.2, reused: sends group + participants + expenses to the backend; on success,
+     * Sends group + participants + expenses to the backend; on success,
      * persists `isSynced=true` + `remoteId` to Room. A network failure never changes Room —
      * `isSynced` stays `false`, only [syncOverride] becomes [GroupSyncActionUiState.Failed].
      */
@@ -116,11 +113,10 @@ class GroupDetailViewModel(
     }
 
     /**
-     * T29.2: deletes the expense locally (Room) — called only after the dialog's confirmation
+     * Deletes the expense locally (Room) — called only after the dialog's confirmation
      * ([GroupDetailScreen]) already happened, this function is never the "tap to delete" trigger
      * itself. `uiState` reflects the deletion on its own, via the same combined `Flow` that already
-     * recomputes the balance on every change in [expenseRepository] (T33/T42.2) — no extra state
-     * needed here.
+     * recomputes the balance on every change in [expenseRepository] — no extra state needed here.
      */
     fun onDeleteExpenseClick(expenseId: String) {
         viewModelScope.launch {
@@ -130,11 +126,11 @@ class GroupDetailViewModel(
     }
 
     /**
-     * T29: propagates the deletion to the backend when the group is already synced — the same
+     * Propagates the deletion to the backend when the group is already synced — the same
      * rationale as
      * [com.tally.app.ui.createexpense.CreateExpenseViewModel.propagateUpdateIfSynced]: the local
      * deletion already happened on the line above, best-effort and silent, never undoes the local
-     * deletion nor blocks the UI waiting for server confirmation (constitution.md, principle 1).
+     * deletion nor blocks the UI waiting for server confirmation.
      */
     private suspend fun propagateDeleteIfSynced(expenseId: String) {
         val group = groupRepository.getGroupById(groupId) ?: return
@@ -147,12 +143,12 @@ class GroupDetailViewModel(
     }
 
     /**
-     * T40.1: connects the [groupRealtimeGateway] while this group is synced and the user is
+     * Connects the [groupRealtimeGateway] while this group is synced and the user is
      * authenticated — disconnects as soon as either condition stops holding (group not synced yet,
      * session ended) and reconnects if it holds again. Called explicitly by [GroupDetailRoute] via
      * `DisposableEffect` (not automatically in `init`) because the screen, not the `ViewModel`,
-     * knows when it's actually in the foreground — the same care constitution.md principle 3 asks
-     * for: "don't connect the Hub globally, only when a synced group is being viewed".
+     * knows when it's actually in the foreground — the Hub is never connected globally, only while
+     * a synced group is being viewed.
      *
      * Idempotent: calling again with a job already running does nothing.
      */
@@ -267,7 +263,7 @@ private fun List<ExpenseSplit>.splitTypeLabel(): String = when (firstOrNull()) {
     null -> ""
 }
 
-/** An already-synced group or a signed-out user: the action is hidden (the same rule as T19). */
+/** An already-synced group or a signed-out user: the action is hidden. */
 private fun Group.syncActionFor(
     isAuthenticated: Boolean,
     override: GroupSyncActionUiState?,

@@ -7,15 +7,15 @@ using Tally.Domain;
 namespace Tally.Application.Tests.Settlements;
 
 /// <summary>
-/// Covers T35.1 with mocked <see cref="IGroupRepository"/>/<see cref="ISettlementRepository"/>
-/// (same pattern as <c>CreateExpenseUseCaseTests</c>, T23): no test here touches EF/Postgres. The
-/// rules of the task's deliverable — a valid settlement persists in the right group, a nonexistent
+/// Covers this use case with mocked <see cref="IGroupRepository"/>/<see cref="ISettlementRepository"/>
+/// (same pattern as <c>CreateExpenseUseCaseTests</c>): no test here touches EF/Postgres. The
+/// key behaviors — a valid settlement persists in the right group, a nonexistent
 /// group becomes <see cref="GroupNotFoundException"/> (the controller maps it to 404), a user
 /// without access becomes <see cref="AccessDeniedException"/> (controller maps it to 403), an
-/// invalid payload never persists — each has its own test. "Reflects in the next call to
-/// GET /groups/{id}/settlement" (the deliverable's other criterion) is covered separately by
+/// invalid payload never persists — each has its own test. Reflecting in the next call to
+/// GET /groups/{id}/settlement is covered separately by
 /// <c>RegisterSettlementReflectsInSettlementTests</c>, which exercises the two use cases chained
-/// against the same in-memory repository. T38.3 adds coverage of
+/// against the same in-memory repository. This also covers
 /// <see cref="IGroupEventNotifier"/>: mocked here (no real Hub), with its own test confirming the
 /// right event fires after persisting.
 /// </summary>

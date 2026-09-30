@@ -4,11 +4,11 @@ using Tally.Application.Groups;
 namespace Tally.Application.Tests.Groups;
 
 /// <summary>
-/// Covers T21.1 with mocked <see cref="IGroupRepository"/>/<see cref="IInviteCodeRepository"/>
-/// (same pattern as <c>CreateExpenseUseCaseTests</c>, T23): no test here touches EF/Postgres. The
-/// task's deliverable — "generating a code only works for the owner (another user gets a 403)" —
-/// is the focus of the first two tests; the rest cover a nonexistent group (404) and the expiration
-/// policy documented in <see cref="InviteCode"/>.
+/// Covers this use case with mocked <see cref="IGroupRepository"/>/<see cref="IInviteCodeRepository"/>
+/// (same pattern as <c>CreateExpenseUseCaseTests</c>): no test here touches EF/Postgres. Generating
+/// a code only works for the owner (another user gets a 403) is the focus of the first two tests;
+/// the rest cover a nonexistent group (404) and the expiration policy documented in
+/// <see cref="InviteCode"/>.
 /// </summary>
 public class GenerateInviteCodeUseCaseTests
 {

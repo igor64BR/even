@@ -6,9 +6,9 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Persistence mapping for a settlement (`Settlement` in `:domain`, T42.1) — who paid, who
+ * Persistence mapping for a settlement (`Settlement` in `:domain`) — who paid, who
  * received, how much, in which group. New schema (v4, see
- * [com.tally.data.persistence.TallyDatabase]): before T42.1 this type only existed in `:domain`,
+ * [com.tally.data.persistence.TallyDatabase]): this type previously only existed in `:domain`,
  * with no DAO/Room entity.
  *
  * [amountCents] holds the amount in cents (Long), the same convention as

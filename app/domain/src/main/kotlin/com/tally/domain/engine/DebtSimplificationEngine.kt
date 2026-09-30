@@ -6,16 +6,14 @@ import com.tally.domain.model.Settlement
 import com.tally.domain.model.SettlementSuggestion
 
 /**
- * Contract for the debt-simplification engine (see `algorithm-spec.md`). This is the project's
- * technical core (constitution.md, principle 4) — exposed as an interface so that consumers (the
- * "Settle debts" screen, T34) depend on an abstraction, not the concrete implementation. This
- * makes isolated testing easier and lets the settlement strategy change later without breaking
- * callers.
+ * Contract for the debt-simplification engine. This is the project's technical core — exposed as
+ * an interface so that consumers (the "Settle debts" screen) depend on an abstraction, not the
+ * concrete implementation. This makes isolated testing easier and lets the settlement strategy
+ * change later without breaking callers.
  *
  * Mirrors `IDebtSimplificationEngine` (`backend/src/Tally.Domain/IDebtSimplificationEngine.cs`)
  * — same two-function contract, same sign rule, same greedy algorithm. Both implementations (this
- * one and the C# one) need to produce exactly the same result for the same input; see
- * `algorithm-spec.md` for the language-agnostic spec both translate line by line.
+ * one and the C# one) need to produce exactly the same result for the same input.
  */
 interface DebtSimplificationEngine {
 

@@ -3,9 +3,9 @@ using Tally.Application.Groups;
 namespace Tally.Application.Expenses;
 
 /// <summary>
-/// T28.2: <c>DELETE /groups/{id}/expenses/{expenseId}</c> — deletes an already-persisted expense
-/// (RF21). Same access pattern as <see cref="CreateExpenseUseCase"/>/<see cref="EditExpenseUseCase"/>:
-/// RNF07 via <see cref="GroupAccessVerification"/> before anything else —
+/// <c>DELETE /groups/{id}/expenses/{expenseId}</c> — deletes an already-persisted expense.
+/// Same access pattern as <see cref="CreateExpenseUseCase"/>/<see cref="EditExpenseUseCase"/>:
+/// validates access via <see cref="GroupAccessVerification"/> before anything else —
 /// <see cref="GroupNotFoundException"/> (404) / <see cref="AccessDeniedException"/> (403) — only
 /// then it removes via <see cref="IExpenseRepository.RemoveAsync"/>, which returns <c>false</c>
 /// (without throwing) when the expense doesn't exist in that group, becoming

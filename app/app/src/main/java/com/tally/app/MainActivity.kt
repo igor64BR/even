@@ -37,14 +37,14 @@ import com.tally.app.ui.theme.TallyTheme
 import java.util.UUID
 
 /**
- * The app's entry point (RF40 — opens straight into "Your groups", no login). Only sets up the
+ * The app's entry point — opens straight into "Your groups", no login required. Only sets up the
  * theme and delegates to [GroupListRoute]; no UI logic lives here.
  *
- * [pendingInviteCode] (T22.1) is the only platform logic that needs to live in the Activity
- * instead of a ViewModel: extracting the invite code from an [Intent] (deep link
- * `tally://join/{code}`, `AndroidManifest.xml`) requires `Intent`/`Uri`, which don't make sense
- * leaking into `:domain`/ViewModels. `android:launchMode="singleTop"` guarantees that reopening the
- * link while the app is already in memory reaches [onNewIntent] instead of recreating the Activity.
+ * [pendingInviteCode] is the only platform logic that needs to live in the Activity instead of a
+ * ViewModel: extracting the invite code from an [Intent] (deep link `tally://join/{code}`,
+ * `AndroidManifest.xml`) requires `Intent`/`Uri`, which don't make sense leaking into
+ * `:domain`/ViewModels. `android:launchMode="singleTop"` guarantees that reopening the link while
+ * the app is already in memory reaches [onNewIntent] instead of recreating the Activity.
  */
 class MainActivity : ComponentActivity() {
 
@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
 }
 
 /**
- * `tally://join/{code}` — the fixed scheme and host of T22.1's deep link, the invite code in the
+ * `tally://join/{code}` — the fixed scheme and host of the deep link, the invite code in the
  * first path segment. `null` for any intent that isn't this link (a normal launcher open, other
  * actions). `internal` (instead of `private`) just to be directly testable — the same convention
  * as [com.tally.app.ui.creategroup.FieldLabel].
@@ -90,30 +90,27 @@ private const val DEEP_LINK_SCHEME = "tally"
 private const val DEEP_LINK_HOST = "join"
 
 /**
- * Navigable destinations from the root. No NavHost yet (T9, a real bottom nav, doesn't exist) —
- * this is a minimal state machine between the screens that already exist.
+ * Navigable destinations from the root. No NavHost yet (a real bottom nav doesn't exist) — this
+ * is a minimal state machine between the screens that already exist.
  *
- * [GroupDetail] (T42.2/T42.4, RF42) is the real destination for tapping a
- * [com.tally.app.ui.groups.GroupCard] — until T42.4 that went straight to [CreateExpense] or
- * triggered "Sync" on the card itself, temporary shortcuts documented by T19/T24 because this
- * screen didn't exist yet. [CreateExpense] and [SettleDebts] still exist, just now reached from
- * [GroupDetail], not directly from the list.
+ * [GroupDetail] is the real destination for tapping a [com.tally.app.ui.groups.GroupCard].
+ * [CreateExpense] and [SettleDebts] are reached from [GroupDetail], not directly from the list.
  *
- * [Login.pendingInviteCode] (T22.1) carries the intent to join a group when the deep link arrives
- * with the user signed out — `null` on normal access (the profile icon). [JoinGroup] is the
- * confirmation screen's destination (T22.2), reached directly from the deep link (user signed in)
- * or resumed after [Login] (user signed in first).
+ * [Login.pendingInviteCode] carries the intent to join a group when the deep link arrives with the
+ * user signed out — `null` on normal access (the profile icon). [JoinGroup] is the confirmation
+ * screen's destination, reached directly from the deep link (user signed in) or resumed after
+ * [Login] (user signed in first).
  *
- * [Notifications] (T41.1, RF35/RF36) is the destination of the bottom nav's "Notifications" tab —
- * `TallyBottomBar` is present on every screen reachable from the root (the same pattern as the
- * prototype: `group.html`/`new-expense.html`/`settle.html`/`create-group.html`/`login.html` always
- * have `.bottombar`, with "Groups" marked active on screens that are a sub-flow of the group list
+ * [Notifications] is the destination of the bottom nav's "Notifications" tab — `TallyBottomBar` is
+ * present on every screen reachable from the root (the same pattern as the prototype:
+ * `group.html`/`new-expense.html`/`settle.html`/`create-group.html`/`login.html` always have
+ * `.bottombar`, with "Groups" marked active on screens that are a sub-flow of the group list
  * and "Profile" active in [Login]), not just in [GroupList]/[Notifications].
  *
- * [CreateExpense.expenseId] (T29) is `null` for "New expense" (reached from [GroupDetail]'s FAB)
- * and the id of the expense being edited when it comes from [GroupDetail]'s `onEditExpenseClick`
- * (tapping an [com.tally.app.ui.groupdetail.ExpenseRow]) — the same destination for both flows,
- * only the parameter changes (T29, "editing is state, not a new screen").
+ * [CreateExpense.expenseId] is `null` for "New expense" (reached from [GroupDetail]'s FAB) and the
+ * id of the expense being edited when it comes from [GroupDetail]'s `onEditExpenseClick` (tapping
+ * an [com.tally.app.ui.groupdetail.ExpenseRow]) — the same destination for both flows, only the
+ * parameter changes (editing is state, not a new screen).
  *
  * [CreateGroup.instanceId]/[CreateExpense.instanceId]: with no `NavHost`, every destination shares
  * the same `ViewModelStoreOwner` (the Activity itself) — `viewModel(factory=...)` with no explicit
@@ -150,7 +147,7 @@ private fun TallyApp(
 ) {
     var destination by remember { mutableStateOf<TallyDestination>(TallyDestination.GroupList) }
 
-    // Unread badge (T41.2) hoisted here instead of injected into each ViewModel: it's the only
+    // Unread badge hoisted here instead of injected into each ViewModel: it's the only
     // piece of state every screen behind TallyBottomBar needs, and none of them (expense editing,
     // create group, login, ...) has any other reason to know about NotificationRepository — adding
     // that dependency to each one just to paint a badge would violate each ViewModel's single
@@ -180,7 +177,7 @@ private fun TallyApp(
         coroutineScope.launch { container.themeRepository.setDarkTheme(!isDarkTheme) }
     }
 
-    // T22.1 — deep link `tally://join/{code}` (extracted from the Intent in MainActivity). Routes
+    // Deep link `tally://join/{code}` (extracted from the Intent in MainActivity). Routes
     // straight to JoinGroup regardless of session: it's JoinGroupViewModel itself that checks login
     // and exposes NeedsLogin — TallyApp only reacts to that state (below, in the JoinGroup case) by
     // sending to Login with the stored code, without duplicating the session check here.

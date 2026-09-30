@@ -6,10 +6,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tally.app.ui.theme.TallyTheme
 
 /**
- * Visual validation for T8.1/T8.2 without an emulator (recorded in the task's report): mocked
- * data covering the prototype's three balance states (owed to you/you owe/settled), local vs.
- * synced group, list with data, empty state, and both themes — compared hex-by-hex against
- * `prototype/styles.css` and layout against `prototype/index.html`.
+ * Visual validation without an emulator: mocked data covering the prototype's three balance
+ * states (owed to you/you owe/settled), local vs. synced group, list with data, empty state, and
+ * both themes — compared hex-by-hex against `prototype/styles.css` and layout against
+ * `prototype/index.html`.
  */
 private val previewGroups = listOf(
     GroupListItemUiModel(

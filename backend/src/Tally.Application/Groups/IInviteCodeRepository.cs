@@ -1,7 +1,7 @@
 namespace Tally.Application.Groups;
 
 /// <summary>
-/// Persistence of invite codes (T21.1/T21.2). Separate interface from
+/// Persistence of invite codes. Separate interface from
 /// <see cref="IGroupRepository"/> (Interface Segregation, same rationale as
 /// <c>Tally.Application.Expenses.IExpenseRepository</c>): whoever generates/resolves an invite
 /// code doesn't need to know about the rest of group persistence. Concrete implementation (EF

@@ -3,7 +3,7 @@ using Tally.Domain;
 namespace Tally.Domain.Tests;
 
 /// <summary>
-/// Covers the guest vs authenticated distinction (RF06/RF07 — spec.md) and the validation of
+/// Covers the guest vs authenticated distinction and the validation of
 /// <see cref="ParticipantName"/>/<see cref="GroupName"/> (cannot be empty/whitespace-only).
 /// </summary>
 public class ParticipantTests

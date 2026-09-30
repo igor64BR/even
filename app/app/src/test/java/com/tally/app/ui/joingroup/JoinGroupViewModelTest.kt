@@ -24,10 +24,10 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Covers T22.1/T22.2 (deep link `tally://join/{code}` + confirmation screen): the decision
+ * Covers the deep link `tally://join/{code}` + confirmation screen: the decision
  * between "signed in goes straight through" vs. "signed out needs to log in first" comes entirely
- * from [AuthRepository.getSessionFlow] (same source of truth as [com.tally.app.ui.auth.AuthViewModel],
- * T12, and [com.tally.app.ui.groupdetail.GroupDetailViewModel], T19/T42.4) — the ViewModel never
+ * from [AuthRepository.getSessionFlow] (same source of truth as [com.tally.app.ui.auth.AuthViewModel]
+ * and [com.tally.app.ui.groupdetail.GroupDetailViewModel]) — the ViewModel never
  * navigates on its own, it only exposes [JoinGroupUiState.NeedsLogin] for whoever observes it to
  * decide. Simple fakes for [AuthRepository]/[RemoteGroupRepository], same pattern as
  * `GroupDetailViewModelTest`.

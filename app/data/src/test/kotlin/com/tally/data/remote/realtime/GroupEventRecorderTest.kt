@@ -15,7 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Covers T40.1: "event received via Hub records a local notification" — at the level of the
+ * Covers "event received via Hub records a local notification" — at the level of the
  * collaborator that actually does this, [GroupEventRecorder], with no SignalR/Room at all (simple
  * test doubles for [GroupRepository]/[ParticipantRepository]/[NotificationRepository], same pattern
  * as `RemoteGroupSyncRepositoryTest` in `:data`).

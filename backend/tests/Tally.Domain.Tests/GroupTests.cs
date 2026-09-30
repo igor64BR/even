@@ -3,7 +3,7 @@ using Tally.Domain;
 namespace Tally.Domain.Tests;
 
 /// <summary>
-/// Covers <see cref="Group"/>'s core invariant (T15.1 — at least 1 participant, always) and the
+/// Covers <see cref="Group"/>'s core invariant (at least 1 participant, always) and the
 /// behavior of the named mutation methods (<see cref="Group.AddParticipant"/>,
 /// <see cref="Group.RemoveParticipant"/>, <see cref="Group.MarkAsSynced"/>).
 /// </summary>

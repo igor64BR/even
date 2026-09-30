@@ -25,18 +25,16 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Smoke test from T8.2 ("smoke test data inserted directly via Room in a test", since the "New
- * group" screen — T16 — didn't exist yet). Inserts through the real DAOs (same Room from T7) and
- * confirms that [GroupListViewModel] combines [RoomGroupRepository] + [RoomParticipantRepository]
- * into the right [GroupListUiState]: no groups -> Empty; with a group -> Content with a reactive
- * participant count. Same Robolectric pattern as `:data`'s `TallyDatabaseTest` (T7), in-memory
+ * Inserts data directly through the real DAOs (same Room used in production) and confirms that
+ * [GroupListViewModel] combines [RoomGroupRepository] + [RoomParticipantRepository] into the
+ * right [GroupListUiState]: no groups -> Empty; with a group -> Content with a reactive
+ * participant count. Same Robolectric pattern as `:data`'s `TallyDatabaseTest`, in-memory
  * database, no disk access or emulator needed.
  *
- * T19.1/T19.2 had added coverage for "Sync this group" here, as a temporary shortcut (a group
- * detail screen didn't exist yet). T42.4 moved that action and its tests to
- * [com.tally.app.ui.groupdetail.GroupDetailViewModelTest]. T41.2 adds `unreadNotificationsCount`
- * (badge for the "Notifications" tab) — this class goes back to covering only what
- * [GroupListViewModel] actually does today, plus that count.
+ * The "Sync this group" action and its tests live in
+ * [com.tally.app.ui.groupdetail.GroupDetailViewModelTest] — this class covers only what
+ * [GroupListViewModel] actually does today, plus `unreadNotificationsCount` (badge for the
+ * "Notifications" tab).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -108,7 +106,7 @@ class GroupListViewModelTest {
 
         val group = state.groups.single()
         assertTrue(
-            "GroupListViewModel.toUiModel() must pass through the real Group.isSynced (T7B), not T8's fixed false anymore",
+            "GroupListViewModel.toUiModel() must pass through the real Group.isSynced value",
             group.isSynced,
         )
     }

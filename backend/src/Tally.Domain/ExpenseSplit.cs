@@ -11,12 +11,12 @@ namespace Tally.Domain;
 /// </summary>
 public abstract record ExpenseSplit(ParticipantId ParticipantId)
 {
-    /// <summary>Equal split among all participants (RF17).</summary>
+    /// <summary>Equal split among all participants.</summary>
     public sealed record Equal(ParticipantId ParticipantId) : ExpenseSplit(ParticipantId);
 
-    /// <summary>Split proportional to a weight/percentage per participant (RF18).</summary>
+    /// <summary>Split proportional to a weight/percentage per participant.</summary>
     public sealed record Weighted(ParticipantId ParticipantId, long Weight) : ExpenseSplit(ParticipantId);
 
-    /// <summary>Split by a fixed amount defined per participant (RF19).</summary>
+    /// <summary>Split by a fixed amount defined per participant.</summary>
     public sealed record FixedAmount(ParticipantId ParticipantId, Money Amount) : ExpenseSplit(ParticipantId);
 }

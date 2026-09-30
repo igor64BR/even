@@ -17,8 +17,8 @@ interface NotificationDao {
 
     /**
      * IGNORE (not REPLACE, unlike [com.tally.data.persistence.dao.SettlementDao.insert]): the
-     * same event can arrive twice with the same [NotificationEntity.id] (live + reconnect pull,
-     * T40.2) — the second write must not revert `isRead` back to `false` if the user already
+     * same event can arrive twice with the same [NotificationEntity.id] (live + reconnect pull)
+     * — the second write must not revert `isRead` back to `false` if the user already
      * opened the notifications screen between the two.
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)

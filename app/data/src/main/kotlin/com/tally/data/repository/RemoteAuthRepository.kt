@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import retrofit2.HttpException
 
 /**
- * Implementation of [AuthRepository] on top of [AuthApi] (`POST /auth/google`, T11; `POST
- * /auth/logout`, T14.1) + [TokenStorage] (T12.2). Translates Retrofit/OkHttp failures into
+ * Implementation of [AuthRepository] on top of [AuthApi] (`POST /auth/google`; `POST
+ * /auth/logout`) + [TokenStorage]. Translates Retrofit/OkHttp failures into
  * [AuthenticationFailedException] — `AuthViewModel` never sees a network type, only the message
  * already ready for the screen.
  */
@@ -37,7 +37,7 @@ class RemoteAuthRepository(
     }
 
     /**
-     * T14.2: revokes the session on the backend when there's one to revoke, but the local session
+     * Revokes the session on the backend when there's one to revoke, but the local session
      * is ALWAYS cleared, even if the network call fails — the user can't be stuck signed in on the
      * device just because there's no connection. Local logout takes priority over the server one.
      */

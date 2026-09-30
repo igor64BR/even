@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 
 /**
- * One case per [ExpenseSplit] subtype (Equal/Weight/FixedAmount — RF17-RF19), mirroring the
- * fields of `ExpenseSplit.cs`. The actual cent distribution (who gets the remainder,
- * `case-05-rounding` in `algorithm-spec.md`) is the simplification engine's job — T33, out of
- * scope for T7B; here we only guarantee the type carries the right data per subtype.
+ * One case per [ExpenseSplit] subtype (Equal/Weight/FixedAmount), mirroring the fields of
+ * `ExpenseSplit.cs`. The actual cent distribution (who gets the remainder, `case-05-rounding`) is
+ * the simplification engine's job; here we only guarantee the type carries the right data per
+ * subtype.
  */
 class ExpenseSplitTest {
 
@@ -48,9 +48,9 @@ class ExpenseSplitTest {
 
     @Test
     fun `equal split among 3 participants mirrors the shape of case-05-rounding`() {
-        // Same scenario as algorithm-spec.md (a 1000-cent expense among P1,P2,P3): here we only
-        // model the list of splits the engine (T33) will consume, without computing who gets the
-        // extra cent -- that's computeBalances/splitEqually, not this type.
+        // Same scenario as a 1000-cent expense among P1,P2,P3: here we only model the list of
+        // splits the engine will consume, without computing who gets the extra cent -- that's
+        // computeBalances/splitEqually, not this type.
         val splits = listOf(
             ExpenseSplit.Equal(participantId = "P1"),
             ExpenseSplit.Equal(participantId = "P2"),

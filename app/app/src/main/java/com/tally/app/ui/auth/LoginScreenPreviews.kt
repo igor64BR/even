@@ -7,8 +7,8 @@ import com.tally.app.ui.theme.TallyTheme
 import com.tally.domain.model.AuthenticatedUser
 
 /**
- * Visual validation of T12.1 with no emulator (same rationale as `GroupListScreenPreviews.kt`,
- * T8): the three [AuthUiState] states in both themes, compared against `prototype/login.html`.
+ * Visual validation with no emulator (same rationale as `GroupListScreenPreviews.kt`): the three
+ * [AuthUiState] states in both themes, compared against `prototype/login.html`.
  */
 @Preview(name = "Signed out — light", showBackground = true)
 @Composable

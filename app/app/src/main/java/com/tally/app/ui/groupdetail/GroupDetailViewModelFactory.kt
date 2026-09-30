@@ -16,9 +16,9 @@ import com.tally.domain.repository.SettlementRepository
 /**
  * No DI framework in the project yet — a manual factory that injects
  * [com.tally.app.di.AppContainer]'s repositories into the [GroupDetailViewModel]. Same pattern as
- * [com.tally.app.ui.createexpense.CreateExpenseViewModelFactory] (T24), with a [groupId] because
- * the screen always belongs to an already-existing group. T40.1 adds [groupRealtimeGateway] for
- * the SignalR client.
+ * [com.tally.app.ui.createexpense.CreateExpenseViewModelFactory], with a [groupId] because the
+ * screen always belongs to an already-existing group, plus [groupRealtimeGateway] for the SignalR
+ * client.
  */
 class GroupDetailViewModelFactory(
     private val groupId: String,

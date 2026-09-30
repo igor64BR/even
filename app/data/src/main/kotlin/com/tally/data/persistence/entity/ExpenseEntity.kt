@@ -6,8 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Persistence mapping for an expense. Minimal skeleton (T7) — who paid and how much; the split
- * among participants is a future task's scope (see `Expense` in `:domain`).
+ * Persistence mapping for an expense — who paid and how much (see `Expense` in `:domain`).
  *
  * [amountCents] holds the amount in cents (Long), never raw decimal in the column — the same
  * convention as `Money` in the simplification engine in Tally.Domain (backend).

@@ -9,9 +9,9 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Covers T22.1: [extractInviteCode] is the only new deep-link parsing logic for
- * `tally://join/{code}` (`AndroidManifest.xml`) — needs a real `Intent`/`Uri` (Robolectric), the
- * same runner as `GroupDetailViewModelTest`.
+ * [extractInviteCode] is the only deep-link parsing logic for `tally://join/{code}`
+ * (`AndroidManifest.xml`) — needs a real `Intent`/`Uri` (Robolectric), the same runner as
+ * `GroupDetailViewModelTest`.
  */
 @RunWith(RobolectricTestRunner::class)
 class MainActivityDeepLinkTest {

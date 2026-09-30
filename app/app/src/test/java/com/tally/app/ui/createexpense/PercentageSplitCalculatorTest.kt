@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Covers T26.1: a percentage sum that doesn't add up to 100% blocks [isPercentageSplitComplete]
+ * A percentage sum that doesn't add up to 100% blocks [isPercentageSplitComplete]
  * (and, by extension, `onSaveClick` in [CreateExpenseViewModel]). Plain JUnit, no Robolectric —
  * same convention as [EqualSplitCalculatorTest].
  */

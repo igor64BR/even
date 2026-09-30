@@ -6,7 +6,7 @@ namespace Tally.Api.Contracts;
 
 /// <summary>
 /// Domain/Application -> Response mapping of <see cref="FullGroup"/> to
-/// <see cref="GetGroupResponse"/> (T28.3). Mirrors, in the opposite direction, the same per-subtype
+/// <see cref="GetGroupResponse"/>. Mirrors, in the opposite direction, the same per-subtype
 /// translation of <see cref="ExpenseSplit"/> that <c>Tally.Infrastructure.Expenses.ExpenseEntityMapper</c>
 /// already does Domain->EF — one named method per step, none doing the whole translation at once
 /// (same Object Calisthenics style the project's other mappers follow).

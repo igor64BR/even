@@ -30,11 +30,10 @@ import com.tally.app.ui.theme.LocalTallyColors
  * amount on the right. Purely presentational — [expense] already comes with everything formatted
  * ([GroupDetailViewModel]).
  *
- * T29.1: two gestures, chosen as the simplest/most discoverable for each action (the prototype
- * doesn't detail this flow, see T29-app-editar-excluir-despesa.md) — tapping anywhere on the row
- * calls [onClick] (opens "Edit expense" pre-filled, T24/T26 reused in edit mode); the trash icon
- * calls [onDeleteClick], which only *asks* for confirmation — [GroupDetailScreen] is the one that
- * decides to actually delete after the dialog, [ExpenseRow] never deletes anything on its own.
+ * Two gestures, chosen as the simplest/most discoverable for each action — tapping anywhere on the
+ * row calls [onClick] (opens "Edit expense" pre-filled, reused in edit mode); the trash icon calls
+ * [onDeleteClick], which only *asks* for confirmation — [GroupDetailScreen] is the one that decides
+ * to actually delete after the dialog, [ExpenseRow] never deletes anything on its own.
  */
 @Composable
 fun ExpenseRow(

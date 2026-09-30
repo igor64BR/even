@@ -20,8 +20,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Confirms that insert+query work against a real Room (not a mock) — a deliverable of
- * T7.2. Runs via Robolectric (JVM) because this environment has no connected emulator/device for
+ * Confirms that insert+query work against a real Room (not a mock). Runs via Robolectric (JVM)
+ * because this environment has no connected emulator/device for
  * an instrumented test (`androidTest`); an in-memory database, no disk access.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -57,7 +57,7 @@ class TallyDatabaseTest {
         // Regression: GroupDao.insert used @Insert(REPLACE), which in SQLite is a DELETE+INSERT
         // and triggered ON DELETE CASCADE of the participant/expense/settlement/notification FKs
         // every time the already-existing group was re-inserted (e.g.
-        // GroupDetailViewModel.syncGroup() writing isSynced=true) — found during T29. @Upsert does
+        // GroupDetailViewModel.syncGroup() writing isSynced=true). @Upsert does
         // a real UPDATE.
         val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
         val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
@@ -107,7 +107,7 @@ class TallyDatabaseTest {
     }
 
     @Test
-    fun `GroupEntity stores isSynced (T7B) and reads it back through GroupDao`() = runTest {
+    fun `GroupEntity stores isSynced and reads it back through GroupDao`() = runTest {
         val synced = GroupEntity(id = "g2", name = "Trip", createdAtEpochMillis = 2_000L, isSynced = true)
 
         database.groupDao().insert(synced)
@@ -203,7 +203,7 @@ class TallyDatabaseTest {
     }
 
     @Test
-    fun `inserts a settlement linked to the group and reads it back through SettlementDao (T42-1)`() = runTest {
+    fun `inserts a settlement linked to the group and reads it back through SettlementDao`() = runTest {
         val group = GroupEntity(id = "g1", name = "Saturday barbecue", createdAtEpochMillis = 1_000L)
         val payer = ParticipantEntity(id = "p1", groupId = "g1", name = "P1", isYou = true)
         val receiver = ParticipantEntity(id = "p2", groupId = "g1", name = "P2")
@@ -235,7 +235,7 @@ class TallyDatabaseTest {
     }
 
     @Test
-    fun `inserts a notification linked to the group and reads it back through NotificationDao (T40-1)`() = runTest {
+    fun `inserts a notification linked to the group and reads it back through NotificationDao`() = runTest {
         val group = GroupEntity(id = "g1", name = "Beach trip", createdAtEpochMillis = 1_000L)
         database.groupDao().insert(group)
 
@@ -260,7 +260,7 @@ class TallyDatabaseTest {
         )
         database.notificationDao().markAllAsRead()
 
-        // The same event arriving again (live + reconnect pull, T40.2) — must not revert
+        // The same event arriving again (live + reconnect pull) — must not revert
         // isRead=true back to false.
         database.notificationDao().insert(
             NotificationEntity(id = "expense:e1", groupId = "g1", message = "original", occurredAtEpochMillis = 5_000L, isRead = false),

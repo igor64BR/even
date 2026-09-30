@@ -28,8 +28,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Covers T41.1: "requires account" state for a signed-out user, empty list, list with
- * notifications (faithful to `prototype/notifications.html`), and the unread badge (T41.2). Same
+ * Covers "requires account" state for a signed-out user, empty list, list with
+ * notifications (faithful to `prototype/notifications.html`), and the unread badge. Same
  * Robolectric pattern as the other screens — in-memory Room, real DAO behind
  * [RoomNotificationRepository].
  *

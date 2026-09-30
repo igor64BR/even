@@ -38,16 +38,14 @@ import com.tally.app.ui.groups.SyncStatusIcon
 import com.tally.app.ui.theme.LocalTallyColors
 
 /**
- * The "Group details" screen (T42.2/RF42), opened from
- * [com.tally.app.ui.groups.GroupCard] — until T42.4 tapping a card went straight to "New expense"
- * (T24) or "Sync" (T19), temporary shortcuts because this screen didn't exist. `factory` injects
+ * The "Group details" screen, opened from [com.tally.app.ui.groups.GroupCard]. `factory` injects
  * the [GroupDetailViewModel] through [com.tally.app.di.AppContainer]'s manual composition, the
  * same pattern as [com.tally.app.ui.createexpense.CreateExpenseRoute].
  *
- * `DisposableEffect` ties the SignalR client (T40.1) to this screen's presence in the composition —
+ * `DisposableEffect` ties the SignalR client to this screen's presence in the composition —
  * connects on entry, disconnects on exit, independent of the `ViewModel`'s own lifecycle. It's
- * this `DisposableEffect`, not the `ViewModel`, that guarantees "only connects while the screen is
- * being viewed" (constitution.md principle 3).
+ * this `DisposableEffect`, not the `ViewModel`, that guarantees the connection is only open while
+ * the screen is being viewed.
  *
  * [key] = `"GroupDetail:$groupId"` (see `TallyApp` in `MainActivity`) — with no real
  * `NavHost`/back stack, every destination shares the same `ViewModelStoreOwner`; without this
@@ -231,7 +229,7 @@ private fun GroupDetailContent(
 }
 
 /**
- * T29.2: [ExpenseDeleteConfirmationState] holds which expense has a pending deletion — the first
+ * [ExpenseDeleteConfirmationState] holds which expense has a pending deletion — the first
  * tap on [ExpenseRow]'s trash icon only reaches
  * [ExpenseDeleteConfirmationState.request] (opens the dialog), never deletes directly; only
  * "Delete" in the [AlertDialog] calls [ExpenseDeleteConfirmationState.confirm], which is what
@@ -315,9 +313,9 @@ private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 }
 
 /**
- * "Sync this group" (T19), moved here from the list card in T42.4. Only draws something when an
- * action is available — an already-synced group or a signed-out user get no extra room on the
- * screen (the same rule as [com.tally.app.ui.groupdetail.GroupSyncActionUiState.Hidden]).
+ * The "Sync this group" action. Only draws something when an action is available — an
+ * already-synced group or a signed-out user get no extra room on the screen (the same rule as
+ * [com.tally.app.ui.groupdetail.GroupSyncActionUiState.Hidden]).
  */
 @Composable
 private fun SyncSection(syncAction: GroupSyncActionUiState, onSyncClick: () -> Unit, modifier: Modifier = Modifier) {

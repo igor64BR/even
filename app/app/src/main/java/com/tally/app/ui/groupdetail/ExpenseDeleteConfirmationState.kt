@@ -5,13 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 /**
- * T29.2: only holds which expense has a pending delete confirmation — extracted from
+ * Only holds which expense has a pending delete confirmation — extracted from
  * [GroupDetailScreen] (`ExpenseList`) so the rule "the first tap on the trash icon only asks for
- * confirmation, the actual deletion only happens after tapping 'Delete' in the dialog"
- * (T29-app-editar-excluir-despesa.md) is testable with plain JUnit
- * ([com.tally.app.ui.groupdetail.ExpenseDeleteConfirmationStateTest]), without needing to set up
- * `Compose`/Robolectric just to check this gating — no screen in the project has a UI test yet
- * (every existing `*ViewModelTest` only tests the `ViewModel`, never the Compose tree).
+ * confirmation, the actual deletion only happens after tapping 'Delete' in the dialog" is testable
+ * with plain JUnit ([com.tally.app.ui.groupdetail.ExpenseDeleteConfirmationStateTest]), without
+ * needing to set up `Compose`/Robolectric just to check this gating — no screen in the project has
+ * a UI test yet (every existing `*ViewModelTest` only tests the `ViewModel`, never the Compose
+ * tree).
  *
  * `mutableStateOf` (not a raw `MutableStateFlow`/`var`) because whoever uses this is always a
  * Composable via `remember { ExpenseDeleteConfirmationState() }` — it needs to trigger

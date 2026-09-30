@@ -21,14 +21,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * State + "Mark as paid" action for the "Settle debts" screen (T42.3, RF44). Recomputes
- * [DebtSimplificationEngine.computeBalances] + [DebtSimplificationEngine.computeSettlement] (T33)
+ * State + "Mark as paid" action for the "Settle debts" screen. Recomputes
+ * [DebtSimplificationEngine.computeBalances] + [DebtSimplificationEngine.computeSettlement]
  * every time the group's expenses or settlements change in Room — the suggestion list is never
  * kept as its own state, it's always derived (same principle as
  * [com.tally.app.ui.groupdetail.GroupDetailViewModel]).
  *
- * "Mark as paid" ([onMarkAsPaidClick]) writes a new [Settlement] via [settlementRepository]
- * (T42.1); since [uiState] is combined from [SettlementRepository.getSettlementsFlow], the write
+ * "Mark as paid" ([onMarkAsPaidClick]) writes a new [Settlement] via [settlementRepository];
+ * since [uiState] is combined from [SettlementRepository.getSettlementsFlow], the write
  * alone already triggers the recalculation — there's no "manual reload" here.
  */
 @OptIn(ExperimentalCoroutinesApi::class)

@@ -7,12 +7,11 @@ import com.tally.domain.model.Settlement
 import com.tally.domain.model.SettlementSuggestion
 
 /**
- * Reference implementation of [DebtSimplificationEngine]: a line-by-line translation of the
- * pseudocode in `algorithm-spec.md`. Direct port of `DebtSimplificationEngine`
- * (`backend/src/Tally.Domain/DebtSimplificationEngine.cs`, T31) — same sign rule, same greedy
- * algorithm with the largest debtor/creditor reselected on every iteration (not two pointers over
- * lists sorted once — see the caveat in the `computeSettlement` section of `algorithm-spec.md`),
- * same largest-remainder method for closing splits that don't divide evenly.
+ * Reference implementation of [DebtSimplificationEngine]: a direct port of
+ * `DebtSimplificationEngine` (`backend/src/Tally.Domain/DebtSimplificationEngine.cs`) — same sign
+ * rule, same greedy algorithm with the largest debtor/creditor reselected on every iteration (not
+ * two pointers over lists sorted once), same largest-remainder method for closing splits that
+ * don't divide evenly.
  */
 class GreedyDebtSimplificationEngine : DebtSimplificationEngine {
 
@@ -130,9 +129,8 @@ class GreedyDebtSimplificationEngine : DebtSimplificationEngine {
     /**
      * Finds and removes the largest remaining balance from the list: amount desc, ties broken by
      * participantId asc. Reselecting the largest on every call (instead of sorting once and
-     * walking with two pointers) is intentional — see algorithm-spec.md, computeSettlement
-     * section: it's not a valid optimization of the pseudocode, it's a different algorithm that
-     * can produce one extra transaction in some cases.
+     * walking with two pointers) is intentional: it's not a valid optimization, it's a different
+     * algorithm that can produce one extra transaction in some cases.
      */
     private fun removeLargestDebtorOrCreditor(participants: MutableList<ParticipantWithBalance>): ParticipantWithBalance {
         val largest = participants

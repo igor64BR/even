@@ -1,7 +1,7 @@
 package com.tally.app.ui.notifications
 
 /**
- * State for the "Notifications" screen (T41.1), faithful to `prototype/notifications.html`:
+ * State for the "Notifications" screen, faithful to `prototype/notifications.html`:
  * loading, "requires account" (user with no session — local groups have no one to notify), empty
  * list, or content.
  */

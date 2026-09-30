@@ -24,9 +24,8 @@ import com.tally.app.ui.theme.LocalTallyColors
  * balance on the right. One responsibility — presenting a [GroupListItemUiModel]; no
  * balance/sync logic lives here (that's the ViewModel's job).
  *
- * [onClick] leads to "Group details" (T42.4/RF42). Up until T19 this card also embedded the
- * "Sync this group" action (temporary shortcut, because the detail screen didn't exist yet);
- * T42.4 removes that shortcut — syncing is now an action inside the detail screen.
+ * [onClick] leads to "Group details". Syncing is an action inside the detail screen, not
+ * embedded in this card.
  */
 @Composable
 fun GroupCard(

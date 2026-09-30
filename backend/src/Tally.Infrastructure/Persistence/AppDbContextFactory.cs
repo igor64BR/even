@@ -8,7 +8,8 @@ namespace Tally.Infrastructure.Persistence;
 /// Factory used only by EF Core's design-time tools (<c>dotnet ef migrations add</c>,
 /// <c>dotnet ef database update</c>). Reads the connection string from
 /// <c>Tally.Api/appsettings.Development.json</c> (never hardcoded) without relying on runtime
-/// DI — registering <see cref="AppDbContext"/> in the application container is T3's scope.
+/// DI — registering <see cref="AppDbContext"/> in the application container happens separately,
+/// in the composition root.
 /// </summary>
 public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {

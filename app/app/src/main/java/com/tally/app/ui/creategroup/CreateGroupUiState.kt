@@ -3,14 +3,13 @@ package com.tally.app.ui.creategroup
 import java.util.UUID
 
 /**
- * State of the "New group" form (T16.1/T16.2). [participants] always starts with a fixed "You"
+ * State of the "New group" form. [participants] always starts with a fixed "You"
  * ([ParticipantChipUiModel.you], not removable — the same rule as `prototype/create-group.html`).
  *
- * [category] is UI-only selection: `Group` (`:domain`, T7B) has no category field today, so this
+ * [category] is UI-only selection: `Group` (`:domain`) has no category field today, so this
  * choice isn't persisted yet — see the note in
- * [com.tally.app.ui.creategroup.CreateGroupViewModel.saveGroup]. The same kind of documented gap
- * T8 left for `Group.isSynced` before T7B resolved it, this time out of scope for T16 (restricted
- * to `app/app/`, without touching `:domain`).
+ * [com.tally.app.ui.creategroup.CreateGroupViewModel.saveGroup]. This is a known, documented gap,
+ * scoped to `app/app/` without touching `:domain`.
  */
 data class CreateGroupUiState(
     val name: String = "",

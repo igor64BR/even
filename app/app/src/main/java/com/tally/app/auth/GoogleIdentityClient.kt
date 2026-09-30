@@ -13,7 +13,7 @@ import com.tally.app.BuildConfig
 
 /**
  * Obtains the Google ID token via Credential Manager (`androidx.credentials` + `googleid`) — the
- * current API Google recommends, replacing the old deprecated `GoogleSignIn` (T12.1). Single
+ * current API Google recommends, replacing the old deprecated `GoogleSignIn`. Single
  * responsibility: turning "ask the user to pick a Google account" into an ID token String or an
  * explained failure; exchanging that token for the backend's JWT is
  * [com.tally.domain.repository.AuthRepository]'s job, not this type's — this client doesn't know
@@ -39,8 +39,7 @@ class GoogleIdentityClient(private val context: Context) {
     /**
      * `setServerClientId` is the project's **web** OAuth client id on Google Cloud (the backend
      * validates the ID token against that same audience, see `GoogleAuthOptions.ClientId` in
-     * `:Tally.Infrastructure`) — still a placeholder client id (see `app/app/build.gradle.kts`),
-     * documented in T12.
+     * `:Tally.Infrastructure`) — still a placeholder client id (see `app/app/build.gradle.kts`).
      */
     private fun googleIdOption(): GetGoogleIdOption = GetGoogleIdOption.Builder()
         .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)

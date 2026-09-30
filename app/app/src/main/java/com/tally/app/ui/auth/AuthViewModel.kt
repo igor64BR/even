@@ -15,10 +15,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * State of the login/account screen (T12). The source of truth for "is signed in?" is
- * [AuthRepository.getSessionFlow] (T12.2, persisted via `EncryptedSharedPreferences`) — [phase]
+ * State of the login/account screen. The source of truth for "is signed in?" is
+ * [AuthRepository.getSessionFlow] (persisted via `EncryptedSharedPreferences`) — [phase]
  * only covers the transient states that session alone doesn't model (connecting, an error from
- * the last attempt). Same MVVM pattern as [com.tally.app.ui.groups.GroupListViewModel] (T8):
+ * the last attempt). Same MVVM pattern as [com.tally.app.ui.groups.GroupListViewModel]:
  * `combine` + `stateIn`, no network logic in the Composable.
  */
 class AuthViewModel(

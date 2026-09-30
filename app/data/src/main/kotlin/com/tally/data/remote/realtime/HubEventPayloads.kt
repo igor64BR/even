@@ -2,7 +2,7 @@ package com.tally.data.remote.realtime
 
 /**
  * Payload for the SignalR method "ExpenseCreated" — mirrors `ExpenseCreatedEvent`
- * (`Tally.Application.Notifications`, backend T38.2/T38's `SignalRGroupEventNotifier`, which
+ * (`Tally.Application.Notifications`, backend's `SignalRGroupEventNotifier`, which
  * sends `nameof(GroupEventType.ExpenseCreated)` as the method name with the whole record as the
  * argument). The official Java SignalR client (`com.microsoft.signalr:signalr`) deserializes
  * these payloads with Gson under the hood (confirmed in the artifact's published POM — it depends

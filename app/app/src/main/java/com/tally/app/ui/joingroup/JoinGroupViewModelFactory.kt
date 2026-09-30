@@ -9,8 +9,8 @@ import com.tally.domain.repository.RemoteGroupRepository
 /**
  * No DI framework in the project yet — manual factory that injects the repositories from
  * [com.tally.app.di.AppContainer] into [JoinGroupViewModel]. Same pattern as
- * [com.tally.app.ui.auth.AuthViewModelFactory] (T12), with [inviteCode] because the screen always
- * belongs to a specific invite (code extracted from the deep link, T22.1).
+ * [com.tally.app.ui.auth.AuthViewModelFactory], with [inviteCode] because the screen always
+ * belongs to a specific invite (code extracted from the deep link).
  */
 class JoinGroupViewModelFactory(
     private val inviteCode: String,

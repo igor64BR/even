@@ -4,10 +4,10 @@ import com.tally.domain.model.AuthSession
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Contract for optional authentication (constitution.md, principles 1 and 2). `:domain` only sees
- * "a Google ID token goes in, an [AuthSession] comes out" — Credential Manager, Retrofit and
- * EncryptedSharedPreferences are implementation details of `:data`/`:app` (Dependency Inversion),
- * none of those types leak into this interface.
+ * Contract for optional authentication. `:domain` only sees "a Google ID token goes in, an
+ * [AuthSession] comes out" — Credential Manager, Retrofit and EncryptedSharedPreferences are
+ * implementation details of `:data`/`:app` (Dependency Inversion), none of those types leak into
+ * this interface.
  */
 interface AuthRepository {
 
@@ -16,7 +16,7 @@ interface AuthRepository {
 
     /**
      * Exchanges a Google ID token (already obtained via Credential Manager) for the backend's own
-     * JWT (`POST /auth/google`, T11) and persists the resulting session.
+     * JWT (`POST /auth/google`) and persists the resulting session.
      *
      * @throws AuthenticationFailedException if the backend rejects the ID token or the call fails.
      */

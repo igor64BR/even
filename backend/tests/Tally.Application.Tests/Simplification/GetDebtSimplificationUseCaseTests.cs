@@ -9,9 +9,9 @@ using Tally.Domain;
 namespace Tally.Application.Tests.Simplification;
 
 /// <summary>
-/// Covers T32.1 with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/>/
-/// <see cref="ISettlementRepository"/> (same pattern as <c>CreateExpenseUseCaseTests</c>, T23) — no
-/// test here touches EF/Postgres. The engine (<see cref="DebtSimplificationEngine"/>, T31) is used
+/// Covers this use case with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/>/
+/// <see cref="ISettlementRepository"/> (same pattern as <c>CreateExpenseUseCaseTests</c>) — no
+/// test here touches EF/Postgres. The engine (<see cref="DebtSimplificationEngine"/>) is used
 /// for real, not mocked: what this use case needs to prove is that it orchestrates correctly (loads
 /// expenses+settlements of the right group, only after validating access, and passes them to the
 /// engine without altering the result) — mocking the engine would hide exactly that.
@@ -27,8 +27,7 @@ public class GetDebtSimplificationUseCaseTests
         new(_groupRepository.Object, _expenseRepository.Object, _settlementRepository.Object, _engine);
 
     /// <summary>
-    /// Fixture = case-01-simples from algorithm-spec.md, built from a real expense (not from
-    /// already-computed balances, unlike how T31's test exercises this case) — B pays R$10.00 and A
+    /// Built from a real expense (not from already-computed balances) — B pays R$10.00 and A
     /// is the split's only participant, so ComputeBalances lands on A:-1000/B:+1000 even before
     /// ComputeSettlement is called.
     /// </summary>
@@ -134,10 +133,9 @@ public class GetDebtSimplificationUseCaseTests
     }
 
     /// <summary>
-    /// RNF02 (spec.md): simplifying a group of up to 50 participants completes in under 200ms. The
-    /// task assumed this was already covered by T31's tests, but
-    /// <c>Tally.Domain.Tests.DebtSimplificationEngineTests</c> has no timing test at all — just the
-    /// five algorithm-spec.md cases and the split-type variations. It's covered here instead, at the
+    /// Simplifying a group of up to 50 participants must complete in under 200ms.
+    /// <c>Tally.Domain.Tests.DebtSimplificationEngineTests</c> has no timing test of its own — just
+    /// the case-by-case correctness tests and the split-type variations. It's covered here instead, at the
     /// full use-case level (more representative of the endpoint's real budget than timing the
     /// isolated engine alone).
     /// </summary>
@@ -179,7 +177,7 @@ public class GetDebtSimplificationUseCaseTests
 
         Assert.True(
             stopwatch.ElapsedMilliseconds < 200,
-            $"RNF02 violated: {stopwatch.ElapsedMilliseconds}ms for {participantCount} participants (limit: 200ms).");
+            $"Simplification took {stopwatch.ElapsedMilliseconds}ms for {participantCount} participants (limit: 200ms).");
     }
 
     private void ConfigureAccess(Guid groupId, Guid ownerUserId) =>

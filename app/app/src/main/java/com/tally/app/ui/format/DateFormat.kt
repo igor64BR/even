@@ -11,7 +11,7 @@ private val EXPENSE_DATE_FORMATTER: DateTimeFormatter =
 
 /**
  * "12 Mar" — the same short formatting as `fmtDate()` in `prototype/app.js`, used in the expense
- * list of the "Group details" screen (T42.2). Converts to the device's time zone before
+ * list of the "Group details" screen. Converts to the device's time zone before
  * formatting, since [instant] is always UTC (see `Expense.createdAt`).
  */
 fun formatInstantAsShortDate(instant: Instant): String =
@@ -19,7 +19,7 @@ fun formatInstantAsShortDate(instant: Instant): String =
 
 /**
  * "today" / "yesterday" / "3 days ago" / "2 months ago" — the same scale as `fmtRelative()` in
- * `prototype/app.js`, used in the notification list (T41.1). [now] only exists to make the test
+ * `prototype/app.js`, used in the notification list. [now] only exists to make the test
  * deterministic (`DateFormatTest`); every real caller uses the default.
  */
 fun formatInstantAsRelative(instant: Instant, now: Instant = Instant.now()): String {

@@ -3,11 +3,11 @@ using Tally.Domain;
 namespace Tally.Application.Settlements;
 
 /// <summary>
-/// DTO-to-domain mapping of a settlement (T35), mirroring
+/// DTO-to-domain mapping of a settlement, mirroring
 /// <c>Tally.Application.Expenses.ExpenseMapper</c> on the expense side: extracted from the use
 /// case (<see cref="RegisterSettlementUseCase"/>) to keep edge translation separate from
 /// orchestration, and to be the single place that decides the invariants of a new settlement —
-/// <see cref="Settlement"/> (T31) is a "dumb" record (no constructor validation), so this mapper is
+/// <see cref="Settlement"/> is a "dumb" record (no constructor validation), so this mapper is
 /// what guarantees no settlement with a zero/negative amount or with payer equal to payee ever
 /// gets persisted.
 /// </summary>

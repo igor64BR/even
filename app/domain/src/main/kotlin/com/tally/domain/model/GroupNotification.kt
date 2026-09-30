@@ -3,9 +3,9 @@ package com.tally.domain.model
 import java.time.Instant
 
 /**
- * A local notification for a synced group event (T40/T41, RF35/RF36; constitution.md principle 3
- * — our own system via a Hub, no third-party push) — an expense logged or a debt settled by
- * someone, received live (SignalR) or recovered by the pull fallback (T39).
+ * A local notification for a synced group event — our own system via a Hub, no third-party push —
+ * an expense logged or a debt settled by someone, received live (SignalR) or recovered by the
+ * pull fallback.
  *
  * [message] already comes ready to display (faithful to `prototype/notifications.html`: "Alice
  * logged 'Description' — $X — in 'Group name'.") — only
@@ -14,7 +14,7 @@ import java.time.Instant
  *
  * [id] isn't a random UUID: it's the event's id on the server (`expenseId`/`settlementId`)
  * prefixed by its type — a natural key that automatically deduplicates the same event arriving
- * twice (once live via SignalR, once via T39's reconnect pull), with no extra "already seen this
+ * twice (once live via SignalR, once via the reconnect pull), with no extra "already seen this
  * event" logic needed (see `NotificationDao.insert`, `OnConflictStrategy.IGNORE`).
  */
 data class GroupNotification(

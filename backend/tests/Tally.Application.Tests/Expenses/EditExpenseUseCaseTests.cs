@@ -6,9 +6,9 @@ using Tally.Domain;
 namespace Tally.Application.Tests.Expenses;
 
 /// <summary>
-/// Covers T28.1 with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/> (same
-/// pattern as <c>CreateExpenseUseCaseTests</c>): no test here touches EF/Postgres. Task
-/// deliverable: a valid edit rebuilds the whole expense and persists it, RNF07 is respected (404
+/// Covers this use case with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/> (same
+/// pattern as <c>CreateExpenseUseCaseTests</c>): no test here touches EF/Postgres. Key behaviors:
+/// a valid edit rebuilds the whole expense and persists it, access is verified (404
 /// nonexistent group, 403 without access), and an expense that doesn't exist in that group also
 /// becomes 404 — via <see cref="ExpenseNotFoundException"/>, mapped by the controller.
 /// </summary>
@@ -40,7 +40,7 @@ public class EditExpenseUseCaseTests
 
         var useCase = CreateUseCase();
         // The request arrives with an Id different from the route's — the route's must prevail
-        // (never trust identity coming from the body, same care RNF07 takes for the group owner).
+        // (never trust identity coming from the body).
         var request = ValidRequest(Guid.NewGuid(), out var anaId, out var brunoId);
 
         await useCase.ExecuteAsync(ownerUserId, groupId, expenseId, request);

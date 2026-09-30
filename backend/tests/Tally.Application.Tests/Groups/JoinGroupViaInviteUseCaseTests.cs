@@ -5,9 +5,9 @@ using Tally.Domain;
 namespace Tally.Application.Tests.Groups;
 
 /// <summary>
-/// Covers T21.2 with mocked <see cref="IInviteCodeRepository"/>/<see cref="IGroupRepository"/>: no
-/// test here touches EF/Postgres. Task deliverable: "joining with a valid code adds the
-/// participant" and "invalid/nonexistent code gets a 404" — the first two tests; the rest cover
+/// Covers this use case with mocked <see cref="IInviteCodeRepository"/>/<see cref="IGroupRepository"/>: no
+/// test here touches EF/Postgres. Key behaviors: joining with a valid code adds the
+/// participant, and an invalid/nonexistent code gets a 404 — the first two tests; the rest cover
 /// expiration (same 404 exception, see <see cref="InviteCode"/>) and the defensive case of a group
 /// that can no longer be found.
 /// </summary>
@@ -50,7 +50,7 @@ public class JoinGroupViaInviteUseCaseTests
         Assert.Equal(groupId, receivedGroupId);
         Assert.NotNull(addedParticipant);
         Assert.Equal(UserName, addedParticipant!.Name.Value);
-        Assert.False(addedParticipant.IsGuest, "T21.2: whoever joins via invite is an authenticated participant, not a guest.");
+        Assert.False(addedParticipant.IsGuest, "Whoever joins via invite is an authenticated participant, not a guest.");
         _groupRepository.Verify(
             r => r.AddParticipantAsync(groupId, It.IsAny<Participant>(), It.IsAny<CancellationToken>()),
             Times.Once);

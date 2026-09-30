@@ -1,13 +1,12 @@
 namespace Tally.Application.Groups;
 
 /// <summary>
-/// Centralized RNF07: "the group exists, and the authenticated user is its owner" — checked
-/// before any operation on behalf of a user over a specific group
+/// Centralized access check: "the group exists, and the authenticated user is its owner" —
+/// checked before any operation on behalf of a user over a specific group
 /// (<see cref="GroupNotFoundException"/> if the group doesn't exist, <see cref="AccessDeniedException"/>
-/// if it exists but doesn't belong to the user). Extracted from <c>CreateExpenseUseCase</c> (T23)
-/// to be reused by <c>Tally.Application.Simplification.GetDebtSimplificationUseCase</c> (T32) —
-/// avoids the same access check being copied a third time by any future "per group" use case (T35
-/// included).
+/// if it exists but doesn't belong to the user). Extracted from <c>CreateExpenseUseCase</c>
+/// to be reused by <c>Tally.Application.Simplification.GetDebtSimplificationUseCase</c> —
+/// avoids the same access check being copied by any future "per group" use case.
 /// </summary>
 internal static class GroupAccessVerification
 {

@@ -25,8 +25,8 @@ import com.tally.app.ui.groups.TallyBottomTab
 import com.tally.app.ui.theme.LocalTallyColors
 
 /**
- * The "New group" screen (T16), opened from "Your groups"'s FAB
- * (T8/[com.tally.app.ui.groups.CreateGroupFab]). `factory` injects the [CreateGroupViewModel]
+ * The "New group" screen, opened from "Your groups"'s FAB
+ * ([com.tally.app.ui.groups.CreateGroupFab]). `factory` injects the [CreateGroupViewModel]
  * through [com.tally.app.di.AppContainer]'s manual composition — the same pattern as
  * [com.tally.app.ui.groups.GroupListRoute].
  *

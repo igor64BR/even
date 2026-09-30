@@ -39,7 +39,7 @@ public class GroupEntityConfiguration : IEntityTypeConfiguration<GroupEntity>
             .OnDelete(DeleteBehavior.Cascade);
 
         // Restrict (not Cascade): deleting a user should not silently delete the groups they
-        // synced — that's an explicit decision for another operation, out of scope for T18.
+        // synced — that's an explicit decision for another operation.
         builder.HasOne(group => group.Owner)
             .WithMany()
             .HasForeignKey(group => group.OwnerUserId)

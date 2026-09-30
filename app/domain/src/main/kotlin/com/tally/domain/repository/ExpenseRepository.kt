@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 interface ExpenseRepository {
     fun getExpensesFlow(groupId: String): Flow<List<Expense>>
 
-    /** One-off read of an expense by id (T29.1: pre-filling the edit form). `null` if it no longer exists. */
+    /** One-off read of an expense by id — used to pre-fill the edit form. `null` if it no longer exists. */
     suspend fun getExpenseById(expenseId: String): Expense?
     suspend fun insertExpense(expense: Expense)
     suspend fun deleteExpense(expenseId: String)

@@ -1,7 +1,7 @@
 namespace Tally.Application.Groups;
 
 /// <summary>
-/// RNF07: the authenticated user does not have access to the group (see <see cref="GroupAccess"/>
+/// The authenticated user does not have access to the group (see <see cref="GroupAccess"/>
 /// for which link is checked today). Never becomes a 500 — the controller maps this to 403.
 /// </summary>
 public sealed class AccessDeniedException(Guid userId, Guid groupId)

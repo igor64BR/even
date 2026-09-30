@@ -26,7 +26,7 @@ public class SettlementEntityConfiguration : IEntityTypeConfiguration<Settlement
 
         // No navigation collection on GroupEntity (same pattern as GroupEntity.Owner): nothing
         // today needs to load "the group with its settlements" at once, only to filter
-        // settlements by GroupId — SettlementRepository (T32) queries SettlementEntity directly.
+        // settlements by GroupId — SettlementRepository queries SettlementEntity directly.
         builder.HasOne(settlement => settlement.Group)
             .WithMany()
             .HasForeignKey(settlement => settlement.GroupId)

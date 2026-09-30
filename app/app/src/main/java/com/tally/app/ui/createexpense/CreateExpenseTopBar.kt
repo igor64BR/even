@@ -14,9 +14,9 @@ import com.tally.app.ui.theme.LocalTallyColors
 import com.tally.app.ui.theme.ThemeToggleButton
 
 /**
- * `new-expense.html`'s `.topbar` — goes back to the group without saving. [isEditMode] (T29) only
- * swaps the title to "Edit expense"; the rest of the form is identical to create mode (T29,
- * "editing is state, not a new screen").
+ * `new-expense.html`'s `.topbar` — goes back to the group without saving. [isEditMode] only
+ * swaps the title to "Edit expense"; the rest of the form is identical to create mode
+ * ("editing is state, not a new screen").
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

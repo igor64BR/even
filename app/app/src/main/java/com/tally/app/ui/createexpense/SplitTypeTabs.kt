@@ -11,8 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * The prototype's `#tabs` ("Equal / Percentage / Fixed amount"). T24 only implemented the Equal
- * split — the other two showed up disabled; T26 swaps that for real tabs, all enabled, changing
+ * The prototype's `#tabs` ("Equal / Percentage / Fixed amount"), all enabled, changing
  * [CreateExpenseUiState.splitMode] via [onModeSelected].
  */
 @OptIn(ExperimentalMaterial3Api::class)

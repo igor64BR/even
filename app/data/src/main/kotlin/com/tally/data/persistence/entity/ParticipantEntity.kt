@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 
 /**
  * Persistence mapping for a participant. The schema requires no authentication/account field
- * (constitution.md, principle 1) — [name] is the only required piece of data besides the link to
+ * — [name] is the only required piece of data besides the link to
  * the group.
  */
 @Entity(

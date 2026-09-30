@@ -9,7 +9,7 @@ import com.tally.domain.repository.AuthRepository
 /**
  * No DI framework in the project yet — a manual factory that injects [AuthRepository] (from
  * [com.tally.app.di.AppContainer]) and [GoogleIdentityClient] into the [AuthViewModel]. Same
- * convention as [com.tally.app.ui.groups.GroupListViewModelFactory] (T8).
+ * convention as [com.tally.app.ui.groups.GroupListViewModelFactory].
  */
 class AuthViewModelFactory(
     private val authRepository: AuthRepository,

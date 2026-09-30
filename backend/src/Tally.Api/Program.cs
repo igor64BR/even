@@ -9,8 +9,8 @@ using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog replaces ASP.NET Core's default log providers (RNF11: structured JSON logging per
-// request). CompactJsonFormatter emits one JSON object per line, ready for a log aggregator.
+// Serilog replaces ASP.NET Core's default log providers for structured JSON logging per
+// request. CompactJsonFormatter emits one JSON object per line, ready for a log aggregator.
 // `ReadFrom.Configuration` allows adjusting levels via appsettings without a redeploy;
 // `Enrich.FromLogContext()` is what lets CorrelationIdMiddleware attach the correlation id to every
 // log event emitted during the request.
@@ -29,7 +29,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// T38.1: TallyHub (RF35/RF36) — the real implementation of IGroupEventNotifier (Application) lives
+// TallyHub — the real implementation of IGroupEventNotifier (Application) lives
 // here, in Tally.Api, because that's where IHubContext<TallyHub> exists; registered in the
 // composition root instead of in Tally.Infrastructure.DependencyInjection.AddInfrastructure
 // because Infrastructure doesn't reference Tally.Api (TallyHub lives in the outermost layer).
@@ -52,20 +52,19 @@ app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
-// T18: the project's first protected endpoint (`POST /groups/sync`) — UseAuthentication needs to
-// run before UseAuthorization so HttpContext.User is populated from the JWT before [Authorize]
-// decides whether to let the request through.
+// UseAuthentication needs to run before UseAuthorization so HttpContext.User is populated from
+// the JWT before [Authorize] decides whether to let the request through.
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// T38.1: same route that Tally.Infrastructure.DependencyInjection.AddJwtAuthentication uses to
+// Same route that Tally.Infrastructure.DependencyInjection.AddJwtAuthentication uses to
 // know a request is a Hub handshake (and to read the JWT from the query string instead of the
 // Authorization header).
 app.MapHub<TallyHub>(NotificationHubRoute.Path);
 
-// RNF08: 200 when dependencies (today: the DB) are healthy, 503 otherwise. Checks registered in
+// 200 when dependencies (today: the DB) are healthy, 503 otherwise. Checks registered in
 // Tally.Infrastructure.DependencyInjection.AddInfrastructure.
 app.MapHealthChecks("/health");
 

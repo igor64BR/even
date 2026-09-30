@@ -1,7 +1,7 @@
 namespace Tally.Infrastructure.Persistence.Entities;
 
 /// <summary>
-/// Persistence mapping of a participant's share of an expense (T18). There's no domain type
+/// Persistence mapping of a participant's share of an expense. There's no domain type
 /// equivalent to <see cref="Type"/> — <c>Tally.Domain.ExpenseSplit</c> deliberately expresses the
 /// split type via a concrete subtype (<c>Equal</c>/<c>Weighted</c>/<c>FixedAmount</c>) instead of a
 /// bare enum, so there aren't two diverging sources of truth in the domain (see that type's XML

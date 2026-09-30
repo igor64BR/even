@@ -8,7 +8,7 @@ import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/** Implementation of [NotificationRepository] on top of [NotificationDao] (Room), T40.1. */
+/** Implementation of [NotificationRepository] on top of [NotificationDao] (Room). */
 class RoomNotificationRepository(private val notificationDao: NotificationDao) : NotificationRepository {
 
     override fun getNotificationsFlow(): Flow<List<GroupNotification>> =

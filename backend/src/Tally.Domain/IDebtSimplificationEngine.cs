@@ -1,8 +1,8 @@
 namespace Tally.Domain;
 
 /// <summary>
-/// Contract for the debt simplification engine (see algorithm-spec.md). This is the project's
-/// technical core (constitution, principle 4) — exposed as an interface so that whoever consumes
+/// Contract for the debt simplification engine. This is the project's
+/// technical core — exposed as an interface so that whoever consumes
 /// it (application/API layer) depends on an abstraction, not the concrete implementation. This
 /// makes it easy to test in isolation and allows swapping the settlement strategy later without
 /// breaking callers.

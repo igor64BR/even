@@ -12,24 +12,23 @@ using Tally.Application.Simplification;
 namespace Tally.Api.Controllers;
 
 /// <summary>
-/// T18.1/T18.2: sync of a local group (Room, app) to the backend (RF09). T23.1 added
-/// <c>POST /groups/{id}/expenses</c>: adding a single expense to a group that's already synced
-/// (day-to-day, different from the sync bulk load). T21 added the group invite/link (RF07):
+/// Sync of a local group (Room, app) to the backend, plus day-to-day group operations:
+/// <c>POST /groups/{id}/expenses</c> (adding a single expense to a group that's already synced,
+/// different from the sync bulk load); the group invite/link,
 /// <c>POST /groups/{id}/invite-code</c> (owner only) and <c>POST /groups/join/{code}</c> (any
-/// authenticated user). T32.1 added <c>GET /groups/{id}/settlement</c>: the group's debt
-/// simplification, recomputed on demand (never stored). T35.1 added
-/// <c>POST /groups/{id}/settlements</c>: records that one of the suggested transactions was paid.
-/// The controller only translates HTTP&lt;-&gt;use case; all orchestration lives in the use cases
-/// (<see cref="SyncGroupUseCase"/>, <see cref="CreateExpenseUseCase"/>,
+/// authenticated user); <c>GET /groups/{id}/settlement</c>, the group's debt
+/// simplification, recomputed on demand (never stored); and
+/// <c>POST /groups/{id}/settlements</c>, which records that one of the suggested transactions was
+/// paid. The controller only translates HTTP&lt;-&gt;use case; all orchestration lives in the use
+/// cases (<see cref="SyncGroupUseCase"/>, <see cref="CreateExpenseUseCase"/>,
 /// <see cref="GenerateInviteCodeUseCase"/>, <see cref="JoinGroupViaInviteUseCase"/>,
-/// <see cref="GetDebtSimplificationUseCase"/>, <see cref="RegisterSettlementUseCase"/>). T39.1 added
-/// <c>GET /groups/{id}/events?since={timestampIso8601}</c>: pull fallback for expense/settlement
-/// events missed while the app was disconnected from the SignalR Hub (T38, constitution.md
-/// principle 3) — see <see cref="GetGroupEventsUseCase"/>. T28 added
-/// <c>PUT</c>/<c>DELETE /groups/{id}/expenses/{expenseId}</c> (edit/delete an expense, RF20/RF21 —
-/// see <see cref="EditExpenseUseCase"/>/<see cref="DeleteExpenseUseCase"/>) and
-/// <c>GET /groups/{id}</c> (full group — see <see cref="GetGroupUseCase"/>, closes the gap reported
-/// by T22).
+/// <see cref="GetDebtSimplificationUseCase"/>, <see cref="RegisterSettlementUseCase"/>). Also
+/// exposes <c>GET /groups/{id}/events?since={timestampIso8601}</c>: pull fallback for
+/// expense/settlement events missed while the app was disconnected from the SignalR Hub — see
+/// <see cref="GetGroupEventsUseCase"/>. And
+/// <c>PUT</c>/<c>DELETE /groups/{id}/expenses/{expenseId}</c> (edit/delete an expense — see
+/// <see cref="EditExpenseUseCase"/>/<see cref="DeleteExpenseUseCase"/>) and
+/// <c>GET /groups/{id}</c> (full group — see <see cref="GetGroupUseCase"/>).
 /// </summary>
 [ApiController]
 [Authorize]
@@ -47,7 +46,7 @@ public class GroupsController(
     GetGroupEventsUseCase getGroupEvents) : ControllerBase
 {
     /// <summary>
-    /// RNF07: the synced group's owner is always the user from the validated JWT
+    /// The synced group's owner is always the user from the validated JWT
     /// (<see cref="GetAuthenticatedUserId"/>), never a field from the request body — there's no way
     /// for an authenticated user to sync a group on behalf of another.
     /// </summary>
@@ -76,8 +75,8 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T23.1: adds an expense to an already-synced group (<paramref name="id"/> is the server-side
-    /// <c>GroupId</c> returned by <c>POST /groups/sync</c>). RNF07 is checked in the use case
+    /// Adds an expense to an already-synced group (<paramref name="id"/> is the server-side
+    /// <c>GroupId</c> returned by <c>POST /groups/sync</c>). Access is checked in the use case
     /// (<see cref="CreateExpenseUseCase"/>) before any persistence — 404 if the group doesn't
     /// exist, 403 if the authenticated user doesn't have access to it.
     /// </summary>
@@ -121,8 +120,8 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T28.1: edits an already-persisted expense (RF20). Same access/error pattern as
-    /// <see cref="CreateExpense"/>: 404 if the group doesn't exist, 403 without access (RNF07);
+    /// Edits an already-persisted expense. Same access/error pattern as
+    /// <see cref="CreateExpense"/>: 404 if the group doesn't exist, 403 without access;
     /// adds 404 when the group exists but <paramref name="expenseId"/> doesn't match one of its
     /// expenses (<see cref="ExpenseNotFoundException"/>). Rebuilds the whole expense from the
     /// payload (<see cref="EditExpenseUseCase"/>) — never a partial loose-field update.
@@ -175,9 +174,9 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T28.2: deletes an already-persisted expense (RF21). Same access/error pattern as
+    /// Deletes an already-persisted expense. Same access/error pattern as
     /// <see cref="EditExpense"/>: 404 if the group doesn't exist, 404 if <paramref name="expenseId"/>
-    /// doesn't match an expense of that group, 403 without access (RNF07).
+    /// doesn't match an expense of that group, 403 without access.
     /// </summary>
     [HttpDelete("{id:guid}/expenses/{expenseId:guid}")]
     public async Task<IActionResult> DeleteExpense(Guid id, Guid expenseId, CancellationToken cancellationToken)
@@ -214,11 +213,11 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T28.3: full group — name, category, participants, and expenses (with description/amount/
-    /// payer/date/split) — closes the gap reported by T22: <c>POST /groups/join/{code}</c> (T21)
-    /// only returns <c>{groupId}</c>, with no way for the app to fetch the rest afterward. Same
+    /// Full group — name, category, participants, and expenses (with description/amount/
+    /// payer/date/split): <c>POST /groups/join/{code}</c> only returns <c>{groupId}</c>, so the app
+    /// needs this endpoint to fetch the rest afterward. Same
     /// access/error pattern as <see cref="CreateExpense"/>: 404 if the group doesn't exist, 403
-    /// without access (RNF07).
+    /// without access.
     /// </summary>
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<GetGroupResponse>> GetGroup(Guid id, CancellationToken cancellationToken)
@@ -248,8 +247,8 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T21.1: generates (or replaces — see <c>InviteCode</c>, "one active code per group") the
-    /// invite code for group <paramref name="id"/>. RNF07/T21: only the owner generates a code —
+    /// Generates (or replaces — see <c>InviteCode</c>, "one active code per group") the
+    /// invite code for group <paramref name="id"/>. Only the owner generates a code —
     /// <see cref="GenerateInviteCodeUseCase"/> throws <see cref="AccessDeniedException"/> (403) for
     /// any other authenticated user, even one who's already a participant.
     /// </summary>
@@ -283,10 +282,10 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T32.1: the group's debt simplification, always recomputed from the current history of
-    /// expenses and settlements (T31's engine — this endpoint stores no balance at all). Same
+    /// The group's debt simplification, always recomputed from the current history of
+    /// expenses and settlements (this endpoint stores no balance at all). Same
     /// access/error pattern as <see cref="CreateExpense"/>: 404 if the group doesn't exist, 403 if
-    /// the authenticated user isn't its owner (RNF07).
+    /// the authenticated user isn't its owner.
     /// </summary>
     [HttpGet("{id:guid}/settlement")]
     public async Task<ActionResult<IReadOnlyList<TransactionResponse>>> GetSettlement(
@@ -322,13 +321,13 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T35.1: records that one of the transactions suggested by <see cref="GetSettlement"/> was paid
-    /// (RF31/RF33) — <paramref name="request"/> is
+    /// Records that one of the transactions suggested by <see cref="GetSettlement"/> was paid —
+    /// <paramref name="request"/> is
     /// <c>{ fromParticipantId, toParticipantId, amountCents }</c>. Same access/error pattern as
     /// <see cref="CreateExpense"/>: 404 if the group doesn't exist, 403 if the authenticated user
-    /// doesn't have access to it (RNF07), 400 if the payload violates a domain invariant
+    /// doesn't have access to it, 400 if the payload violates a domain invariant
     /// (non-positive amount, payer equal to payee). Doesn't return a recomputed balance — the next
-    /// call to <c>GET /groups/{id}/settlement</c> already reflects the settlement (T35.2).
+    /// call to <c>GET /groups/{id}/settlement</c> already reflects the settlement.
     /// </summary>
     [HttpPost("{id:guid}/settlements")]
     public async Task<ActionResult<RegisterSettlementResponse>> RegisterSettlement(
@@ -370,13 +369,13 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T39.1: <c>GET /groups/{id}/events?since={timestampIso8601}</c> — pull fallback
-    /// (constitution.md principle 3): the group's expense/settlement events persisted on the server
-    /// after <paramref name="since"/>, ordered by ascending date, in the same format T38 already
-    /// sends in real time via SignalR (<see cref="ExpenseCreatedEvent"/>/<see cref="DebtSettledEvent"/>)
-    /// — the app uses this to recover what it missed while disconnected from the Hub (T40). Same
+    /// <c>GET /groups/{id}/events?since={timestampIso8601}</c> — pull fallback: the group's
+    /// expense/settlement events persisted on the server after <paramref name="since"/>, ordered by
+    /// ascending date, in the same format already sent in real time via SignalR
+    /// (<see cref="ExpenseCreatedEvent"/>/<see cref="DebtSettledEvent"/>) — the app uses this to
+    /// recover what it missed while disconnected from the Hub. Same
     /// access/error pattern as <see cref="GetSettlement"/>: 404 if the group doesn't exist, 403 if
-    /// the authenticated user doesn't have access to it (RNF07). A group with no new events returns
+    /// the authenticated user doesn't have access to it. A group with no new events returns
     /// an empty list (200), never 404.
     ///
     /// The response is typed as <c>IReadOnlyList&lt;object&gt;</c> (not
@@ -385,7 +384,7 @@ public class GroupsController(
     /// the interface would make the serializer include only <c>Type</c>/<c>GroupId</c> (the
     /// interface's members) and drop <c>Description</c>/<c>TotalAmountCents</c>/etc. Declaring each
     /// item as <c>object</c> forces the serializer to use each event's concrete type — the same care
-    /// <c>SignalRGroupEventNotifier</c> (T38) already takes, just there via a <c>switch</c>
+    /// <c>SignalRGroupEventNotifier</c> already takes, just there via a <c>switch</c>
     /// dispatching to the concrete type on every call to <c>SendAsync</c>.
     /// </summary>
     [HttpGet("{id:guid}/events")]
@@ -419,11 +418,11 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T21.2: resolves <paramref name="code"/> and adds the authenticated user as a new participant
-    /// of the corresponding group (RF07). Open to any authenticated user — there's no owner/access
-    /// check here, the valid code IS the authorization (RNF07/T21: "joining via code is open to any
-    /// authenticated user, that's the point of the feature"). Response in the same format as
-    /// <c>POST /groups/sync</c> (T18), so the app can already show the group.
+    /// Resolves <paramref name="code"/> and adds the authenticated user as a new participant
+    /// of the corresponding group. Open to any authenticated user — there's no owner/access
+    /// check here, the valid code IS the authorization: joining via code is open to any
+    /// authenticated user, that's the point of the feature. Response in the same format as
+    /// <c>POST /groups/sync</c>, so the app can already show the group.
     /// </summary>
     [HttpPost("join/{code}")]
     public async Task<ActionResult<SyncGroupResponse>> JoinWithCode(
@@ -474,8 +473,8 @@ public class GroupsController(
     }
 
     /// <summary>
-    /// T21.2: the new <c>Participant.Authenticated</c>'s (T15) name comes from the JWT's <c>name</c>
-    /// claim — the same value <c>JwtIssuer</c> (T11) writes from <c>User.Name</c> when issuing the
+    /// The new <c>Participant.Authenticated</c>'s name comes from the JWT's <c>name</c>
+    /// claim — the same value <c>JwtIssuer</c> writes from <c>User.Name</c> when issuing the
     /// token, without needing a new query to <c>IUserRepository</c> just to get the name back.
     /// </summary>
     private string GetAuthenticatedUserName() =>

@@ -26,7 +26,7 @@ import com.tally.domain.model.Money
  * The prototype's `#split-area` in the Fixed amount tab: one row per participant with an R$ input
  * (no checkbox — whoever is left at 0/empty simply doesn't take part in the expense, see
  * [buildSplits]) + an always-visible `#split-sum` showing "sum: X of Y", green when it matches the
- * total, red when it doesn't (T26.2). No calculation lives here — [sumFixedAmounts]/
+ * total, red when it doesn't. No calculation lives here — [sumFixedAmounts]/
  * [isFixedAmountSplitComplete] are the same pure functions used to build `ExpenseSplit.FixedAmount`
  * on save ([CreateExpenseViewModel]).
  */

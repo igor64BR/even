@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * Covers the same money convention `algorithm-spec.md` requires of both ports of the engine
- * (C#/`Money.cs`, Kotlin/`Money`): everything in integer cents, no `Float`/`Double`.
+ * Covers the same money convention required of both ports of the engine (C#/`Money.cs`,
+ * Kotlin/`Money`): everything in integer cents, no `Float`/`Double`.
  */
 class MoneyTest {
 

@@ -18,7 +18,7 @@ import com.tally.app.ui.theme.LocalTallyColors
  * `group.html`'s `.split-row`: the participant's name (+ "you" when [ParticipantBalanceUiModel.isYou])
  * on the left, a colored balance on the right ("gets back"/"owes"/"settled") — no balance
  * calculation lives here, [balance] already comes ready from the ViewModel
- * (`DebtSimplificationEngine.computeBalances`, T33).
+ * (`DebtSimplificationEngine.computeBalances`).
  */
 @Composable
 fun ParticipantBalanceRow(participant: ParticipantBalanceUiModel, modifier: Modifier = Modifier) {

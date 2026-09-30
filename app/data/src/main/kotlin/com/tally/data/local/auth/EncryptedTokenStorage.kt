@@ -8,8 +8,8 @@ import com.tally.domain.model.AuthenticatedUser
 
 /**
  * [TokenStorage] on top of `EncryptedSharedPreferences` (Jetpack Security) — `accessToken` and
- * `refreshToken` never in plain `SharedPreferences` nor in logs (T12.2, an explicit deliverable of
- * the task). The master key used to encrypt the file lives in the Android Keystore, managed by
+ * `refreshToken` never in plain `SharedPreferences` nor in logs. The master key used to encrypt
+ * the file lives in the Android Keystore, managed by
  * [MasterKey] itself; this code never sees or stores the key.
  */
 class EncryptedTokenStorage(context: Context) : TokenStorage {

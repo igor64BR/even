@@ -5,7 +5,7 @@ namespace Tally.Infrastructure.Persistence;
 
 /// <summary>
 /// Tally's EF Core context. Lives in Tally.Infrastructure — Tally.Domain never references
-/// EF Core (constitution/T2: Domain doesn't know EF Core exists).
+/// EF Core; Domain doesn't know EF Core exists.
 /// </summary>
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {

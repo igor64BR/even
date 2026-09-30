@@ -21,8 +21,8 @@ import com.tally.app.ui.groups.TallyBottomTab
 import com.tally.app.ui.theme.LocalTallyColors
 
 /**
- * "Settle debts" screen (T42.3, RF44), opened from the button of the same name in "Group details"
- * (T42.2). `factory` injects the [SettleDebtsViewModel] through the manual composition of
+ * "Settle debts" screen, opened from the button of the same name in "Group details".
+ * `factory` injects the [SettleDebtsViewModel] through the manual composition of
  * [com.tally.app.di.AppContainer], same pattern as the module's other screens.
  *
  * [key] = `"SettleDebts:$groupId"` (see `TallyApp` in `MainActivity`, same reasoning as

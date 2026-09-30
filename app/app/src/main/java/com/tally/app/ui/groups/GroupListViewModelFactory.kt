@@ -9,10 +9,9 @@ import com.tally.domain.repository.ParticipantRepository
 
 /**
  * No DI framework in the project yet — manual factory that injects the repositories from
- * [com.tally.app.di.AppContainer] into [GroupListViewModel]. Up until T19 it also received
- * `authRepository`/`remoteGroupRepository`/`expenseRepository` for the "Sync this group" action;
- * T42.4 moves that action to [com.tally.app.ui.groupdetail.GroupDetailViewModelFactory]. T41.2
- * adds [notificationRepository] for the "Notifications" tab badge.
+ * [com.tally.app.di.AppContainer] into [GroupListViewModel]. The "Sync this group" action isn't
+ * injected here: it lives in [com.tally.app.ui.groupdetail.GroupDetailViewModelFactory].
+ * [notificationRepository] is for the "Notifications" tab badge.
  */
 class GroupListViewModelFactory(
     private val groupRepository: GroupRepository,

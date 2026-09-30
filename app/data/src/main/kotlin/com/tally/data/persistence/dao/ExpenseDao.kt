@@ -17,7 +17,7 @@ interface ExpenseDao {
     fun getExpensesWithSplitsFlow(groupId: String): Flow<List<ExpenseWithSplitsEntity>>
 
     /**
-     * T29.1: a one-off (non-`Flow`) read of an expense by id — used only to pre-fill the edit
+     * A one-off (non-`Flow`) read of an expense by id — used only to pre-fill the edit
      * form once, when opening the screen (`CreateExpenseViewModel.loadExpenseForEditing`).
      * Deliberately doesn't reuse [getExpensesWithSplitsFlow] + `.first()` (subscribing to the
      * whole list just to grab one item and cancel the subscription right after): that "Flow

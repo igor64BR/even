@@ -1,7 +1,7 @@
 namespace Tally.Application.Auth;
 
 /// <summary>
-/// Orchestrates logout (T14): revokes the session associated with a refresh token. Exists as its
+/// Orchestrates logout: revokes the session associated with a refresh token. Exists as its
 /// own use case — instead of the controller calling <see cref="IRefreshTokenRepository"/>
 /// directly — to keep the same pattern as <see cref="AuthenticateWithGoogleUseCase"/> (the
 /// controller only translates HTTP, the business rule lives here) and to give a single extension

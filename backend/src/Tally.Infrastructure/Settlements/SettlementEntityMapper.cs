@@ -4,12 +4,12 @@ using Tally.Infrastructure.Persistence.Entities;
 namespace Tally.Infrastructure.Settlements;
 
 /// <summary>
-/// Domain-to-EF mapping of a settlement (T35), mirroring
+/// Domain-to-EF mapping of a settlement, mirroring
 /// <c>Tally.Infrastructure.Expenses.ExpenseEntityMapper</c> on the expense side and
-/// <see cref="SettlementEntityToDomainMapper"/> (T32) in the opposite direction of this same
+/// <see cref="SettlementEntityToDomainMapper"/> in the opposite direction of this same
 /// entity. Doesn't set <see cref="SettlementEntity.GroupId"/> — the caller
 /// (<see cref="SettlementRepository"/>) assigns the FK directly, same pattern as the single-expense
-/// insert (T23).
+/// insert.
 /// </summary>
 internal static class SettlementEntityMapper
 {

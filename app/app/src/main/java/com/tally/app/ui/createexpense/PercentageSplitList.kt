@@ -24,7 +24,7 @@ import com.tally.app.ui.theme.LocalTallyColors
  * The prototype's `#split-area` in the Percentage tab: one row per participant with a `%` input
  * (no checkbox — every participant takes part in the percentage split, same as the prototype) + an
  * always-visible `#split-sum` with the running sum, green when it adds up to 100%, red when it
- * doesn't (T26.1). No calculation lives here — [sumPercentages]/[isPercentageSplitComplete] are the
+ * doesn't. No calculation lives here — [sumPercentages]/[isPercentageSplitComplete] are the
  * same pure functions used to build `ExpenseSplit.Weight` on save ([CreateExpenseViewModel]).
  */
 @OptIn(ExperimentalMaterial3Api::class)

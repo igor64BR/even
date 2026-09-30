@@ -40,7 +40,7 @@ import com.tally.app.ui.theme.LocalTallyColors
 import com.tally.app.ui.theme.ThemeToggleButton
 
 /**
- * "Notifications" screen (T41.1, RF35/RF36), faithful to `prototype/notifications.html`.
+ * "Notifications" screen, faithful to `prototype/notifications.html`.
  * `factory` injects the [NotificationsViewModel] via manual composition from
  * [com.tally.app.di.AppContainer] — same pattern as the other screens.
  *

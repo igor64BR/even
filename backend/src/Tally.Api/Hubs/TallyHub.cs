@@ -7,10 +7,10 @@ using Tally.Application.Groups;
 namespace Tally.Api.Hubs;
 
 /// <summary>
-/// T38.1: real-time notification hub (RF35/RF36; constitution.md principle 3 — our own system via
-/// SignalR, no third-party push). The connection requires the same JWT Bearer already validated by
+/// Real-time notification hub — our own system via SignalR, no third-party push. The connection
+/// requires the same JWT Bearer already validated by
 /// the rest of the API: <see cref="AuthorizeAttribute"/> reuses the default scheme configured in
-/// <c>Tally.Infrastructure.DependencyInjection.AddJwtAuthentication</c> (T18) — the only difference
+/// <c>Tally.Infrastructure.DependencyInjection.AddJwtAuthentication</c> — the only difference
 /// is that a Hub client doesn't send an <c>Authorization</c> header in the WebSocket handshake, so
 /// the token arrives via the <c>access_token</c> query string (read by the <c>OnMessageReceived</c>
 /// added in that same method, restricted to
@@ -18,7 +18,7 @@ namespace Tally.Api.Hubs;
 ///
 /// One SignalR group per <c>groupId</c> (<see cref="Hub.Groups"/>) — no connection is subscribed
 /// automatically; the client explicitly joins each synced group it's following via
-/// <see cref="JoinGroupAsync"/>. Joining revalidates RNF07 (<see cref="GroupAccess.BelongsTo"/>, the
+/// <see cref="JoinGroupAsync"/>. Joining revalidates access (<see cref="GroupAccess.BelongsTo"/>, the
 /// same rule <c>CreateExpenseUseCase</c>/<c>RegisterSettlementUseCase</c> already check before any
 /// operation) — without this, any authenticated user could subscribe to another group's real-time
 /// channel and see the description/amount of someone else's expenses and settlements just by

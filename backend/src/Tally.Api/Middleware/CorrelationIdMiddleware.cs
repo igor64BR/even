@@ -3,7 +3,7 @@ using Serilog.Context;
 namespace Tally.Api.Middleware;
 
 /// <summary>
-/// Ensures a per-request correlation identifier (RNF11 — observability). Reads the incoming
+/// Ensures a per-request correlation identifier for observability. Reads the incoming
 /// <c>X-Correlation-Id</c> header; if absent, generates a new one. The value is published to
 /// Serilog's <see cref="LogContext"/> so that every structured log emitted during the request
 /// (including the request/response log from <c>UseSerilogRequestLogging</c>) carries the same id,

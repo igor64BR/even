@@ -3,7 +3,7 @@ package com.tally.app.ui.auth
 import com.tally.domain.model.AuthenticatedUser
 
 /**
- * State of the login/account screen (T12.1) — mirrors `prototype/login.html`'s states: signed
+ * State of the login/account screen — mirrors `prototype/login.html`'s states: signed
  * out (with or without an error from the last attempt), connecting (the "Connecting to Google…"
  * overlay) and signed in (the "Your account" block).
  */

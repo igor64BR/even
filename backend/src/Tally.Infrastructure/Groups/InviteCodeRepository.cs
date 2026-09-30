@@ -6,8 +6,7 @@ using Tally.Infrastructure.Persistence.Entities;
 namespace Tally.Infrastructure.Groups;
 
 /// <summary>
-/// Implementation of <see cref="IInviteCodeRepository"/> via EF Core / <see cref="AppDbContext"/>
-/// (T21.1/T21.2).
+/// Implementation of <see cref="IInviteCodeRepository"/> via EF Core / <see cref="AppDbContext"/>.
 /// </summary>
 public sealed class InviteCodeRepository(AppDbContext dbContext) : IInviteCodeRepository
 {

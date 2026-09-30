@@ -9,8 +9,8 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Translates [Expense]/[ExpenseSplit] (`:domain`) into the expense DTO the backend expects
- * (`SyncedExpenseRequest`, T18/T23.1) — extracted from [RemoteGroupSyncRepository] (T19.1, where
- * it originated) to be shared with [RemoteExpenseSyncRepository] (T29): both classes send the same
+ * (`SyncedExpenseRequest`) — extracted from [RemoteGroupSyncRepository] (where
+ * it originated) to be shared with [RemoteExpenseSyncRepository]: both classes send the same
  * expense shape to the backend (bulk in [RemoteGroupSyncRepository.syncGroup], a single one in
  * [RemoteExpenseSyncRepository.updateExpense]), so the Expense -> DTO translation lives in one
  * place only.

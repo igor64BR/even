@@ -1,11 +1,11 @@
 package com.tally.app.ui.groupdetail
 
 /**
- * State of the "Group details" screen (T42.2, RF42). [Content] is the only state with real data —
- * [Loading] covers the instant before the first combined value arrives (Room + engine, T33) and
- * [NotFound] covers a `groupId` that no longer exists in Room (group deleted from another
- * tab/screen while this one was open; shouldn't happen in the normal flow, but avoids a crash
- * instead of assuming the group always exists).
+ * State of the "Group details" screen. [Content] is the only state with real data — [Loading]
+ * covers the instant before the first combined value arrives (Room + engine) and [NotFound] covers
+ * a `groupId` that no longer exists in Room (group deleted from another tab/screen while this one
+ * was open; shouldn't happen in the normal flow, but avoids a crash instead of assuming the group
+ * always exists).
  */
 sealed interface GroupDetailUiState {
     data object Loading : GroupDetailUiState
@@ -24,7 +24,7 @@ sealed interface GroupDetailUiState {
 
 /**
  * A row in "Balances" (the prototype `group.html`'s `.split-row`): a participant's balance,
- * computed by [com.tally.domain.engine.DebtSimplificationEngine.computeBalances] (T33) — never
+ * computed by [com.tally.domain.engine.DebtSimplificationEngine.computeBalances] — never
  * recalculated here, `ParticipantBalanceRow` just presents the already-ready [balance].
  */
 data class ParticipantBalanceUiModel(
@@ -49,7 +49,7 @@ sealed interface ParticipantBalance {
 /**
  * A row in "Expenses" (the prototype's `.expense-row`): description, who paid, a short date, split
  * type and total amount — no split calculation lives here, [splitTypeLabel] just translates the
- * `ExpenseSplit` (T7B) subtype already chosen when the expense was logged (T24).
+ * `ExpenseSplit` subtype already chosen when the expense was logged.
  */
 data class ExpenseRowUiModel(
     val id: String,
@@ -61,9 +61,9 @@ data class ExpenseRowUiModel(
 )
 
 /**
- * A row in "Settlement history" (T37, RF31/RF33): who paid, who received, how much and when —
- * presentation only, `SettleDebtsViewModel` already recorded the settlement itself (T42.1); this
- * list never recalculates anything, it's purely the history of what already happened.
+ * A row in "Settlement history": who paid, who received, how much and when — presentation only,
+ * `SettleDebtsViewModel` already recorded the settlement itself; this list never recalculates
+ * anything, it's purely the history of what already happened.
  */
 data class SettlementRowUiModel(
     val id: String,
@@ -74,10 +74,7 @@ data class SettlementRowUiModel(
 )
 
 /**
- * State of the "Sync this group" action (T19) for the detail screen. Until T19/before T42.4 this
- * action lived in the group list card (`com.tally.app.ui.groups.GroupSyncActionUiState`), a
- * temporary shortcut because this screen didn't exist yet. T42.4 moves the action here — it's the
- * right place now that "Group details" exists.
+ * State of the "Sync this group" action for the detail screen.
  */
 sealed interface GroupSyncActionUiState {
     /** The group is already synced, or the user isn't authenticated — offering the action makes no sense. */

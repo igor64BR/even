@@ -4,8 +4,7 @@ namespace Tally.Infrastructure.Auth;
 /// Config for validating the Google ID token. <see cref="ClientId"/> is the expected audience —
 /// the project's OAuth client id in the Google Cloud Console. In
 /// <c>appsettings.Development.json</c> today it's a placeholder; it needs to be swapped for the
-/// real client id as soon as the Google Cloud project exists (external configuration, out of
-/// scope for T11 — see T11 for details on how to test this manually afterwards).
+/// real client id as soon as the Google Cloud project exists.
 /// </summary>
 public sealed class GoogleAuthOptions
 {

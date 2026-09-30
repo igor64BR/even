@@ -29,7 +29,7 @@ enum class TallyBottomTab { NOTIFICATIONS, GROUPS, PROFILE }
 /**
  * The prototype's `.bottombar` — Notifications/Groups/Profile, the active tab in full `--ink`,
  * inactive ones in `--ink-soft`. [unreadNotificationsCount] > 0 draws the bell's `.badge-dot`
- * (T41.2, the same `--owed` color as the prototype) — see `com.tally.app.ui.notifications`, the
+ * (the same `--owed` color as the prototype) — see `com.tally.app.ui.notifications`, the
  * source of the count.
  *
  * [authenticatedUserName] mirrors `renderHeaderAuth` from `prototype/app.js`: `null` (signed out)

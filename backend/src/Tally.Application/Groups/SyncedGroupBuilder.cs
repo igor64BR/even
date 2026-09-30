@@ -4,11 +4,11 @@ using Tally.Domain;
 namespace Tally.Application.Groups;
 
 /// <summary>
-/// DTO-to-domain mapping from T18.1 — the first time the project converts a JSON payload coming
+/// DTO-to-domain mapping that converts a JSON payload coming
 /// from the app into the rich <c>Tally.Domain</c> types (<see cref="Group"/>/<see cref="Participant"/>/
 /// <see cref="Expense"/>). One named method per step, with no single method doing the whole
 /// translation at once (Object Calisthenics) — and without bypassing domain validation: the
-/// aggregate is always created by <see cref="Group.Create"/> (T15), never a loose constructor.
+/// aggregate is always created by <see cref="Group.Create"/>, never a loose constructor.
 /// </summary>
 internal static class SyncedGroupBuilder
 {
@@ -42,8 +42,8 @@ internal static class SyncedGroupBuilder
         IReadOnlyList<SyncedExpenseRequest> expenses) =>
         expenses.Select(BuildExpense).ToList();
 
-    // T23 extracted building the Expense/ExpenseSplit itself into
-    // Tally.Application.Expenses.ExpenseMapper — reused here and by the new single-expense use
+    // Building the Expense/ExpenseSplit itself lives in
+    // Tally.Application.Expenses.ExpenseMapper — reused here and by the single-expense use
     // case, instead of duplicated.
     private static ExpenseToPersist BuildExpense(SyncedExpenseRequest request) =>
         new(ExpenseMapper.Build(request), request.Description, request.Date);

@@ -13,16 +13,16 @@ import java.io.IOException
 import retrofit2.HttpException
 
 /**
- * Implementation of [RemoteGroupRepository] on top of [GroupsApi] (`POST /groups/sync`, T18) +
- * [TokenStorage] (T12.2, reading the access token) — T19.1.
+ * Implementation of [RemoteGroupRepository] on top of [GroupsApi] (`POST /groups/sync`) +
+ * [TokenStorage] (reading the access token).
  *
- * Two model gaps inherited from earlier tasks, resolved here with the most honest value available
+ * Two model gaps, resolved here with the most honest value available
  * (documented, not invented):
- * - [Group] (`:domain`, T7B) doesn't model category yet (same gap already flagged by
- *   `CreateGroupViewModel`, T16: the category chosen in the form isn't persisted). Every group
+ * - [Group] (`:domain`) doesn't model category yet (same gap already flagged by
+ *   `CreateGroupViewModel`: the category chosen in the form isn't persisted). Every group
  *   syncs as [GROUP_CATEGORY_OTHER] until a future task adds the real field.
  * - [Participant] (`:domain`) doesn't model a link to an actual account — the project's
- *   local-first stance (constitution.md, principle 1) only requires a name. Every participant
+ *   local-first stance only requires a name. Every participant
  *   syncs as a guest (`isGuest = true`); there's currently no way for a `Participant` to
  *   correspond to an authenticated user other than the device owner.
  */
@@ -78,7 +78,7 @@ private fun Participant.toSyncDto() = SyncedParticipantDto(
 )
 
 // Expense.toSyncDto()/split translation live in ExpenseSyncMapper.kt (same package,
-// `internal` — shared with RemoteExpenseSyncRepository, T29, to avoid duplicating the same
+// `internal` — shared with RemoteExpenseSyncRepository, to avoid duplicating the same
 // Expense -> SyncedExpenseDto translation in both places).
 
 // Mirrors the ordinal value of GroupCategory.Other (C#) — the backend doesn't register a

@@ -17,25 +17,20 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * State for the "Your groups" screen (RF40/RF41). The data source is [GroupRepository] +
- * [ParticipantRepository] — the two `:domain` ports that `:data` already implements over Room
- * (T7); zero network calls to build the list, as required by T8.
+ * State for the "Your groups" screen. The data source is [GroupRepository] +
+ * [ParticipantRepository] — the two `:domain` ports that `:data` already implements over Room;
+ * zero network calls to build the list.
  *
- * Gap known since T8 (which reported it instead of making up data, since it was scoped to
- * `app/app/`): `Group` was missing a sync flag and `Expense` a per-participant split. T7B
- * (`:domain`/`:data`) fixed the first half — [Group.isSynced] is now a real field, and
- * [toUiModel] uses the real value instead of the fixed `false` T8 had put in as a placeholder.
+ * [Group.isSynced] is a real field, and [toUiModel] uses its actual value.
  * [GroupListItemUiModel.balance] still defaults to [GroupBalance.Settled]: computing a real
- * balance depends on the debt-simplification engine in Kotlin (RF25-RF28, T33), which already
- * exists and is already used by [com.tally.app.ui.groupdetail.GroupDetailViewModel] — bringing
- * that calculation over here, to the list, is a future extension outside the scope of T42 (which
- * only calls for the detail/settlement screen), not a fix for this task.
+ * balance depends on the debt-simplification engine in Kotlin, which already exists and is
+ * already used by [com.tally.app.ui.groupdetail.GroupDetailViewModel] — bringing that calculation
+ * over here, to the list, is a future extension, not implemented for this screen yet.
  *
- * T19 had put the "Sync this group" action here, as a temporary shortcut because a group detail
- * screen (RF42) didn't exist yet. T42.4 removes this dependency on
+ * The "Sync this group" action doesn't live here: it's a dependency on
  * [com.tally.domain.repository.AuthRepository]/[com.tally.domain.repository.RemoteGroupRepository]
- * — the action now lives in [com.tally.app.ui.groupdetail.GroupDetailViewModel], alongside
- * everything else a specific group can do.
+ * that lives in [com.tally.app.ui.groupdetail.GroupDetailViewModel], alongside everything else a
+ * specific group can do.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupListViewModel(
@@ -52,7 +47,7 @@ class GroupListViewModel(
             initialValue = GroupListUiState.Loading,
         )
 
-    /** Badge for the "Notifications" tab (T41.2) — same source `NotificationsViewModel` uses. */
+    /** Badge for the "Notifications" tab — same source `NotificationsViewModel` uses. */
     val unreadNotificationsCount: StateFlow<Int> = notificationRepository.getUnreadCountFlow()
         .stateIn(
             scope = viewModelScope,

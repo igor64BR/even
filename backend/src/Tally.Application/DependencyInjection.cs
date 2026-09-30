@@ -31,7 +31,7 @@ public static class DependencyInjection
         services.AddScoped<RegisterSettlementUseCase>();
         services.AddScoped<GetGroupEventsUseCase>();
 
-        // T32: the simplification engine (Tally.Domain, T31) has no state — Singleton avoids a
+        // The simplification engine (Tally.Domain) has no state — Singleton avoids a
         // new instance per request for no benefit in return. Registered here (Application, not
         // Infrastructure) because it's the domain's engine, not an infrastructure detail; and not
         // in Tally.Domain because that project doesn't depend on

@@ -4,7 +4,7 @@ using Tally.Application.Auth;
 namespace Tally.Application.Tests.Auth;
 
 /// <summary>
-/// Covers <see cref="RevokeSessionUseCase"/> (T14.1) with a mocked
+/// Covers <see cref="RevokeSessionUseCase"/> with a mocked
 /// <see cref="IRefreshTokenRepository"/> — same style as
 /// <see cref="AuthenticateWithGoogleUseCaseTests"/>, no real database. Idempotency itself (an
 /// already-revoked or unknown token is not an error) is the responsibility of the

@@ -4,7 +4,7 @@ using Tally.Application.Notifications;
 namespace Tally.Api.Hubs;
 
 /// <summary>
-/// T38.2/T38.3: real implementation of <see cref="IGroupEventNotifier"/> using
+/// Real implementation of <see cref="IGroupEventNotifier"/> using
 /// <see cref="IHubContext{TallyHub}"/> — lives in <c>Tally.Api</c> (not Tally.Infrastructure)
 /// because that's where <see cref="TallyHub"/> also lives; nothing in Tally.Application
 /// references <c>Microsoft.AspNetCore.SignalR</c> (Dependency Inversion: use cases depend only on
@@ -16,7 +16,7 @@ namespace Tally.Api.Hubs;
 /// <c>nameof(GroupEventType.DebtSettled)</c>, not the event class's name
 /// (<c>nameof(ExpenseCreatedEvent)</c> would be <c>"ExpenseCreatedEvent"</c>, a different name) —
 /// the client subscribes to exactly these names via
-/// <c>connection.on("ExpenseCreated", ...)</c>/<c>connection.on("DebtSettled", ...)</c> (T40); a
+/// <c>connection.on("ExpenseCreated", ...)</c>/<c>connection.on("DebtSettled", ...)</c>; a
 /// method with the wrong name reaches the client as an unrecognized invocation (SignalR logs and
 /// discards it instead of throwing), so this mismatch doesn't show up as a server-side failure —
 /// only a manual end-to-end test (a real client receiving the event) catches it.
@@ -45,9 +45,8 @@ public sealed class SignalRGroupEventNotifier(
         {
             // The business operation (expense/settlement) was already persisted successfully before
             // this call — a real-time delivery failure (e.g. hub unavailable) must never bring down
-            // the use case. RF35/RF36 is "notify in real time", not "guarantee delivery"; the
-            // kill-state/disconnection limitation is already a documented trade-off (constitution.md
-            // principle 3), and the pull fallback (T39) covers what's lost here.
+            // the use case. The goal is to notify in real time, not to guarantee delivery; the
+            // pull fallback covers what's lost here.
             logger.LogWarning(
                 error,
                 "Failed to notify event {EventType} of group {GroupId} via SignalR.",

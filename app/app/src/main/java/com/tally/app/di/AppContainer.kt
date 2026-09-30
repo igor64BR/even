@@ -58,38 +58,38 @@ class AppContainer(context: Context) {
     val participantRepository: ParticipantRepository by lazy { RoomParticipantRepository(database.participantDao()) }
     val expenseRepository: ExpenseRepository by lazy { RoomExpenseRepository(database.expenseDao()) }
 
-    // T42.1 — settlement persistence (RF31/RF33), consumed by the "Settle debts" screen (T42.3).
+    // Settlement persistence, consumed by the "Settle debts" screen.
     val settlementRepository: SettlementRepository by lazy { RoomSettlementRepository(database.settlementDao()) }
 
-    // T33 — the debt-simplification engine (algorithm-spec.md). A :domain interface, its only
-    // implementation also lives in :domain (GreedyDebtSimplificationEngine) — not a persistence
-    // contract like the `Room*Repository`s above, but follows the same manual composition: the
-    // consumer (T42.2/T42.3) depends on the interface, not the concrete class.
+    // The debt-simplification engine. A :domain interface, its only implementation also lives in
+    // :domain (GreedyDebtSimplificationEngine) — not a persistence contract like the
+    // `Room*Repository`s above, but follows the same manual composition: the consumer depends on
+    // the interface, not the concrete class.
     val debtSimplificationEngine: DebtSimplificationEngine by lazy { GreedyDebtSimplificationEngine() }
 
-    // T12 — optional authentication via Google (constitution.md, principles 1 and 2). `authApi`
-    // uses BuildConfig.API_BASE_URL (placeholder documented in `app/app/build.gradle.kts`);
-    // `tokenStorage` encrypts the session on the device (EncryptedSharedPreferences, T12.2).
+    // Optional authentication via Google. `authApi` uses BuildConfig.API_BASE_URL (placeholder
+    // documented in `app/app/build.gradle.kts`); `tokenStorage` encrypts the session on the device
+    // (EncryptedSharedPreferences).
     private val tokenStorage: TokenStorage by lazy { EncryptedTokenStorage(context.applicationContext) }
     private val authApi: AuthApi by lazy { TallyHttpClientFactory.createAuthApi(BuildConfig.API_BASE_URL) }
     val authRepository: AuthRepository by lazy { RemoteAuthRepository(authApi, tokenStorage) }
     val googleIdentityClient: GoogleIdentityClient by lazy { GoogleIdentityClient(context.applicationContext) }
 
-    // T19 — the "Sync this group" action (POST /groups/sync, T18). Reuses the same `tokenStorage`
-    // from T12 to read the access token when building the Authorization header.
+    // The "Sync this group" action (POST /groups/sync). Reuses the same `tokenStorage` to read the
+    // access token when building the Authorization header.
     private val groupsApi: GroupsApi by lazy { TallyHttpClientFactory.createGroupsApi(BuildConfig.API_BASE_URL) }
     val remoteGroupRepository: RemoteGroupRepository by lazy { RemoteGroupSyncRepository(groupsApi, tokenStorage) }
 
-    // T29 — propagating an expense edit/delete to the backend when the group is synced
-    // (`PUT`/`DELETE /groups/{id}/expenses/{expenseId}`, T28). Same `groupsApi`/`tokenStorage` as
+    // Propagates an expense edit/delete to the backend when the group is synced
+    // (`PUT`/`DELETE /groups/{id}/expenses/{expenseId}`). Same `groupsApi`/`tokenStorage` as
     // remoteGroupRepository, its own interface for single responsibility (see the KDoc of
     // RemoteExpenseRepository).
     val remoteExpenseRepository: RemoteExpenseRepository by lazy { RemoteExpenseSyncRepository(groupsApi, tokenStorage) }
 
-    // T40/T41 — local notifications (Room) + SignalR client (T38's Hub) + pull fallback (T39).
+    // Local notifications (Room) + SignalR client (Hub) + pull fallback.
     val notificationRepository: NotificationRepository by lazy { RoomNotificationRepository(database.notificationDao()) }
 
-    // GroupEventsApi.getEvents is T39's pull; TallyHttpClientFactory reuses the same
+    // GroupEventsApi.getEvents is the pull fallback; TallyHttpClientFactory reuses the same
     // Retrofit.Builder as authApi/groupsApi (see the factory's KDoc).
     private val groupEventsApi: GroupEventsApi by lazy {
         TallyHttpClientFactory.createGroupEventsApi(BuildConfig.API_BASE_URL)

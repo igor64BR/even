@@ -6,10 +6,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Covers T29.2: "the delete confirmation really asks for confirmation before deleting (doesn't
- * delete on the first tap)" — the whole rule lives in [ExpenseDeleteConfirmationState] (extracted
- * from `GroupDetailScreen.ExpenseList` precisely to make it testable without setting up Compose),
- * so it can be verified here with plain JUnit, no Robolectric.
+ * Verifies "the delete confirmation really asks for confirmation before deleting (doesn't delete
+ * on the first tap)" — the whole rule lives in [ExpenseDeleteConfirmationState] (extracted from
+ * `GroupDetailScreen.ExpenseList` precisely to make it testable without setting up Compose), so it
+ * can be verified here with plain JUnit, no Robolectric.
  */
 class ExpenseDeleteConfirmationStateTest {
 

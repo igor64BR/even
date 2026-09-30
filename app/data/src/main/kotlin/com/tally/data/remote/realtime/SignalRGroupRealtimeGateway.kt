@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Real implementation of [GroupRealtimeGateway] (T40.1/T40.2) on top of the official Java SignalR
+ * Real implementation of [GroupRealtimeGateway] on top of the official Java SignalR
  * client (`com.microsoft.signalr:signalr`). Connects to [hubUrl] (`/hubs/tally`, see
  * `NotificationHubRoute` on the backend), authenticated via an access token in the query string
  * (`withAccessTokenProvider` — the same mechanism the backend's `OnMessageReceived` reads for Hub
@@ -36,11 +36,11 @@ import kotlinx.coroutines.withContext
  * of the Java client, not an omission in this code). [maintainConnection] implements the retry
  * manually: on every `onClosed`, it waits for a backoff (same progression documented for the JS
  * client — 0s, 2s, 10s, 30s, then repeating 30s) and reconnects. Every successful connection — the
- * first one and every reconnection — triggers [MissedGroupEventsSynchronizer.sync] (T40.2), which
+ * first one and every reconnection — triggers [MissedGroupEventsSynchronizer.sync], which
  * also covers "app was killed and reopened" in addition to "network dropped and came back" (see
  * the KDoc of [MissedGroupEventsSynchronizer]).
  *
- * **No real unit test for Hub connection** (limitation documented in the T40/T41 delivery): this
+ * **No real unit test for Hub connection**: this
  * class is the only piece of the flow that actually opens a socket, and there's no way to test it
  * without a real Hub running (Robolectric doesn't spin up an ASP.NET server, and adding a network
  * mocking framework for this would be out of scope for this task). All the business logic that
@@ -53,7 +53,7 @@ import kotlinx.coroutines.withContext
  *
  * A single group at a time: [connect] always closes a previous connection before opening a new one
  * (never two simultaneous connections) — consistent with "only connects when a synced group is
- * being viewed" (T40, not a multi-group feature).
+ * being viewed" (not a multi-group feature).
  *
  * Builds [GroupEventNotificationBuilder]/[GroupEventRecorder]/[MissedGroupEventsSynchronizer]
  * internally from the "raw" dependencies (Room/Retrofit/[MoneyFormatter]) instead of receiving them

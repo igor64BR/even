@@ -1,16 +1,16 @@
 namespace Tally.Application.Groups;
 
 /// <summary>
-/// T21.1: generates the invite code for a synced group. Reuses
+/// Generates the invite code for a synced group. Reuses
 /// <see cref="IGroupRepository.GetAccessAsync"/> (the same one used by
-/// <c>Tally.Application.Expenses.CreateExpenseUseCase</c>, T23) to validate the group's existence
+/// <c>Tally.Application.Expenses.CreateExpenseUseCase</c>) to validate the group's existence
 /// and owner — <see cref="GroupAccess.BelongsTo"/> today IS the owner check (see that type's
-/// comment), so "owner only" (RNF07/T21) is exactly the same rule, with no new concept needed.
+/// comment), so "owner only" is exactly the same rule, with no new concept needed.
 ///
-/// Validation order (same pattern as T23): (1) group exists, otherwise
+/// Validation order (same pattern as elsewhere): (1) group exists, otherwise
 /// <see cref="GroupNotFoundException"/> (404); (2) authenticated user is the owner, otherwise
 /// <see cref="AccessDeniedException"/> (403 — "generate code, owner only", unlike "join via code",
-/// which T21.2 opens to any authenticated user).
+/// which is open to any authenticated user).
 /// </summary>
 public sealed class GenerateInviteCodeUseCase(
     IGroupRepository groupRepository,

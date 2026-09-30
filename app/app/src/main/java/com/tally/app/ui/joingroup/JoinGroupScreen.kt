@@ -33,9 +33,9 @@ import com.tally.app.ui.theme.LocalTallyColors
 import com.tally.app.ui.theme.ThemeToggleButton
 
 /**
- * Entry point of the "join group via link" flow (T22.2). `factory` injects the
+ * Entry point of the "join group via link" flow. `factory` injects the
  * [JoinGroupViewModel] through the manual composition of [com.tally.app.di.AppContainer] — same
- * convention as [com.tally.app.ui.auth.LoginRoute] (T12).
+ * convention as [com.tally.app.ui.auth.LoginRoute].
  *
  * [onNeedsLogin] is called (via [LaunchedEffect]) when [JoinGroupUiState.NeedsLogin] shows up —
  * whoever assembles navigation (`MainActivity`) decides what to do (send to the login screen,
@@ -166,9 +166,8 @@ private fun LoadingContent(modifier: Modifier = Modifier) {
 }
 
 /**
- * "You've been invited to join a group" — deliberately generic text: T21 has no endpoint to
- * preview the group by its code, so there's no name to show here (see
- * `T22-app-entrar-via-link.md`, "don't make one up").
+ * "You've been invited to join a group" — deliberately generic text: there's no endpoint to
+ * preview the group by its code, so there's no name to show here ("don't make one up").
  */
 @Composable
 private fun ConfirmContent(onConfirmClick: () -> Unit, onCancelClick: () -> Unit, modifier: Modifier = Modifier) {

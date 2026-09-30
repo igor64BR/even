@@ -5,7 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Covers T41.1: [formatInstantAsRelative] reproduces the same scale as `fmtRelative()` in
+ * [formatInstantAsRelative] reproduces the same scale as `fmtRelative()` in
  * `prototype/app.js` ("today"/"yesterday"/"N days ago"/"N months ago"), used in the notifications
  * screen.
  */

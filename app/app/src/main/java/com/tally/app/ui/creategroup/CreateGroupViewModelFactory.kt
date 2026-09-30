@@ -9,7 +9,7 @@ import com.tally.domain.repository.ParticipantRepository
 /**
  * No DI framework in the project yet — a manual factory that injects
  * [com.tally.app.di.AppContainer]'s repositories into the [CreateGroupViewModel]. Same pattern as
- * [com.tally.app.ui.groups.GroupListViewModelFactory] (T8).
+ * [com.tally.app.ui.groups.GroupListViewModelFactory].
  */
 class CreateGroupViewModelFactory(
     private val groupRepository: GroupRepository,

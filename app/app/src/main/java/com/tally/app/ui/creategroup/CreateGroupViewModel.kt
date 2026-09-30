@@ -18,9 +18,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * State + validation + persistence for the "New group" form (T16). Persistence is always local
- * via [GroupRepository]/[ParticipantRepository] (Room, T7) — zero network calls (constitution.md,
- * principle 1); syncing is a separate, future action (T19).
+ * State + validation + persistence for the "New group" form. Persistence is always local
+ * via [GroupRepository]/[ParticipantRepository] (Room) — zero network calls; syncing is a
+ * separate, future action.
  */
 class CreateGroupViewModel(
     private val groupRepository: GroupRepository,
@@ -97,8 +97,8 @@ class CreateGroupViewModel(
     }
 
     /**
-     * The [GroupCategory] chosen in the form isn't persisted here: `Group` (`:domain`, T7B) has no
-     * category field, and adding one is a schema change out of scope for T16 (restricted to
+     * The [GroupCategory] chosen in the form isn't persisted here: `Group` (`:domain`) has no
+     * category field, and adding one is a schema change out of scope here (restricted to
      * `app/app/`). Reported as a known gap, not invented.
      */
     private suspend fun saveGroup(state: CreateGroupUiState) {

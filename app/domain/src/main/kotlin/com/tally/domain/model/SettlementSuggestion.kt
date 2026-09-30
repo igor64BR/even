@@ -1,7 +1,7 @@
 package com.tally.domain.model
 
 /**
- * A transaction suggested by the debt-simplification engine (`DebtSimplificationEngine`, T33):
+ * A transaction suggested by the debt-simplification engine (`DebtSimplificationEngine`):
  * "[fromParticipantId] should pay [amount] to [toParticipantId]". Mirrors `Transaction`
  * (`backend/src/Tally.Domain/Transaction.cs`).
  *

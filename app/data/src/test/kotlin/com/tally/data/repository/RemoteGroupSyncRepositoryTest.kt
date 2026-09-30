@@ -26,7 +26,7 @@ import retrofit2.HttpException
 import retrofit2.Response
 
 /**
- * Covers T19.1: [RemoteGroupSyncRepository] mirrors `POST /groups/sync` (T18) with the
+ * [RemoteGroupSyncRepository] mirrors `POST /groups/sync` with the
  * `Authorization: Bearer` read from [TokenStorage] and translates network/HTTP failure (or a
  * missing session) into [GroupSyncException] — never lets `HttpException`/`IOException` leak out.
  * Same pattern as `RemoteAuthRepositoryTest`: simple test doubles for [GroupsApi]/[TokenStorage]
@@ -208,8 +208,8 @@ class RemoteGroupSyncRepositoryTest {
             return SyncGroupResponseDto(groupId = "remote-group-id")
         }
 
-        // Not used by RemoteGroupSyncRepositoryTest (T29 covers these in
-        // RemoteExpenseSyncRepositoryTest) — only here to satisfy the GroupsApi interface.
+        // Not used by RemoteGroupSyncRepositoryTest (RemoteExpenseSyncRepositoryTest covers these)
+        // — only here to satisfy the GroupsApi interface.
         override suspend fun updateExpense(
             bearerToken: String,
             id: String,

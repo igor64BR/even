@@ -23,9 +23,9 @@ import com.tally.app.ui.format.formatCentsAsBrl
 import com.tally.app.ui.theme.LocalTallyColors
 
 /**
- * A row in "Settlement history" (T37, RF31/RF33) — the same layout as [ExpenseRow] (icon + text +
- * amount), but purely informational: a settlement already happened and can't be edited or deleted
- * from here, so there's no `onClick`/action at all, unlike [ExpenseRow].
+ * A row in "Settlement history" — the same layout as [ExpenseRow] (icon + text + amount), but
+ * purely informational: a settlement already happened and can't be edited or deleted from here, so
+ * there's no `onClick`/action at all, unlike [ExpenseRow].
  */
 @Composable
 fun SettlementRow(settlement: SettlementRowUiModel, modifier: Modifier = Modifier) {

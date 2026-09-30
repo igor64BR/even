@@ -20,7 +20,7 @@ namespace Tally.Infrastructure;
 /// <summary>
 /// DI registration entry point for the Infrastructure layer. Called from the composition root
 /// (<c>Tally.Api/Program.cs</c>) — keeps Program.cs lean instead of spreading each layer's
-/// <c>services.AddX</c> directly into it (T3).
+/// <c>services.AddX</c> directly into it.
 /// </summary>
 public static class DependencyInjection
 {
@@ -41,8 +41,8 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
-        // T4.1: infrastructure health check for RNF08 (`/health` reflects the DB's health).
-        // When the SignalR Hub (E8) exists, its health check goes here as a second
+        // Infrastructure health check (`/health` reflects the DB's health).
+        // If a SignalR Hub health check is added later, it goes here as a second
         // `.AddCheck(...)`/`.AddSignalRHub(...)` in the same chain, making the endpoint aggregate.
         services.AddHealthChecks()
             .AddNpgSql(connectionString, name: "postgres");
@@ -55,7 +55,7 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// T11 DI registration: Google ID token validation, issuing the app's own JWT, and persisting
+    /// DI registration: Google ID token validation, issuing the app's own JWT, and persisting
     /// user/refresh token. Extracted from <see cref="AddInfrastructure"/>'s body only for
     /// readability — it's still part of the same composition root.
     /// </summary>
@@ -85,15 +85,14 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// T18.1: <c>POST /groups/sync</c> requires a valid JWT (<c>[Authorize]</c>) — until this task
-    /// nothing validated the token <see cref="JwtIssuer"/> issues, it only issued it (T11 never
-    /// ended up with a protected endpoint). Reuses <see cref="JwtOptions"/> (the same issuing
+    /// Validates the JWT that <see cref="JwtIssuer"/> issues, so <c>[Authorize]</c> endpoints like
+    /// <c>POST /groups/sync</c> can require it. Reuses <see cref="JwtOptions"/> (the same issuing
     /// config) to validate signature/issuer/audience, instead of duplicating those values.
     /// <c>MapInboundClaims = false</c> is needed to read the <c>sub</c> claim exactly as
     /// <see cref="JwtIssuer"/> issued it — without it the default handler remaps "sub" to the
     /// legacy URI of <see cref="System.Security.Claims.ClaimTypes.NameIdentifier"/>.
     ///
-    /// T38.1: <c>OnMessageReceived</c> is the only addition needed for the SignalR Hub
+    /// <c>OnMessageReceived</c> is the only addition needed for the SignalR Hub
     /// (<c>TallyHub</c>, Tally.Api) to work authenticated. A Hub client can't send an
     /// <c>Authorization</c> header on the WebSocket handshake — ASP.NET Core's own documentation
     /// recommends reading the token from the <c>access_token</c> query string in that case,
@@ -149,9 +148,9 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// T18/T23/T21/T32 DI registration: syncing a local group to the cloud (RF09), adding a
-    /// single new expense to an already-synced group (T23), invite/join via code (T21), and reading
-    /// a group's current expenses/settlements to feed the simplification engine on demand (T32).
+    /// DI registration: syncing a local group to the cloud, adding a
+    /// single new expense to an already-synced group, invite/join via code, and reading
+    /// a group's current expenses/settlements to feed the simplification engine on demand.
     /// </summary>
     private static IServiceCollection AddGroups(this IServiceCollection services)
     {

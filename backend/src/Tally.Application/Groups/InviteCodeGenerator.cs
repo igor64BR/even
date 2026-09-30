@@ -3,8 +3,8 @@ using System.Security.Cryptography;
 namespace Tally.Application.Groups;
 
 /// <summary>
-/// Generates the short invite code (T21.1: "8 alphanumeric characters, hard-to-guess enough for an
-/// MVP — doesn't need to be as cryptographically strong as a session token"). Still uses
+/// Generates the short invite code: 8 alphanumeric characters, hard-to-guess enough for an
+/// MVP — doesn't need to be as cryptographically strong as a session token. Still uses
 /// <see cref="RandomNumberGenerator"/> (CSPRNG) instead of <see cref="Random"/>: the cost is
 /// negligible and it avoids any dependency on the default PRNG's state/seed, without having to
 /// justify why "an MVP can use the weak PRNG here". The alphabet excludes visually ambiguous

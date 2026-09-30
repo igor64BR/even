@@ -4,15 +4,15 @@ using Tally.Infrastructure.Persistence.Entities;
 namespace Tally.Infrastructure.Expenses;
 
 /// <summary>
-/// EF-to-domain mapping of an expense (T32): the opposite direction of
-/// <see cref="ExpenseEntityMapper"/> (domain-to-EF, T23/T18.1). Until T32 no use case needed to
-/// reconstruct the domain <see cref="Expense"/> from what's persisted — only persist it; the
-/// settlement endpoint (<c>GET /groups/{id}/settlement</c>) is the first consumer, because the
-/// simplification engine (T31) only understands the domain type, never <see cref="ExpenseEntity"/>.
+/// EF-to-domain mapping of an expense: the opposite direction of
+/// <see cref="ExpenseEntityMapper"/> (domain-to-EF). Before the settlement endpoint existed, no use
+/// case needed to reconstruct the domain <see cref="Expense"/> from what's persisted — only persist
+/// it; the settlement endpoint (<c>GET /groups/{id}/settlement</c>) is the first consumer, because
+/// the simplification engine only understands the domain type, never <see cref="ExpenseEntity"/>.
 ///
 /// Reconstructs the concrete <see cref="ExpenseSplit"/> subtype from the <see cref="SplitTypeEntity"/>
 /// discriminator — the exact inverse of <c>ExpenseEntityMapper.BuildSplit</c>. One named method per
-/// step, with no single method doing the whole translation at once (same Object Calisthenics T23
+/// step, with no single method doing the whole translation at once (same Object Calisthenics
 /// already followed on the opposite side).
 /// </summary>
 internal static class ExpenseEntityToDomainMapper

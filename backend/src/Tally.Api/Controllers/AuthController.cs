@@ -5,7 +5,7 @@ using Tally.Application.Auth;
 namespace Tally.Api.Controllers;
 
 /// <summary>
-/// T11: exchanges a Google ID token for our own JWT. No token validation/issuance logic here — the
+/// Exchanges a Google ID token for our own JWT. No token validation/issuance logic here — the
 /// controller only receives the request, calls <see cref="AuthenticateWithGoogleUseCase"/>, and
 /// translates the result (or failure) to HTTP.
 /// </summary>
@@ -45,7 +45,7 @@ public class AuthController(
     }
 
     /// <summary>
-    /// T14.1: revokes the session for the given refresh token (see <see cref="LogoutRequest"/> for
+    /// Revokes the session for the given refresh token (see <see cref="LogoutRequest"/> for
     /// why it comes in the body, not the Authorization header). Always 204, even if the token was
     /// already revoked or never existed — <see cref="RevokeSessionUseCase"/> is deliberately
     /// idempotent, so as not to expose to the client whether a given token ever existed.

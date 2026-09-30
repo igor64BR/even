@@ -1,7 +1,7 @@
 package com.tally.app.ui.createexpense
 
 /**
- * The "Percentage" tab (T26.1): each row holds a freely typed integer `%` (the same `<input
+ * The "Percentage" tab: each row holds a freely typed integer `%` (the same `<input
  * type="number" min="0" max="100">` as the prototype — the min/max attributes don't block
  * anything in JavaScript, only the final sum is validated), and saving is only allowed when the
  * sum matches exactly 100 (`prototype/new-expense.html`, `updateSplitSum`/the `salvar-btn`

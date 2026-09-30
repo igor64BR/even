@@ -2,8 +2,8 @@ namespace Tally.Domain;
 
 /// <summary>
 /// Participant of a <see cref="Group"/>. The distinction between a guest (name only, no
-/// account) and an authenticated one (linked to a Google account) is central to the product —
-/// see constitution.md principle 2 and spec.md RF06/RF07 — so it's expressed as two named
+/// account) and an authenticated one (linked to a Google account) is central to the product,
+/// so it's expressed as two named
 /// factory methods instead of a constructor taking a loose <see cref="bool"/> (Object
 /// Calisthenics: a boolean parameter at the call site doesn't say what's being created;
 /// <c>Participant.Guest(...)</c> does).
@@ -15,8 +15,8 @@ public sealed class Participant : IEquatable<Participant>
     public ParticipantName Name { get; }
 
     /// <summary>
-    /// <c>true</c> for a participant added by name only (RF06), with no account or app of their
-    /// own; <c>false</c> for a participant linked to a Google account (RF07).
+    /// <c>true</c> for a participant added by name only, with no account or app of their
+    /// own; <c>false</c> for a participant linked to a Google account.
     /// </summary>
     public bool IsGuest { get; }
 

@@ -10,9 +10,9 @@ import retrofit2.http.Path
 
 /**
  * Mirrors `POST /groups/sync` (backend: `GroupsController.Sync`,
- * `backend/src/Tally.Api/Controllers/GroupsController.cs`, T18) — the first sync of a local
- * group to the backend (RF09). Same Retrofit pattern as
- * [com.tally.data.remote.auth.AuthApi] (T12): a thin interface, request/response bodies as
+ * `backend/src/Tally.Api/Controllers/GroupsController.cs`) — the first sync of a local
+ * group to the backend. Same Retrofit pattern as
+ * [com.tally.data.remote.auth.AuthApi]: a thin interface, request/response bodies as
  * `@Serializable` DTOs that mirror the C# records field for field (System.Text.Json/ASP.NET Core
  * serializes in camelCase by default, with no enum converter registered — that's why
  * `category`/`splitType` travel as `Int`, the C# enum's ordinal value, not as a string).
@@ -29,8 +29,8 @@ interface GroupsApi {
     ): SyncGroupResponseDto
 
     /**
-     * Mirrors `POST /groups/join/{code}` (backend: `GroupsController.JoinByCode`, T21.2) — joins
-     * an existing group via invite code (RF07). Response uses the same shape as [sync]
+     * Mirrors `POST /groups/join/{code}` (backend: `GroupsController.JoinByCode`) — joins
+     * an existing group via invite code. Response uses the same shape as [sync]
      * (`SyncGroupResponse(GroupId)`), reused here instead of a dedicated DTO because the body is
      * identical.
      */
@@ -41,11 +41,11 @@ interface GroupsApi {
     ): SyncGroupResponseDto
 
     /**
-     * T29 (app: edit expense) against T28 (backend, `PUT /groups/{id}/expenses/{expenseId}`,
-     * running in parallel — see the KDoc of [com.tally.domain.repository.RemoteExpenseRepository]
-     * for the documented pending item). Same body as `POST /groups/{id}/expenses`
-     * (`CreateExpense`, T23.1, same [SyncedExpenseDto]) — only the HTTP verb changes, since it's
-     * always the whole expense replacing the previous one, never a partial patch.
+     * Edit expense: mirrors `PUT /groups/{id}/expenses/{expenseId}` on the backend — see the KDoc
+     * of [com.tally.domain.repository.RemoteExpenseRepository] for a documented pending item. Same
+     * body as `POST /groups/{id}/expenses` (`CreateExpense`, same [SyncedExpenseDto]) — only the
+     * HTTP verb changes, since it's always the whole expense replacing the previous one, never a
+     * partial patch.
      */
     @PUT("groups/{id}/expenses/{expenseId}")
     suspend fun updateExpense(
@@ -56,8 +56,8 @@ interface GroupsApi {
     )
 
     /**
-     * T29 (app: delete expense) against T28 (backend, `DELETE /groups/{id}/expenses/{expenseId}`)
-     * — same documented pending item as [updateExpense].
+     * Delete expense: mirrors `DELETE /groups/{id}/expenses/{expenseId}` on the backend — same
+     * documented pending item as [updateExpense].
      */
     @DELETE("groups/{id}/expenses/{expenseId}")
     suspend fun deleteExpense(

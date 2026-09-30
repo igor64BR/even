@@ -27,7 +27,7 @@ public class InviteCodeEntityConfiguration : IEntityTypeConfiguration<InviteCode
 
         builder.HasIndex(code => code.GroupId);
 
-        // Cascade: if the group is deleted (RF15), its invite code no longer makes sense —
+        // Cascade: if the group is deleted, its invite code no longer makes sense —
         // unlike a group's owner (Restrict in GroupEntityConfiguration), which is a link that
         // shouldn't disappear just because a secondary operation deleted something.
         builder.HasOne(code => code.Group)

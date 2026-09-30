@@ -29,8 +29,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Covers T42.3: `computeSettlement` (T33) over the current balances becomes the suggestion list;
- * "Mark as paid" writes a `Settlement` (T42.1) and the list recalculates on its own (it's derived
+ * `computeSettlement` over the current balances becomes the suggestion list;
+ * "Mark as paid" writes a `Settlement` and the list recalculates on its own (it's derived
  * from the settlements Flow, not a cached state); a group with zeroed-out balances goes straight
  * into [SettleDebtsUiState.SettledUp]. Same Robolectric pattern as the other screens.
  */
@@ -77,7 +77,7 @@ class SettleDebtsViewModelTest {
         debtSimplificationEngine = GreedyDebtSimplificationEngine(),
     )
 
-    /** A: -1000 (owes) · B: +1000 (is owed) — `case-01-simples` from algorithm-spec.md. */
+    /** A: -1000 (owes) · B: +1000 (is owed) — the simplest possible debt case. */
     private suspend fun seedSimpleDebt() {
         participantRepository.insertParticipant(Participant(id = "a", groupId = groupId, name = "Ana"))
         participantRepository.insertParticipant(Participant(id = "b", groupId = groupId, name = "Bruno"))

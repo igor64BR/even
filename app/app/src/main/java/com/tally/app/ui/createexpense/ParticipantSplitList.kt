@@ -19,7 +19,7 @@ import com.tally.app.ui.theme.LocalTallyColors
  * The prototype's `#split-area` in the Equal tab: one row per participant, an inclusion checkbox +
  * the live-calculated amount ([ExpenseSplitRowUiModel.amountCents], already closed out by the
  * largest-remainder rule — see [calculateEqualSplit]). No calculation lives here, only
- * presentation (T24, Object Calisthenics/Clean Code).
+ * presentation (Object Calisthenics/Clean Code).
  */
 @Composable
 fun ParticipantSplitList(

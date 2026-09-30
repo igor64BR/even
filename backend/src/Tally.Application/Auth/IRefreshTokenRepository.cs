@@ -1,7 +1,7 @@
 namespace Tally.Application.Auth;
 
 /// <summary>
-/// Persistence of issued sessions (refresh tokens), to allow future revocation (T14). The
+/// Persistence of issued sessions (refresh tokens), to allow future revocation. The
 /// concrete implementation never stores the refresh token in plain text — only a hash of it.
 /// </summary>
 public interface IRefreshTokenRepository
@@ -14,7 +14,7 @@ public interface IRefreshTokenRepository
 
     /// <summary>
     /// Marks the corresponding session's revocation timestamp for
-    /// <paramref name="refreshToken"/> (T14). Idempotent: an already-revoked or unknown token is
+    /// <paramref name="refreshToken"/>. Idempotent: an already-revoked or unknown token is
     /// not an error, it just does nothing — this avoids exposing to the caller whether a given
     /// token ever existed.
     /// </summary>

@@ -6,8 +6,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Covers T24.2: [calculateEqualSplit] matches the exact total amount even when the split isn't
- * even (`algorithm-spec.md`, "Closing splits that don't divide evenly"). Plain JUnit — no
+ * [calculateEqualSplit] matches the exact total amount even when the split isn't
+ * even ("Closing splits that don't divide evenly"). Plain JUnit — no
  * Robolectric, because the function doesn't touch Android/Room.
  */
 class EqualSplitCalculatorTest {
@@ -17,7 +17,7 @@ class EqualSplitCalculatorTest {
         val parts = calculateEqualSplit(Money.ofCents(1000), listOf("p2", "p1", "p3"))
 
         assertEquals(1000L, parts.values.sumOf { it.cents })
-        // "p1" is first in participantId order (algorithm-spec.md): gets the extra cent.
+        // "p1" is first in participantId order: gets the extra cent.
         assertEquals(334L, parts.getValue("p1").cents)
         assertEquals(333L, parts.getValue("p2").cents)
         assertEquals(333L, parts.getValue("p3").cents)

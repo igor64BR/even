@@ -1,9 +1,9 @@
 namespace Tally.Domain;
 
 /// <summary>
-/// Aggregate root of an expense-splitting group (RF05). Protected invariant: a group needs at
+/// Aggregate root of an expense-splitting group. Protected invariant: a group needs at
 /// least 1 participant to exist — the app allows creating one with just "You", but never with
-/// zero (see T15-model-group-participant.md). The invariant is enforced on creation
+/// zero. The invariant is enforced on creation
 /// (<see cref="Create"/>) and re-validated on every mutation that shrinks the participant list
 /// (<see cref="RemoveParticipant"/>); there are no loose public setters, so there's no path to
 /// violate this after creation.
@@ -19,7 +19,7 @@ public sealed class Group
     public GroupCategory Category { get; }
 
     /// <summary>
-    /// <c>true</c> when the group has been synced with the backend (RF09); local groups are
+    /// <c>true</c> when the group has been synced with the backend; local groups are
     /// born <c>false</c> and only change state via <see cref="MarkAsSynced"/>.
     /// </summary>
     public bool Synced { get; private set; }
@@ -68,9 +68,9 @@ public sealed class Group
     }
 
     /// <summary>
-    /// Removes a participant by id (RF10). The zero-balance check required by RF10 depends on
+    /// Removes a participant by id. A zero-balance check before removal depends on
     /// expenses/balances, which this aggregate doesn't know about (that's the responsibility of
-    /// an application layer that also sees <see cref="Expense"/> — scope of T18/T23); this only
+    /// an application layer that also sees <see cref="Expense"/>); this only
     /// protects <see cref="Group"/>'s own structural invariant: never end up with zero
     /// participants.
     /// </summary>

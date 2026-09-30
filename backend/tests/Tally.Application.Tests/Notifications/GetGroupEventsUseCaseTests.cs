@@ -7,12 +7,12 @@ using Tally.Application.Settlements;
 namespace Tally.Application.Tests.Notifications;
 
 /// <summary>
-/// Covers T39.1 with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/>/
+/// Covers this use case with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/>/
 /// <see cref="ISettlementRepository"/> (same pattern as
-/// <c>Simplification.GetDebtSimplificationUseCaseTests</c>, T32) — no test here touches
-/// EF/Postgres. Task deliverable: events after "since" come back correct and ordered (expenses and
+/// <c>Simplification.GetDebtSimplificationUseCaseTests</c>) — no test here touches
+/// EF/Postgres. Key behaviors: events after "since" come back correct and ordered (expenses and
 /// settlements interleaved by <c>CreatedAt</c>), a group with no new events returns an empty list,
-/// and RNF07 is respected (nonexistent/inaccessible group throws before querying expenses or
+/// and group access is verified (nonexistent/inaccessible group throws before querying expenses or
 /// settlements) — each has its own test.
 /// </summary>
 public class GetGroupEventsUseCaseTests

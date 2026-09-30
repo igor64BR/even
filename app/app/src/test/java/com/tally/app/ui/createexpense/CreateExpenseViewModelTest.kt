@@ -31,10 +31,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Covers T24.2 (live calculation of the equal split) and T24.3/T24.4 (local persistence +
- * validation) of the "New expense" form. Same Robolectric pattern as `CreateGroupViewModelTest`
- * (T16): an in-memory Room database, real DAOs behind `Room*Repository`, group + participants
- * seeded directly through the repository (there's no group detail screen to seed through the UI).
+ * Covers the live calculation of the equal split and the local persistence + validation of the
+ * "New expense" form. Same Robolectric pattern as `CreateGroupViewModelTest`: an in-memory Room
+ * database, real DAOs behind `Room*Repository`, group + participants seeded directly through the
+ * repository (there's no group detail screen to seed through the UI).
  *
  * The initial participant load ([CreateExpenseViewModel.init]) and the expense write
  * ([CreateExpenseViewModel.onSaveClick]) run on Room's real `TransactionExecutor`, outside the
@@ -82,8 +82,8 @@ class CreateExpenseViewModelTest {
 
     /**
      * Creates the ViewModel and really suspends until the initial participant load arrives.
-     * [expenseId] (T29) switches on edit mode — `null` (default) keeps the usual behavior (T24,
-     * create mode). [remoteExpenseRepository] only matters for the tests about propagating the edit
+     * [expenseId] switches on edit mode — `null` (default) keeps the usual behavior (create
+     * mode). [remoteExpenseRepository] only matters for the tests about propagating the edit
      * to the backend (a synced group); the others use the default fake, which is never called
      * because no group seeded here has `isSynced = true`.
      */
@@ -208,7 +208,7 @@ class CreateExpenseViewModelTest {
         assertEquals(setOf("p1", "p2", "p3"), expense.splits.map { it.participantId }.toSet())
     }
 
-    // --- T26.1: Percentage tab ---
+    // --- Percentage tab ---
 
     @Test
     fun `saving with a percentage that does not add up to 100 percent persists nothing`() = runTest(testDispatcher) {
@@ -254,7 +254,7 @@ class CreateExpenseViewModelTest {
         assertEquals(40L, weights.getValue("p2"))
     }
 
-    // --- T26.2: Fixed amount tab ---
+    // --- Fixed amount tab ---
 
     @Test
     fun `saving with a fixed amount that does not match the total persists nothing`() = runTest(testDispatcher) {
@@ -300,7 +300,7 @@ class CreateExpenseViewModelTest {
         assertEquals(3000L, amounts.getValue("p2"))
     }
 
-    // --- T29.1: edit mode ---
+    // --- Edit mode ---
 
     private suspend fun seedExpense(): Expense {
         val expense = Expense(
@@ -389,8 +389,8 @@ class CreateExpenseViewModelTest {
 
     /**
      * Marks the group as synced by reinserting the same row with `isSynced=true` — the same
-     * production path (`GroupDetailViewModel.syncGroup`, T19). `GroupDao.insert` is `@Upsert`
-     * (found during T29, fixed separately: `@Insert(OnConflictStrategy.REPLACE)` made SQLite
+     * production path (`GroupDetailViewModel.syncGroup`). `GroupDao.insert` is `@Upsert`
+     * (fixed separately: `@Insert(OnConflictStrategy.REPLACE)` made SQLite
      * delete+reinsert the row, triggering `ON DELETE CASCADE` and wiping out participants/expenses
      * along with it), so this doesn't erase what was already seeded.
      */

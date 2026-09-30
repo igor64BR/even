@@ -1,8 +1,8 @@
 namespace Tally.Infrastructure.Persistence.Entities;
 
 /// <summary>
-/// Persistence mapping of a user authenticated via Google (T11). Never stores a password —
-/// authentication is entirely delegated to Google (constitution.md, principle 2); the only
+/// Persistence mapping of a user authenticated via Google. Never stores a password —
+/// authentication is entirely delegated to Google; the only
 /// identity-related secret this schema stores is the refresh token's hash, in
 /// <see cref="RefreshTokenEntity"/>.
 /// </summary>

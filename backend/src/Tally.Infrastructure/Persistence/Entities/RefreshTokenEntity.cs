@@ -1,9 +1,9 @@
 namespace Tally.Infrastructure.Persistence.Entities;
 
 /// <summary>
-/// A refresh session issued for a user (T11). Stores only the refresh token's hash — never the
+/// A refresh session issued for a user. Stores only the refresh token's hash — never the
 /// plain-text value — so that a database leak doesn't expose usable session tokens.
-/// <see cref="RevokedAt"/> already exists (even with nothing filling it in yet) so T14 (logout)
+/// <see cref="RevokedAt"/> already exists (even with nothing filling it in yet) so logout
 /// doesn't need another migration just for that.
 /// </summary>
 public class RefreshTokenEntity

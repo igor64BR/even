@@ -9,11 +9,11 @@ using Tally.Domain;
 namespace Tally.Application.Tests.Settlements;
 
 /// <summary>
-/// T35.2: proves the deliverable criterion that the isolated tests of
-/// <c>RegisterSettlementUseCaseTests</c> and <c>GetDebtSimplificationUseCaseTests</c> (T32) don't
-/// cover on their own — that a settlement recorded by <see cref="RegisterSettlementUseCase"/>
-/// (T35.1) is read back by <see cref="GetDebtSimplificationUseCase"/> (T32) on the next call,
-/// without needing a cached balance. Uses a simple fake <see cref="ISettlementRepository"/>
+/// Proves what the isolated tests of <c>RegisterSettlementUseCaseTests</c> and
+/// <c>GetDebtSimplificationUseCaseTests</c> don't cover on their own — that a settlement recorded by
+/// <see cref="RegisterSettlementUseCase"/> is read back by <see cref="GetDebtSimplificationUseCase"/>
+/// on the next call, without needing a cached balance. Uses a simple fake
+/// <see cref="ISettlementRepository"/>
 /// (in-memory list) instead of a mock, because what this test needs is real state persisting
 /// between the two use case calls — a mock of <c>AddAsync</c> wouldn't feed back into
 /// <c>GetByGroupAsync</c>. Doesn't touch EF/Postgres: same "use case unit test" level as the other
@@ -53,7 +53,7 @@ public class RegisterSettlementReflectsInSettlementTests
         var beforeSettlement = await getSimplification.ExecuteAsync(ownerUserId, groupId);
         Assert.Equal([new Transaction(a, b, Money.FromCents(1000))], beforeSettlement);
 
-        // T35.1: A pays 400 to B via POST /groups/{id}/settlements.
+        // A pays 400 to B via POST /groups/{id}/settlements.
         var registerSettlement = new RegisterSettlementUseCase(
             _groupRepository.Object, _settlementRepository, Mock.Of<IGroupEventNotifier>());
         var request = new RegisterSettlementRequest(a.Value, b.Value, AmountCents: 400);
@@ -89,7 +89,7 @@ public class RegisterSettlementReflectsInSettlementTests
             return Task.CompletedTask;
         }
 
-        // T39.1: this fake only covers the settlement flow (GetByGroupAsync/AddAsync) that this
+        // This fake only covers the settlement flow (GetByGroupAsync/AddAsync) that this
         // test exercises — the pull fallback has its own coverage in
         // Notifications.GetGroupEventsUseCaseTests, with a mocked repository (Moq), not this
         // in-memory fake.

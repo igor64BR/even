@@ -6,7 +6,7 @@ import retrofit2.http.POST
 
 /**
  * Mirrors the backend's auth endpoints (`backend/src/Tally.Api/Controllers/AuthController.cs`):
- * login via Google (T11) and logout (T14.1). The whole HTTP client (see
+ * login via Google and logout. The whole HTTP client (see
  * [com.tally.data.remote.TallyHttpClientFactory]) exists just for these two.
  */
 interface AuthApi {
@@ -14,7 +14,7 @@ interface AuthApi {
     suspend fun loginWithGoogle(@Body request: GoogleLoginRequestDto): GoogleLoginResponseDto
 
     /**
-     * Mirrors `POST /auth/logout` (T14.1). No response body (204) — only throws if the network
+     * Mirrors `POST /auth/logout`. No response body (204) — only throws if the network
      * call fails, the only case `RemoteAuthRepository.signOut` handles (local logout proceeds
      * anyway).
      */

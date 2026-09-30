@@ -4,17 +4,16 @@ import com.tally.domain.model.Money
 
 /**
  * Splits [total] into equal shares among [participantIds], closing out the remainder using the
- * same largest-remainder rule described in `algorithm-spec.md` ("Closing splits that don't divide
- * evenly") and implemented in `GreedyDebtSimplificationEngine.splitEqually` (T33): sorts by
- * `participantId` ascending, `base = total / n`, `remainder = total % n`, and the first
+ * same largest-remainder rule implemented in `GreedyDebtSimplificationEngine.splitEqually`: sorts
+ * by `participantId` ascending, `base = total / n`, `remainder = total % n`, and the first
  * `remainder` participants (in that order) get one extra cent — never naive `total.cents / n`,
  * which loses a cent (e.g. R$10.00 ÷ 3 = 333+333+333 = 999 ≠ 1000).
  *
  * Reimplemented here — a small, pure, independently testable function (Object Calisthenics: no
  * inline calculation in the Composable) — instead of a direct call to the engine because
  * `splitEqually` is private to [com.tally.domain.engine.GreedyDebtSimplificationEngine] and this
- * task (T24) is restricted to `app/app/`; the rule is the same, line by line, only the participant
- * is responsible for computing the form's live preview, not the group's balance (that's T25/T33).
+ * module is restricted to `app/app/`; the rule is the same, line by line, only the participant
+ * is responsible for computing the form's live preview, not the group's balance.
  */
 fun calculateEqualSplit(total: Money, participantIds: List<String>): Map<String, Money> {
     if (participantIds.isEmpty()) return emptyMap()

@@ -9,7 +9,7 @@ namespace Tally.Application.Auth;
 public interface IJwtIssuer
 {
     /// <summary>
-    /// Issues a new access token (short-lived, RNF06: &lt;= 15 min) and a new (opaque) refresh
+    /// Issues a new access token (short-lived, &lt;= 15 min) and a new (opaque) refresh
     /// token for the given user. Persists nothing — persisting the refresh token (to allow
     /// revocation) is <see cref="IRefreshTokenRepository"/>'s responsibility.
     /// </summary>

@@ -6,7 +6,7 @@ using Tally.Infrastructure.Auth;
 namespace Tally.Infrastructure.Tests.Auth;
 
 /// <summary>
-/// Covers <see cref="JwtIssuer"/>'s token issuance (T11.2). Doesn't depend on a real Google ID
+/// Covers <see cref="JwtIssuer"/>'s token issuance. Doesn't depend on a real Google ID
 /// token or a database — <see cref="IJwtIssuer"/> is pure (takes an already-resolved
 /// <see cref="User"/>, returns tokens), so it can be tested in isolation with a
 /// <see cref="FixedClock"/>.
@@ -39,7 +39,7 @@ public class JwtIssuerTests
         var tokens = issuer.Issue(TestUser);
 
         var duration = tokens.AccessTokenExpiresAt - Now;
-        Assert.True(duration <= TimeSpan.FromMinutes(15), $"Access token expires in {duration}, violating RNF06.");
+        Assert.True(duration <= TimeSpan.FromMinutes(15), $"Access token expires in {duration}, exceeding the 15-minute limit.");
     }
 
     [Fact]

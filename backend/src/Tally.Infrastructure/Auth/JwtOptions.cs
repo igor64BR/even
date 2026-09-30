@@ -15,7 +15,7 @@ public sealed class JwtOptions
 
     public required string Audience { get; init; }
 
-    /// <summary>RNF06: access token expires in &lt;= 15 min.</summary>
+    /// <summary>Access token expires in &lt;= 15 min.</summary>
     public required int AccessTokenMinutes { get; init; }
 
     public required int RefreshTokenDays { get; init; }

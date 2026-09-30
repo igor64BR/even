@@ -2,9 +2,9 @@ namespace Tally.Domain;
 
 /// <summary>
 /// Monetary amount used inside the simplification engine: a wrapped integer number of cents
-/// (<see cref="long"/>), never raw. See "Money: representation and rounding" in
-/// algorithm-spec.md — inside the algorithm there is no <c>float</c>/<c>double</c>/<c>decimal</c>;
-/// those representations only exist at the parsing/formatting edge, outside this engine's scope.
+/// (<see cref="long"/>), never raw. Inside the algorithm there is no
+/// <c>float</c>/<c>double</c>/<c>decimal</c>; those representations only exist at the
+/// parsing/formatting edge, outside this engine's scope.
 /// </summary>
 public readonly record struct Money : IComparable<Money>
 {

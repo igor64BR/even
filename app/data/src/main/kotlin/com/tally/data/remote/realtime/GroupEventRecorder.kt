@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.first
 /**
  * "A group event happened, record the local notification" — resolves the local group/participants
  * (Room) and records via [NotificationRepository]. Used both by [SignalRGroupRealtimeGateway]
- * (live event) and by [MissedGroupEventsSynchronizer] (T39, reconnect pull), to avoid duplicating
+ * (live event) and by [MissedGroupEventsSynchronizer] (reconnect pull), to avoid duplicating
  * this logic in both places — extracted precisely to be testable without any SignalR
  * (`GroupEventRecorderTest`, with test doubles for [GroupRepository]/[ParticipantRepository]/
  * [NotificationRepository]).

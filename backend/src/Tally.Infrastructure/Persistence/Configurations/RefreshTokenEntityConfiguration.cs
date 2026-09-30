@@ -17,7 +17,7 @@ public class RefreshTokenEntityConfiguration : IEntityTypeConfiguration<RefreshT
             .IsRequired();
 
         // Unique: two refresh tokens never collide on the same hash (SHA-256 hex), and the index
-        // also speeds up looking up a token at refresh time (T14).
+        // also speeds up looking up a token at refresh time.
         builder.HasIndex(refreshToken => refreshToken.TokenHash)
             .IsUnique();
 

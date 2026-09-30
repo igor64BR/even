@@ -6,11 +6,10 @@ using Tally.Domain;
 namespace Tally.Application.Tests.Groups;
 
 /// <summary>
-/// Covers T28.3 with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/> (same
-/// pattern as <c>CreateExpenseUseCaseTests</c>): no test here touches EF/Postgres. Task
-/// deliverable: an existing group with access returns name/category/participants/expenses together
-/// (<see cref="FullGroup"/>), RNF07 respected (404 nonexistent group, 403 without access) — the gap
-/// reported by T22 (joining via link only returns the group's id).
+/// Covers this use case with mocked <see cref="IGroupRepository"/>/<see cref="IExpenseRepository"/> (same
+/// pattern as <c>CreateExpenseUseCaseTests</c>): no test here touches EF/Postgres. Key behaviors:
+/// an existing group with access returns name/category/participants/expenses together
+/// (<see cref="FullGroup"/>), and access is verified (404 nonexistent group, 403 without access).
 /// </summary>
 public class GetGroupUseCaseTests
 {

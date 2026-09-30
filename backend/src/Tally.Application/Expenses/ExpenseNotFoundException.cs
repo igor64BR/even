@@ -1,8 +1,8 @@
 namespace Tally.Application.Expenses;
 
 /// <summary>
-/// T28.1/T28.2: the referenced expense (<c>PUT</c>/<c>DELETE /groups/{id}/expenses/{expenseId}</c>)
-/// does not exist in that group — the group may exist (RNF07 already validated by
+/// The referenced expense (<c>PUT</c>/<c>DELETE /groups/{id}/expenses/{expenseId}</c>)
+/// does not exist in that group — the group may exist (access already validated by
 /// <see cref="Groups.GroupAccessVerification"/> before this check), just not the expense. Never
 /// becomes a 500 — the controller maps this to 404, same pattern as
 /// <see cref="Groups.GroupNotFoundException"/>.

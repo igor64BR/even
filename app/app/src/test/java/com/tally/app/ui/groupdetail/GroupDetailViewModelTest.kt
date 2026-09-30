@@ -42,10 +42,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Covers T42.2 (the displayed balance matches `computeBalances`, T33, for a group with real
- * expenses) and the "Sync this group" action (T19, moved here from the list card in T42.4 — the
- * same coverage that existed in `GroupListViewModelTest` before the rewire). Same Robolectric
- * pattern as the other screens: an in-memory Room database, real DAOs behind `Room*Repository`.
+ * Covers the displayed balance matching `computeBalances` for a group with real expenses, and the
+ * "Sync this group" action (the same coverage that existed in `GroupListViewModelTest` before the
+ * rewire). Same Robolectric pattern as the other screens: an in-memory Room database, real DAOs
+ * behind `Room*Repository`.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -215,18 +215,17 @@ class GroupDetailViewModelTest {
 
     /**
      * Marks the group as synced by reinserting the same row with `isSynced=true` — the same
-     * production path ([GroupDetailViewModel.syncGroup], T19). Before `GroupDao.insert` became
-     * `@Upsert` (found during T29, fixed separately), this would silently wipe out
-     * participants/expenses via `ON DELETE CASCADE` (SQLite `INSERT OR REPLACE` is a
-     * DELETE+INSERT); `@Upsert` does a real `UPDATE`, so this helper today is just a test shortcut,
-     * not a workaround.
+     * production path ([GroupDetailViewModel.syncGroup]). Before `GroupDao.insert` became
+     * `@Upsert`, this would silently wipe out participants/expenses via `ON DELETE CASCADE` (SQLite
+     * `INSERT OR REPLACE` is a DELETE+INSERT); `@Upsert` does a real `UPDATE`, so this helper today
+     * is just a test shortcut, not a workaround.
      */
     private suspend fun markGroupAsSynced(groupId: String, remoteId: String) {
         val group = requireNotNull(groupRepository.getGroupById(groupId))
         groupRepository.insertGroup(group.copy(isSynced = true, remoteId = remoteId))
     }
 
-    // --- T37: settlement history ---
+    // --- Settlement history ---
 
     @Test
     fun `recorded settlements show up in the history, most recent first`() = runTest(testDispatcher) {
@@ -272,7 +271,7 @@ class GroupDetailViewModelTest {
         assertTrue(state.settlements.isEmpty())
     }
 
-    // --- T29.2: delete expense ---
+    // --- Delete expense ---
 
     @Test
     fun `deleting a local expense removes it from Room and recalculates the balance`() = runTest(testDispatcher) {
@@ -334,7 +333,7 @@ class GroupDetailViewModelTest {
         assertTrue("the local deletion stands regardless of the network failure (local-first)", stateAfterDelete.expenses.isEmpty())
     }
 
-    // T40.1: GroupDetailViewModel.startRealtimeUpdates()/stopRealtimeUpdates() only orchestrate
+    // GroupDetailViewModel.startRealtimeUpdates()/stopRealtimeUpdates() only orchestrate
     // WHEN to connect/disconnect — the connection logic itself (SignalRGroupRealtimeGateway) is
     // tested separately in :data, with no HubConnection at all (see GroupEventRecorderTest/
     // MissedGroupEventsSynchronizerTest). Here we only verify the gateway is called with the right
@@ -473,7 +472,7 @@ class GroupDetailViewModelTest {
         }
 
         override suspend fun joinByCode(inviteCode: String): String {
-            throw UnsupportedOperationException("not used in this test — see JoinGroupViewModelTest (T22)")
+            throw UnsupportedOperationException("not used in this test — see JoinGroupViewModelTest")
         }
     }
 
@@ -497,7 +496,7 @@ class GroupDetailViewModelTest {
         )
 
         override suspend fun updateExpense(remoteGroupId: String, expense: Expense) {
-            throw UnsupportedOperationException("not used in this test — see CreateExpenseViewModelTest (T29.1)")
+            throw UnsupportedOperationException("not used in this test — see CreateExpenseViewModelTest")
         }
 
         override suspend fun deleteExpense(remoteGroupId: String, expenseId: String) {

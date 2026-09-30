@@ -49,12 +49,12 @@ import com.tally.app.ui.theme.ThemeToggleButton
 import com.tally.domain.model.AuthenticatedUser
 
 /**
- * Entry point for the login screen (T12.1), faithful to `prototype/login.html`. `factory` injects
+ * Entry point for the login screen, faithful to `prototype/login.html`. `factory` injects
  * the [AuthViewModel] through [com.tally.app.di.AppContainer]'s manual composition — the same
- * convention as [com.tally.app.ui.groups.GroupListRoute] (T8): the Composable itself doesn't know
+ * convention as [com.tally.app.ui.groups.GroupListRoute]: the Composable itself doesn't know
  * where the state comes from or how the Google ID token is obtained.
  *
- * [onSignedIn] (T22.1) is optional: when non-null, it fires once as soon as [uiState] becomes
+ * [onSignedIn] is optional: when non-null, it fires once as soon as [uiState] becomes
  * [AuthUiState.SignedIn], via [LaunchedEffect]. Used by the "join group via link" flow to resume
  * automatically after login — normal access to the screen (the profile icon) doesn't pass this
  * parameter and keeps no automatic navigation after signing in.
@@ -355,7 +355,7 @@ private fun AccountCard(user: AuthenticatedUser, modifier: Modifier = Modifier) 
 
 /**
  * The prototype's `.btn-secondary`. Revokes the session on the backend and clears the session
- * stored on the device (T14.2, via `AuthViewModel.signOut` → `RemoteAuthRepository.signOut`) — the
+ * stored on the device (via `AuthViewModel.signOut` → `RemoteAuthRepository.signOut`) — the
  * local cleanup always happens, even if the backend revocation fails due to no network.
  */
 @Composable

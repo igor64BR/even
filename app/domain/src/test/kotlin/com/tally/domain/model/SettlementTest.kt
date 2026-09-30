@@ -4,7 +4,7 @@ import java.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-/** Mirrors `case-01-simple` from `algorithm-spec.md` (A owes, B receives) in the type's shape. */
+/** Mirrors `case-01-simple` (A owes, B receives) in the type's shape. */
 class SettlementTest {
 
     @Test

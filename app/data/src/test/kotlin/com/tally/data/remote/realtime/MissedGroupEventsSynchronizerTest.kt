@@ -26,11 +26,11 @@ import retrofit2.HttpException
 import retrofit2.Response
 
 /**
- * Covers T40.2: "reconnection fetches missed events via T39" — at the level of the collaborator
+ * Covers "reconnection fetches missed events" — at the level of the collaborator
  * that actually calls the endpoint, [MissedGroupEventsSynchronizer], with no `HubConnection` at
  * all. [GroupEventsApi] is a simple test double (same pattern as `RemoteGroupSyncRepositoryTest`);
- * it was never exercised against a real `GET /groups/{id}/events` (T39 didn't exist on the backend
- * yet — gap documented in `GroupEventsApi`).
+ * it was never exercised against a real `GET /groups/{id}/events` — gap documented in
+ * `GroupEventsApi`.
  */
 class MissedGroupEventsSynchronizerTest {
 
@@ -132,7 +132,7 @@ class MissedGroupEventsSynchronizerTest {
     }
 
     @Test
-    fun `sync swallows an HTTP error (403 RNF07 or 404 group removed) without propagating it`() = runTest {
+    fun `sync swallows an HTTP error (403 or 404 group removed) without propagating it`() = runTest {
         val errorBody = "".toResponseBody("application/json".toMediaType())
         val api = FakeGroupEventsApi(failure = { HttpException(Response.error<Unit>(404, errorBody)) })
         val synchronizer = buildSynchronizer(api, FakeTokenStorage(session))
