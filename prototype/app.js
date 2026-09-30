@@ -1,7 +1,7 @@
 /* Tally — mocked data layer for the prototype.
    Everything lives in localStorage; no network calls. computeSettlement() is a
-   real greedy algorithm (not just decoration), just simplified for demo
-   purposes — the production version is specified in specs/001-mvp-expense-splitting. */
+   real greedy algorithm (not just decoration), just simplified compared to
+   the production version (.NET backend / Android app). */
 
 const STORAGE_KEY = 'tally:v1';
 const THEME_KEY = 'tally:theme';

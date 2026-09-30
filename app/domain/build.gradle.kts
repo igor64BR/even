@@ -1,5 +1,5 @@
 // :domain module — pure Kotlin (the "jvm" plugin, not "android"): cannot depend on anything
-// from the Android SDK. This is where the debt-simplification engine (T33) and the repository
+// from the Android SDK. This is where the debt-simplification engine and the repository
 // interfaces that :data implements (Dependency Inversion) live — :domain never depends on :app
 // or :data.
 plugins {

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- T12 — POST /auth/google (T11) and Credential Manager need network access. -->
+    <!-- POST /auth/google and Credential Manager need network access. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -19,7 +19,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- T22.1 — "join group via link": tally://join/{code}, shareable through any
+            <!-- "Join group via link": tally://join/{code}, shareable through any
                  channel (WhatsApp, SMS, etc.), not an integration with anything specific. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

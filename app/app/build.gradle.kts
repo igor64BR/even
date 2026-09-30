@@ -8,8 +8,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-// T12 — a real OAuth client id doesn't exist yet (T11 documented the same problem on the
-// backend side, see `backend/src/Tally.Api/appsettings.Development.json`). Read from
+// A real OAuth client id doesn't exist yet on the backend side either (see
+// `backend/src/Tally.Api/appsettings.Development.json`). Read from
 // `local.properties` (a per-developer file, already in .gitignore) with a fallback to an
 // obvious placeholder — never hardcoded as a "real" value in source code. Swap
 // `TALLY_GOOGLE_WEB_CLIENT_ID` in `local.properties` once a Google Cloud project exists.
@@ -104,7 +104,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
 
-    // T12 — optional login via Google. Credential Manager is the current API (replaces the
+    // Optional login via Google. Credential Manager is the current API (replaces the
     // deprecated GoogleSignIn); credentials-play-services-auth + googleid are the concrete
     // engine that knows how to talk to the Google account installed on the device.
     implementation(libs.androidx.credentials)

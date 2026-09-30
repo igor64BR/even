@@ -47,17 +47,17 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-    // T12 — minimal HTTP client for POST /auth/google (T11) and secure session storage.
-    // Only what's needed for the auth endpoint; other endpoints (synced groups, SignalR)
-    // are left for the tasks that introduce them (T19+).
+    // Minimal HTTP client for POST /auth/google and secure session storage. Only what's
+    // needed for the auth endpoint; other endpoints (synced groups, SignalR) get added
+    // alongside the modules that use them.
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.kotlinx.serialization)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.security.crypto)
 
-    // T40 — SignalR client (official library) for the real-time notification Hub (T38,
-    // constitution.md principle 3: our own system, no third-party push). rxjava3/gson are
+    // SignalR client (official library) for the real-time notification Hub — our own
+    // system, no third-party push. rxjava3/gson are
     // runtime dependencies of the `signalr` artifact itself (confirmed in its published POM:
     // io.reactivex.rxjava3:rxjava + com.google.code.gson:gson, not RxJava2/Jackson) — declared
     // explicitly because `SignalRGroupRealtimeGateway` references `io.reactivex.rxjava3.core.Single`
