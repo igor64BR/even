@@ -1,56 +1,106 @@
-/* Tally — the prototype's visual system.
-   Ledger-book palette (paper + ink + one amber accent), a single typeface
-   (Plex Sans) across the whole app. No purple gradients, no emoji as icons. */
+/* Even — the prototype's visual system, and the single source of truth for the
+   palette: the Android theme is an exact hex replica of the tokens below.
+
+   Identity: cool-slate neutrals, INDIGO brand (hue ~232 — buttons, FAB, active
+   tabs, links, focus rings) and an AMBER accent (hue ~36 — money totals,
+   settle-up actions, highlights). Semantics keep their meaning: owed = coral/red,
+   credit = green, danger = red. One typeface (Plex Sans), no gradients, no
+   purple, no emoji as icons. */
 
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   color-scheme: light;
-  --stage: #e4ddc9;
-  --paper: #f5f2ea;
-  --paper-alt: #ece6d8;
+  /* surfaces + ink (cool slate) */
+  --stage: #dde2ec;
+  --paper: #f7f8fc;
+  --paper-alt: #ebeef6;
   --paper-raised: #ffffff;
-  --ink: #211f1b;
-  --ink-soft: #6b6558;
-  --rule: #d9d1bd;
-  --owed: #a84a34;
-  --owed-bg: #f4e2dc;
-  --credit: #33604f;
-  --credit-bg: #dfe9de;
-  --neutral: #8a8474;
-  --brand: #b7842a;
-  --brand-ink: #3a2c0f;
+  --ink: #151823;
+  --ink-soft: #565e73;
+  --rule: #d4dae7;
+  --control-border: #848ea3;
+  /* brand — indigo */
+  --brand: #3246c8;
+  --brand-hover: #26339c;
+  --brand-ink: #2b3cad;
+  --brand-bg: #e7eafb;
   --on-brand: #ffffff;
-  --danger: #a3352b;
-  --device-border: #cfc7ae;
-  --device-shadow: rgba(33, 31, 27, 0.45);
-  --overlay-scrim: rgba(245, 242, 234, 0.88);
-  --toast-bg: #211f1b;
+  --brand-shadow: rgba(38, 51, 156, 0.38);
+  /* accent — amber */
+  --accent: #c97c06;
+  --accent-hover: #b56d03;
+  --accent-ink: #8a5600;
+  --accent-bg: #fdf0d8;
+  --on-accent: #171003;
+  /* semantics */
+  --owed: #c0342a;
+  --owed-bg: #fbe4e0;
+  --credit: #15714d;
+  --credit-bg: #ddf2e6;
+  --neutral: #636b7c;
+  --danger: #c0261c;
+  /* device frame, elevation, overlays */
+  --device-border: #c5cddd;
+  --device-shadow: rgba(21, 24, 35, 0.35);
+  --shadow-raised: rgba(21, 24, 35, 0.14);
+  --overlay-scrim: rgba(247, 248, 252, 0.90);
+  --toast-bg: #1b2231;
+  --on-toast: #f2f5fb;
+  --toast-ok: #5fcf98;
+  /* prototype chrome (the bar outside the phone, not part of the product) */
+  --chrome-bg: #1b2231;
+  --chrome-ink: #aab3c6;
+  --chrome-ink-strong: #eef1f8;
+  --chrome-line: #3b465c;
+  /* Google sign-in button surface */
+  --google-bg: #ffffff;
+  --google-bg-hover: #ebeef6;
+  --google-ink: #1f2430;
   --radius: 14px;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --stage: #131110;
-  --paper: #1e1b17;
-  --paper-alt: #2a251e;
-  --paper-raised: #332d24;
-  --ink: #f3eee2;
-  --ink-soft: #a89f8d;
-  --rule: #3d372c;
-  --owed: #e08361;
-  --owed-bg: #3a241c;
-  --credit: #7ab89a;
-  --credit-bg: #1f332a;
-  --neutral: #948c78;
-  --brand: #cf9c3f;
-  --brand-ink: #d9a441;
-  --on-brand: #241a08;
-  --danger: #e2735f;
-  --device-border: #423c30;
-  --device-shadow: rgba(0, 0, 0, 0.6);
-  --overlay-scrim: rgba(20, 18, 15, 0.88);
-  --toast-bg: #3d382c;
+  --stage: #0b0e15;
+  --paper: #141924;
+  --paper-alt: #1d2331;
+  --paper-raised: #252c3c;
+  --ink: #e9edf6;
+  --ink-soft: #9aa4b8;
+  --rule: #313a4c;
+  --control-border: #6e798f;
+  --brand: #7b8cf7;
+  --brand-hover: #93a2ff;
+  --brand-ink: #a3b1ff;
+  --brand-bg: #1e2648;
+  --on-brand: #0f1535;
+  --brand-shadow: rgba(0, 0, 0, 0.55);
+  --accent: #f0b046;
+  --accent-hover: #f7bd5c;
+  --accent-ink: #f0bc5e;
+  --accent-bg: #3a2b10;
+  --on-accent: #171003;
+  --owed: #ff8f76;
+  --owed-bg: #3e211a;
+  --credit: #5fcf98;
+  --credit-bg: #153024;
+  --neutral: #8e99ad;
+  --danger: #ff8a7a;
+  --device-border: #2b3447;
+  --device-shadow: rgba(0, 0, 0, 0.65);
+  --shadow-raised: rgba(0, 0, 0, 0.50);
+  --overlay-scrim: rgba(11, 14, 21, 0.90);
+  --toast-bg: #2b3447;
+  --on-toast: #eef1f8;
+  --toast-ok: #5fcf98;
+  --chrome-bg: #0a0e16;
+  --chrome-ink: #9aa4b8;
+  --chrome-ink-strong: #e7ebf5;
+  --chrome-line: #28303f;
+  --google-bg: #1b202c;
+  --google-bg-hover: #232a38;
+  --google-ink: #e9edf6;
 }
 
 * { box-sizing: border-box; }
@@ -68,26 +118,26 @@ html, body {
   gap: 4px 14px;
   align-items: center;
   padding: 10px 20px;
-  background: #211f1b;
-  color: #cfc7b0;
+  background: var(--chrome-bg);
+  color: var(--chrome-ink);
   font-size: 12.5px;
   }
-.proto-bar a { color: #efe9d8; text-decoration: none; border-bottom: 1px dotted #6b6558; }
-.proto-bar a:hover { border-bottom-color: #efe9d8; }
-.proto-bar strong { color: var(--brand); font-weight: 600; }
-.proto-bar .sep { color: #4a4638; }
+.proto-bar a { color: var(--chrome-ink-strong); text-decoration: none; border-bottom: 1px dotted var(--chrome-line); }
+.proto-bar a:hover { border-bottom-color: var(--chrome-ink-strong); }
+.proto-bar strong { color: var(--chrome-ink-strong); font-weight: 600; }
+.proto-bar .sep { color: var(--chrome-line); }
 .proto-bar button.reset {
   margin-left: auto;
   background: none;
-  border: 1px solid #4a4638;
-  color: #cfc7b0;
+  border: 1px solid var(--chrome-line);
+  color: var(--chrome-ink);
   font: inherit;
     font-size: 12px;
   padding: 4px 9px;
   border-radius: 6px;
   cursor: pointer;
 }
-.proto-bar button.reset:hover { border-color: #cfc7b0; }
+.proto-bar button.reset:hover { border-color: var(--chrome-ink); }
 
 .stage {
   display: flex;
@@ -202,7 +252,7 @@ html, body {
 .group-tag {
   width: 40px; height: 40px;
   border-radius: 10px;
-  background: var(--paper-alt);
+  background: var(--brand-bg);
   display: flex; align-items: center; justify-content: center;
     font-weight: 600;
   font-size: 14px;
@@ -219,7 +269,7 @@ html, body {
   border: 1px solid var(--rule);
   color: var(--ink-soft);
 }
-.pill.synced { border-color: var(--credit); color: var(--credit); }
+.pill.synced { border-color: var(--credit); background: var(--credit-bg); color: var(--credit); }
 .balance { text-align: right; font-size: 13.5px; font-weight: 600; flex-shrink: 0; white-space: nowrap; }
 .balance .label { display: block; font-family: 'IBM Plex Sans', sans-serif; font-weight: 400; font-size: 11px; color: var(--ink-soft); }
 .balance.owed { color: var(--owed); }
@@ -231,7 +281,7 @@ html, body {
   padding: 60px 20px 30px;
   color: var(--ink-soft);
 }
-.empty-state .mark { font-size: 34px; margin-bottom: 10px; color: var(--rule); }
+.empty-state .mark { font-size: 34px; margin-bottom: 10px; color: var(--neutral); }
 .empty-state h2 { font-size: 16px; color: var(--ink); margin: 0 0 6px; }
 .empty-state p { font-size: 13.5px; margin: 0 0 18px; line-height: 1.5; }
 
@@ -265,7 +315,7 @@ html, body {
   padding: 2px 10px;
 }
 .bottombar .tab svg { width: 22px; height: 22px; }
-.bottombar .tab.active { color: var(--ink); }
+.bottombar .tab.active { color: var(--brand-ink); }
 .bottombar .tab .badge-dot { top: -1px; right: 4px; }
 
 .fab {
@@ -273,17 +323,16 @@ html, body {
   right: 20px; bottom: 24px;
   width: 54px; height: 54px;
   border-radius: 50%;
-  background: var(--brand-ink);
+  background: var(--brand);
   color: var(--on-brand);
   display: flex; align-items: center; justify-content: center;
   text-decoration: none;
-  box-shadow: 0 10px 22px -6px rgba(58, 44, 15, 0.55);
+  box-shadow: 0 10px 22px -6px var(--brand-shadow);
   border: none;
   cursor: pointer;
 }
-.fab:hover { background: #2c210b; }
+.fab:hover { background: var(--brand-hover); }
 .fab svg { stroke: var(--on-brand); }
-:root[data-theme="dark"] .fab:hover { background: #c48e2e; }
 .fab.above-bar { bottom: 86px; }
 
 .screen.with-bottombar { padding-bottom: 140px; }
@@ -302,13 +351,13 @@ html, body {
   width: 100%;
   padding: 11px 12px;
   border-radius: 10px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--control-border);
   background: var(--paper-raised);
   font: inherit;
   font-size: 15px;
   color: var(--ink);
 }
-.field input:focus, .field select:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+.field input:focus, .field select:focus { outline: 2px solid var(--brand-ink); outline-offset: 1px; }
 .field .error {
   color: var(--danger);
   font-size: 12.5px;
@@ -323,14 +372,14 @@ html, body {
 .chip {
   padding: 7px 13px;
   border-radius: 20px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--control-border);
   background: var(--paper-raised);
   font-size: 13.5px;
   cursor: pointer;
   color: var(--ink);
   user-select: none;
 }
-.chip.selected { background: var(--brand-ink); color: var(--on-brand); border-color: var(--brand-ink); }
+.chip.selected { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
 .chip.removable { display: flex; align-items: center; gap: 6px; }
 .chip.removable button { background: none; border: none; color: inherit; opacity: 0.6; cursor: pointer; font-size: 13px; padding: 0; }
 
@@ -347,15 +396,15 @@ html, body {
   color: var(--ink-soft);
   cursor: pointer;
 }
-.tabs button.active { background: var(--paper-raised); color: var(--ink); box-shadow: 0 1px 3px rgba(33,31,27,0.15); }
+.tabs button.active { background: var(--paper-raised); color: var(--brand-ink); box-shadow: 0 1px 3px var(--shadow-raised); }
 
 .split-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--rule); }
 .split-row:last-child { border-bottom: none; }
 .split-row .who { flex: 1; font-size: 14.5px; display: flex; align-items: center; gap: 9px; }
-.split-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--brand-ink); }
+.split-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--brand); }
 .split-row .amount-input { width: 92px; }
 .split-row .amount-input input {
-  width: 100%; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--rule);
+  width: 100%; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--control-border);
   background: var(--paper-raised); color: var(--ink);
   font-size: 13.5px; text-align: right;
 }
@@ -382,24 +431,26 @@ html, body {
   text-decoration: none;
   color: inherit;
 }
-.btn-primary { background: var(--brand-ink); color: var(--on-brand); }
-.btn-primary:hover { background: #2c210b; }
+.btn-primary { background: var(--brand); color: var(--on-brand); }
+.btn-primary:hover { background: var(--brand-hover); }
 .btn-primary:disabled { background: var(--rule); color: var(--ink-soft); cursor: not-allowed; }
-:root[data-theme="dark"] .btn-primary:hover { background: #c48e2e; }
+/* Amber = money changing hands: settling up, marking a debt paid. */
+.btn-accent { background: var(--accent); color: var(--on-accent); }
+.btn-accent:hover { background: var(--accent-hover); }
 .btn-secondary { background: var(--paper-alt); color: var(--ink); }
 .btn-secondary:hover { background: var(--rule); }
 .btn-ghost { background: none; color: var(--ink-soft); text-align: center; font-size: 13.5px; font-weight: 500; padding: 10px; }
 .btn-google {
-  background: #fff; color: #211f1b; border: 1px solid var(--rule);
+  background: var(--google-bg); color: var(--google-ink); border: 1px solid var(--control-border);
   display: flex; align-items: center; justify-content: center; gap: 10px;
 }
-.btn-google:hover { background: #ece6d8; }
+.btn-google:hover { background: var(--google-bg-hover); }
 
 .expense-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--rule); }
 .expense-row:last-child { border-bottom: none; }
 .expense-mark {
-  width: 36px; height: 36px; border-radius: 9px; background: var(--paper-alt);
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink-soft);
+  width: 36px; height: 36px; border-radius: 9px; background: var(--accent-bg);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-ink);
 }
 .expense-info { flex: 1; min-width: 0; }
 .expense-info .desc { font-weight: 600; font-size: 14.5px; }
@@ -409,12 +460,12 @@ html, body {
 .settle-row { display: flex; align-items: center; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--rule); }
 .settle-row:last-child { border-bottom: none; }
 .settle-flow { flex: 1; font-size: 14px; }
-.settle-flow .amount { font-weight: 700; font-size: 16px; display: block; margin-top: 2px; }
+.settle-flow .amount { font-weight: 700; font-size: 16px; display: block; margin-top: 2px; color: var(--accent-ink); }
 .settle-row .btn { width: auto; padding: 8px 14px; font-size: 13px; flex-shrink: 0; }
 
 .notif-row { display: flex; gap: 12px; padding: 13px 4px; border-bottom: 1px solid var(--rule); }
 .notif-row:last-child { border-bottom: none; }
-.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); margin-top: 6px; flex-shrink: 0; }
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-ink); margin-top: 6px; flex-shrink: 0; }
 .notif-dot.read { background: transparent; }
 .notif-text { flex: 1; font-size: 14px; line-height: 1.4; }
 .notif-time { font-size: 11.5px; color: var(--ink-soft); margin-top: 3px; }
@@ -432,7 +483,7 @@ html, body {
   position: absolute;
   left: 18px; right: 18px; top: 14px;
   background: var(--toast-bg);
-  color: #f5f2ea;
+  color: var(--on-toast);
   padding: 12px 16px;
   border-radius: 10px;
   font-size: 13.5px;
@@ -444,7 +495,7 @@ html, body {
   z-index: 30;
 }
 .toast.show { transform: translateY(0); }
-.toast .ok-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--credit); flex-shrink: 0; }
+.toast .ok-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--toast-ok); flex-shrink: 0; }
 
 .overlay {
   position: absolute; inset: 0;
@@ -461,7 +512,7 @@ html, body {
   width: 26px; height: 26px;
   border-radius: 50%;
   border: 3px solid var(--rule);
-  border-top-color: var(--brand-ink);
+  border-top-color: var(--brand);
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }

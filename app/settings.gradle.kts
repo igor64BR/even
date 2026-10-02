@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "tally"
+rootProject.name = "even"
 
 include(":app")
 include(":domain")

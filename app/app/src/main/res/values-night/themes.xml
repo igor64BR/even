@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+    Dark counterpart of res/values/themes.xml. `@color/even_paper` already resolves to the dark
+    `paper` token here (res/values-night/colors.xml), so only the things that genuinely differ are
+    repeated: the `Material` (dark) parent instead of `Material.Light`, and light-on-dark system bar
+    icons. Light and dark are both first-class in this palette; neither is a tinted copy of the
+    other.
+    -->
+    <style name="Theme.Even" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/even_paper</item>
+        <item name="android:statusBarColor">@color/even_paper</item>
+        <item name="android:navigationBarColor">@color/even_paper</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/even_paper</item>
+    </style>
+</resources>

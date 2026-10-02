@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The `paper` token from `:root[data-theme="dark"]`, mirroring `DarkEvenColors.paper`. See res/values/colors.xml. -->
+<resources>
+    <color name="even_paper">#141924</color>
+</resources>

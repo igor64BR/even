@@ -1,6 +1,6 @@
 // :data module — implements the repository interfaces declared in :domain using Room
-// (local persistence, T7) and a SignalR/HTTP client (sync, future tasks). Depends on
-// :domain, never the other way around.
+// (local persistence) and a SignalR/HTTP client (sync). Depends on :domain, never the
+// other way around.
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tally.data"
+    namespace = "com.even.data"
     compileSdk = 34
 
     defaultConfig {
@@ -69,7 +69,7 @@ dependencies {
     testImplementation(libs.junit4)
     // In-memory Room doesn't run in a plain unit test (it needs an Android Context) — Robolectric
     // provides that on the JVM, without requiring an emulator/connected device (none was available
-    // in this environment). Covers the T7.2 deliverable ("instrumented test or simple unit test").
+    // in this environment).
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<script>document.documentElement.dataset.theme = localStorage.getItem('tally:theme') || 'light';</script>
+<script>(function(){var t=localStorage.getItem('even:theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally — Sign in</title>
+<title>Even — Sign in</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <div class="proto-bar">
-  <strong>Tally</strong> — static prototype
+  <strong>Even</strong> — static prototype
   <span class="sep">·</span>
   <a href="index.html">groups</a>
   <span class="sep">·</span>
@@ -83,7 +83,7 @@ function render() {
   document.getElementById('titulo').textContent = 'Sign in';
   screen.innerHTML = `
     <div class="card" style="margin-top:18px">
-      <p>Using Tally doesn't require an account. Signing in with Google is just for:</p>
+      <p>Using Even doesn't require an account. Signing in with Google is just for:</p>
       <p>· keeping a group available on more than one device</p>
       <p>· real-time alerts when someone in the group adds an expense or settles a debt</p>
       <p>· keeping a history of past groups</p>

@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<script>document.documentElement.dataset.theme = localStorage.getItem('tally:theme') || 'light';</script>
+<script>(function(){var t=localStorage.getItem('even:theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally — Your groups</title>
+<title>Even — Your groups</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <div class="proto-bar">
-  <strong>Tally</strong> — static prototype
+  <strong>Even</strong> — static prototype
   <span class="sep">·</span>
   <a href="index.html">groups</a>
   <span class="sep">·</span>
@@ -40,7 +40,7 @@
     <div class="screen with-bottombar" id="screen"></div>
 
     <a class="fab above-bar" href="create-group.html" title="Create group">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.9-3.4 3-5 5.5-5s4.6 1.6 5.5 5"/><path d="M18 8v5M15.5 10.5h5"/></svg>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.9-3.4 3-5 5.5-5s4.6 1.6 5.5 5"/><path d="M18 8v5M15.5 10.5h5"/></svg>
     </a>
 
     <div class="bottombar">

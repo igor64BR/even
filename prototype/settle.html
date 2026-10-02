@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<script>document.documentElement.dataset.theme = localStorage.getItem('tally:theme') || 'light';</script>
+<script>(function(){var t=localStorage.getItem('even:theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally — Settle debts</title>
+<title>Even — Settle debts</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <div class="proto-bar">
-  <strong>Tally</strong> — static prototype
+  <strong>Even</strong> — static prototype
   <span class="sep">·</span>
   <a href="index.html">groups</a>
   <span class="sep">·</span>
@@ -85,7 +85,7 @@ function render() {
             ${participantName(group, t.de)} → ${participantName(group, t.para)}
             <span class="amount">${fmtMoney(t.valor)}</span>
           </div>
-          <button class="btn btn-secondary quitar-btn" data-de="${t.de}" data-para="${t.para}" data-valor="${t.valor}">Mark as paid</button>
+          <button class="btn btn-accent quitar-btn" data-de="${t.de}" data-para="${t.para}" data-valor="${t.valor}">Mark as paid</button>
         </div>`).join('')}
     </div>`;
 

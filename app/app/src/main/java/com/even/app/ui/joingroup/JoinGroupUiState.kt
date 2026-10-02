@@ -1,0 +1,39 @@
+package com.even.app.ui.joingroup
+
+/**
+ * State for the "Join group" screen (deep link `even://join/{code}`).
+ *
+ * There's no "group X" state with a name to show before confirming: the backend doesn't
+ * expose an endpoint to preview the group by its code, only the one to actually join — that's why
+ * [Confirming] only carries the [inviteCode] used in the call, never a made-up group name
+ * ("don't make one up").
+ */
+sealed interface JoinGroupUiState {
+
+    /** Session not resolved yet (first emission of [com.even.domain.repository.AuthRepository.getSessionFlow] hasn't arrived). */
+    data object CheckingSession : JoinGroupUiState
+
+    /**
+     * Signed out: the action only makes sense authenticated (the backend requires `[Authorize]`). Whoever
+     * observes this state is responsible for keeping [inviteCode] and sending the user to the
+     * login screen, resuming the flow afterwards — the confirmation screen itself never navigates
+     * on its own.
+     */
+    data class NeedsLogin(val inviteCode: String) : JoinGroupUiState
+
+    /** Signed in, waiting for confirmation — "You've been invited to join a group". */
+    data class Confirming(val inviteCode: String) : JoinGroupUiState
+
+    /** "Join" button tapped, call in progress. */
+    data object Joining : JoinGroupUiState
+
+    /**
+     * `POST /groups/join/{code}` responded successfully. Only [remoteGroupId] — no name,
+     * participants or expenses (gap documented in [com.even.domain.repository.RemoteGroupRepository.joinByCode]),
+     * so the UI shows a generic confirmation, not the group's details.
+     */
+    data class Success(val remoteGroupId: String) : JoinGroupUiState
+
+    /** Network/HTTP failure (includes invalid/expired code) already translated by [com.even.domain.repository.GroupSyncException]. */
+    data class Error(val inviteCode: String, val message: String) : JoinGroupUiState
+}

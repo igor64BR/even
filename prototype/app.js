@@ -1,20 +1,41 @@
-/* Tally — mocked data layer for the prototype.
+/* Even — mocked data layer for the prototype.
    Everything lives in localStorage; no network calls. computeSettlement() is a
    real greedy algorithm (not just decoration), just simplified compared to
    the production version (.NET backend / Android app). */
 
-const STORAGE_KEY = 'tally:v1';
-const THEME_KEY = 'tally:theme';
+const STORAGE_KEY = 'even:v1';
+const THEME_KEY = 'even:theme';
 
 /**
  * Theme button (sun/moon) in the `.topbar` of every screen, opposite the title — a global
  * component, not a single-screen feature. The icon shown is always the one for the mode the tap
  * leads TO (sun visible = "tap to go light", moon visible = "tap to go dark"), never the current mode.
+ *
+ * Default is the OS preference (`prefers-color-scheme`); tapping the button stores an explicit
+ * choice. Picking the mode the OS already prefers drops the stored choice, which hands control
+ * back to the system — so "follow the system" stays reachable without a third button state.
+ * The same resolution runs inline in the <head> of every page, before first paint.
  */
 const THEME_ICONS = {
   sun: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
   moon: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
 };
+
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function systemTheme() {
+  return darkQuery.matches ? 'dark' : 'light';
+}
+
+/** The explicitly chosen theme, or null while we're following the OS. */
+function storedTheme() {
+  const v = localStorage.getItem(THEME_KEY);
+  return v === 'light' || v === 'dark' ? v : null;
+}
+
+function applyTheme() {
+  document.documentElement.dataset.theme = storedTheme() || systemTheme();
+}
 
 function initThemeToggle() {
   const btn = document.getElementById('theme-toggle');
@@ -28,9 +49,15 @@ function initThemeToggle() {
   };
   render();
   btn.addEventListener('click', () => {
-    const dark = document.documentElement.dataset.theme === 'dark';
-    document.documentElement.dataset.theme = dark ? 'light' : 'dark';
-    localStorage.setItem(THEME_KEY, dark ? 'light' : 'dark');
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    if (next === systemTheme()) localStorage.removeItem(THEME_KEY);
+    else localStorage.setItem(THEME_KEY, next);
+    applyTheme();
+    render();
+  });
+  darkQuery.addEventListener('change', () => {
+    if (storedTheme()) return;
+    applyTheme();
     render();
   });
 }

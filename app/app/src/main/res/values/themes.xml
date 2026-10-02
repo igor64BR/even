@@ -1,12 +1,29 @@
-<resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!--
     Without a declared theme, Android fell back to the system default (with an ActionBar) — the
-    platform itself drew a native bar with the app label ("Tally") on top of the real UI,
+    platform itself drew a native bar with the app label ("Even") on top of the real UI,
     duplicating the `TopAppBar` each Compose screen already draws (found while porting the
     prototype's theme toggle: every TopAppBar got a sun/moon button, and the ghost native bar
-    would have been left floating on top). NoActionBar removes that native bar; every real
-    color/decoration still comes from Compose (TallyTheme), never from this theme — it only
-    exists to turn off the system chrome.
+    would have been left floating on top). NoActionBar removes that native bar.
+
+    The colours below are the only ones NOT drawn by Compose, and they are the same `paper` token
+    (`@color/even_paper`, see res/values[-night]/colors.xml) that `EvenTheme` paints the screens
+    with: the cold-start window and the API 31+ splash, which exist before the first composition,
+    plus the system bars. Without them the launch window flashes the platform's default grey/black
+    and the app visibly "snaps" into its own background. Everything else still comes from
+    `EvenTheme` — never from here.
+
+    `enableEdgeToEdge()` in MainActivity makes the real bars transparent at runtime and picks the
+    icon contrast from the night mode; `statusBarColor`/`navigationBarColor` are the pre-Compose
+    fallback, and `windowLightStatusBar` keeps the launch window's icons dark on light paper.
     -->
-    <style name="Theme.Tally" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Even" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/even_paper</item>
+        <item name="android:statusBarColor">@color/even_paper</item>
+        <item name="android:navigationBarColor">@color/even_paper</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/even_paper</item>
+    </style>
 </resources>

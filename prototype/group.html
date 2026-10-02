@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<script>document.documentElement.dataset.theme = localStorage.getItem('tally:theme') || 'light';</script>
+<script>(function(){var t=localStorage.getItem('even:theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tally — Group</title>
+<title>Even — Group</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <div class="proto-bar">
-  <strong>Tally</strong> — static prototype
+  <strong>Even</strong> — static prototype
   <span class="sep">·</span>
   <a href="index.html">groups</a>
   <span class="sep">·</span>
@@ -40,7 +40,7 @@
     <div class="screen with-bottombar" id="screen"></div>
 
     <a class="fab above-bar" id="fab" href="#" title="New expense">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 3v18M16.5 7.5H10a2.8 2.8 0 0 0 0 5.6h4a2.8 2.8 0 0 1 0 5.6H7"/></svg>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M16.5 7.5H10a2.8 2.8 0 0 0 0 5.6h4a2.8 2.8 0 0 1 0 5.6H7"/></svg>
     </a>
 
     <div class="bottombar">
@@ -113,7 +113,7 @@ function render() {
     <div class="eyebrow" style="margin-top:20px">Balances</div>
     ${saldosHtml}
 
-    <a class="btn btn-primary" style="margin-top:16px" href="settle.html?id=${group.id}">Settle debts</a>
+    <a class="btn btn-accent" style="margin-top:16px" href="settle.html?id=${group.id}">Settle debts</a>
     ${!group.synced ? `<a class="btn btn-secondary" style="margin-top:10px" href="login.html?sync=${group.id}">Sync this group</a>` : ''}
 
     <div class="eyebrow" style="margin-top:22px">Expenses</div>

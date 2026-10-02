@@ -4,11 +4,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".TallyApplication"
+        android:name=".EvenApplication"
         android:allowBackup="true"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Tally">
+        android:theme="@style/Theme.Even">
 
         <activity
             android:name=".MainActivity"
@@ -19,14 +19,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- "Join group via link": tally://join/{code}, shareable through any
+            <!-- "Join group via link": even://join/{code}, shareable through any
                  channel (WhatsApp, SMS, etc.), not an integration with anything specific. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="tally"
+                    android:scheme="even"
                     android:host="join" />
             </intent-filter>
         </activity>

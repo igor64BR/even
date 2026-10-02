@@ -9,10 +9,10 @@ plugins {
 }
 
 // A real OAuth client id doesn't exist yet on the backend side either (see
-// `backend/src/Tally.Api/appsettings.Development.json`). Read from
+// `backend/src/Even.Api/appsettings.Development.json`). Read from
 // `local.properties` (a per-developer file, already in .gitignore) with a fallback to an
 // obvious placeholder — never hardcoded as a "real" value in source code. Swap
-// `TALLY_GOOGLE_WEB_CLIENT_ID` in `local.properties` once a Google Cloud project exists.
+// `EVEN_GOOGLE_WEB_CLIENT_ID` in `local.properties` once a Google Cloud project exists.
 val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
@@ -22,11 +22,11 @@ fun localOrDefault(key: String, default: String): String =
     (localProperties.getProperty(key) ?: System.getenv(key))?.takeIf { it.isNotBlank() } ?: default
 
 android {
-    namespace = "com.tally.app"
+    namespace = "com.even.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.tally.app"
+        applicationId = "com.even.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -37,16 +37,16 @@ android {
         buildConfigField(
             "String",
             "GOOGLE_WEB_CLIENT_ID",
-            "\"${localOrDefault("TALLY_GOOGLE_WEB_CLIENT_ID", "PLACEHOLDER-CLIENT-ID.apps.googleusercontent.com")}\"",
+            "\"${localOrDefault("EVEN_GOOGLE_WEB_CLIENT_ID", "PLACEHOLDER-CLIENT-ID.apps.googleusercontent.com")}\"",
         )
         // 10.0.2.2 is the host alias from the Android emulator (loopback to the machine
         // running the backend, "http" profile from
-        // `backend/src/Tally.Api/Properties/launchSettings.json`, port 5134) — doesn't work on a
+        // `backend/src/Even.Api/Properties/launchSettings.json`, port 5134) — doesn't work on a
         // physical device on the same network, which would need the machine's real IP.
         buildConfigField(
             "String",
             "API_BASE_URL",
-            "\"${localOrDefault("TALLY_API_BASE_URL", "http://10.0.2.2:5134/")}\"",
+            "\"${localOrDefault("EVEN_API_BASE_URL", "http://10.0.2.2:5134/")}\"",
         )
     }
 
@@ -74,8 +74,8 @@ android {
         buildConfig = true
     }
 
-    // Robolectric (T8 smoke test of GroupListViewModel against real Room, same pattern as
-    // :data's TallyDatabaseTest from T7) needs the module's resources (strings, manifest) on
+    // Robolectric (the GroupListViewModel smoke test runs against a real Room database, same
+    // pattern as :data's EvenDatabaseTest) needs the module's resources (strings, manifest) on
     // the unit test classpath.
     testOptions {
         unitTests.isIncludeAndroidResources = true
@@ -112,7 +112,7 @@ dependencies {
     implementation(libs.googleid)
 
     testImplementation(libs.junit4)
-    // Same reasoning as :data (see TallyDatabaseTest): in-memory Room needs an Android
+    // Same reasoning as :data (see EvenDatabaseTest): in-memory Room needs an Android
     // Context, which only exists in a plain unit test via Robolectric (no emulator available
     // in this environment).
     testImplementation(libs.robolectric)

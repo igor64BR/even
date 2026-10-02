@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+The `paper` token from `:root` in `prototype/styles.css`, where the palette is defined — the app
+background. The single colour the platform needs before Compose exists: the cold-start window, the
+API 31+ splash and the system bars (res/values/themes.xml). Kept in sync by hand with
+`LightEvenColors.paper` in ui/theme/EvenColors.kt; the dark value lives in res/values-night/colors.xml.
+-->
+<resources>
+    <color name="even_paper">#F7F8FC</color>
+</resources>
