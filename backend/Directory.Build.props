@@ -1,6 +1,6 @@
 <Project>
 
-  <!-- Conventions shared by every project in the Tally solution.
+  <!-- Conventions shared by every project in the Even solution.
        Each individual .csproj only declares what's specific to it
        (SDK type, packages, references). -->
   <PropertyGroup>
